@@ -1,0 +1,8 @@
+POST http://splk2.test/api/login
+Content-Type: application/json
+
+#test1234
+{
+    "email": "novy_uzivatel@test.cz",
+    "password": "test1234"
+}

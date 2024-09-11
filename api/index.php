@@ -1,28 +1,99 @@
 <?php
 // index.php
 
-header('Content-Type: application/json');
+header(header: 'Content-Type: application/json');
 require 'config.php';
 require 'Database.php';
+require 'Auth.php';
 
-// Načtení konfigurace a inicializace DB
+// Načtení konfigurace a inicializace DB a autentizace
 $config = require 'config.php';
-$db = new Database($config);
+$db = new Database(config: $config);
+$auth = new Auth(secret: $config['jwt_secret']);
 
-// Získání HTTP metody a endpointu (např. /api/users/1)
+// Získání HTTP metody a endpointu
 $method = $_SERVER['REQUEST_METHOD'];
-$path = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+$path = explode(separator: '/', string: trim(string: $_SERVER['REQUEST_URI'], characters: '/'));
 
-if (count($path) == 0 || empty($path[0])) {
-    http_response_code(400);
-    echo json_encode(["error" => "Invalid endpoint"]);
+// Validace endpointu
+if (count(value: $path) == 0 || empty($path[0])) {
+    http_response_code(response_code: 400);
+    echo json_encode(value: ["error" => "Invalid endpoint"]);
     exit;
 }
 
 $table = $path[0];
 $id = $path[1] ?? null;
 
-// Zpracování požadavků podle HTTP metody
+if ($table == 'login' && $method == 'POST') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    if (isset($data['email']) && isset($data['password'])) {
+        $email = $data['email'];
+        $password = $data['password'];
+
+        // Ověření uživatelského jména a hesla
+        $user = $db->verifyUser('users', $email, $password);
+
+        if ($user) {
+            // Generování JWT tokenu pro ověřeného uživatele
+            $token = $auth->generateToken($user);
+            echo json_encode(['token' => $token]);
+        } else {
+            http_response_code(401);
+            echo json_encode(["error" => "Invalid credentials"]);
+        }
+    } else {
+        http_response_code(400);
+        echo json_encode(["error" => "Username and password required"]);
+    }
+    exit;
+} elseif ($table == 'register' && $method == 'POST') {
+    // Registrace uživatele (POST /api/register)
+    $data = json_decode(json: file_get_contents(filename: 'php://input'), associative: true);
+
+    // Kontrola, zda uživatel poslal email a password
+    if (isset($data['email']) && isset($data['password'])) {
+        $email = $data['email'];
+        $password = $data['password'];
+        $first_name = $data['first_name'];
+        $last_name = $data['last_name'];
+
+        // Zkontrolovat, zda uživatelské jméno už neexistuje
+        $existingUser = $db->getById('users', $email);
+        if ($existingUser) {
+            http_response_code(400);
+            echo json_encode(["error" => "Email already exists"]);
+            exit;
+        }
+
+        // Hashování hesla
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+
+        // Uložení uživatele do databáze
+        $newUser = [
+            'email' => $email,
+            'password' => $password,
+            'first_name' => $first_name,
+            'last_name' => $last_name,
+        ];
+
+        $userId = $db->insert('users', $newUser);
+        echo json_encode(["message" => "User created", "user_id" => $userId]);
+    } else {
+        http_response_code(response_code: 400);
+        echo json_encode(value: ["error" => "Username and password are required"]);
+    }
+    exit;
+}
+
+// Ověření tokenu pro ostatní endpointy
+$user = $auth->authenticate();
+if (!$user) {
+    http_response_code(401);
+    echo json_encode(["error" => "Unauthorized"]);
+    exit;
+}
+// CRUD operace (jen pro přihlášené uživatele)
 switch ($method) {
     case 'GET':
         if ($id) {

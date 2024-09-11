@@ -1,0 +1,6 @@
+GET http://splk2.test/api/users
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOjM0LCJpYXQiOjE3MjYwODM3OTksImV4cCI6MTcyNjA4NzM5OX0.RVTFuo0slNiw23j0R_g1CAQeZZ1uKsSUqheuY1q9SqI
+
+{
+}

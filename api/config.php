@@ -5,4 +5,5 @@ return [
     'dbname' => 'splk',
     'username' => 'splk',
     'password' => 'splk',
+    'jwt_secret' => 'my_little_secret',
 ];
