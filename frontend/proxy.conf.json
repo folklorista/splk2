@@ -1,0 +1,7 @@
+{
+  "/api": {
+    "target": "http://splk2.test",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

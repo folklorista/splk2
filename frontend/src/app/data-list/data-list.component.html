@@ -1,0 +1,22 @@
+@if (data.length > 0) {
+  <table>
+    <thead>
+      <tr>
+        @for (key of keys; track key) {
+          <th>{{ key }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (item of data; track data) {
+        <tr>
+          @for (key of keys; track key) {
+            <td>{{ item[key] }}</td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+} @else {
+  <p>No data available</p>
+}
