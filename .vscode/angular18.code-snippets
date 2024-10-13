@@ -1,0 +1,8 @@
+{
+	"angularQuery": {
+	  "prefix": "angular18",
+	  "body": ["Používám Angular 18. Mohu dostat řešení pro tuto verzi: $1"],
+	  "description": "Dotaz s Angular 18 verzí"
+	}
+  }
+  
