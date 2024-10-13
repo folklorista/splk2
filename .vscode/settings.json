@@ -1,1 +1,21 @@
-{}
+{
+  "rest-client.addRequestBodyLineIndentationAroundBrackets": true,
+
+  "rest-client.environmentVariables": {
+    "$shared": {
+      "version": "v1",
+      "token": "",
+      "nonProdToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOjM0LCJpYXQiOjE3Mjg4NDI3MDksImV4cCI6MTc2MDM3ODcwOSwidXNlciI6eyJmaXJzdE5hbWUiOiJKYW4iLCJsYXN0TmFtZSI6Ik5vdlx1MDBlMWsifX0.fFpPSb35Bwg0JRKHtm3-rKo3mwh6mIp8XVAAs57UyIE"
+    },
+    "local": {
+      "host": "localhost",
+      "token": "{{$shared nonProdToken}}",
+      "email": "novy_uzivatel@test.cz",
+      "password": "test1234"
+    },
+    "production": {
+      "host": "splk.foklorista.cz",
+      "token": "{{$shared prodToken}}"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+GET http://splk2.test/api/places
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}
+
+###
+
+GET http://splk2.test/api/places/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}
+
+###
+
+POST http://splk2.test/api/places
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "id": 6,
+    "name": "Peklo",
+    "description": "Příliš žluťoučký kůň úpěl ďábelské ódy.",
+    "gps_lat": "49.2251697",
+    "gps_lon": "17.6656944"
+}
+
+###
+
+PUT http://splk2.test/api/places/6
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Peklíčko"
+}
+
+
+###
+
+DELETE http://splk2.test/api/places/6
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}

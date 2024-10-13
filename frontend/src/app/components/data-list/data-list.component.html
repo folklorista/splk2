@@ -1,0 +1,25 @@
+<h1>{{ this.tableName }}</h1>
+@if (data.length > 0) {
+<table>
+  <thead>
+    <tr>
+      @for (key of keys; track key) {
+      <th>{{ key }}</th>
+      }
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (item of data; track item[keys[0]]) {
+    <tr>
+      @for (key of keys; track key) {
+      <td>{{ item[key] }}</td>
+      }
+      <td><a routerLink="/places/{{ item.id }}">Show</a></td>
+    </tr>
+    }
+  </tbody>
+</table>
+} @else {
+<p>No data available</p>
+}

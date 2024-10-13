@@ -19,9 +19,12 @@ class Auth
             'iss' => "localhost",   // Vydavatel tokenu
             'sub' => $user['id'],   // Uživatelské ID
             'iat' => time(),        // Vydáno
-            'exp' => time() + (60 * 60) // Platnost (1 hodina)
+            'exp' => time() + (/*365 * 24 * */60 * 60), // Platnost (1 hodina),
+            'user' => [
+                'firstName' => $user['first_name'],
+                'lastName' => $user['last_name'],
+            ],
         ];
-
         return JWT::encode($payload, $this->secret, 'HS256');
     }
 

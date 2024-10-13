@@ -1,6 +1,17 @@
 <?php
 // index.php
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    header("Access-Control-Allow-Origin: http://localhost:4200");
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type, Authorization");
+    exit(0); // Ukončit zpracování, protože OPTIONS nepotřebuje další odpověď
+}
+
+header("Access-Control-Allow-Origin: http://localhost:4200");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS"); // Povolené metody
+header("Access-Control-Allow-Headers: Content-Type, Authorization"); // Povolené hlavičky
+
 header(header: 'Content-Type: application/json');
 require 'config.php';
 require 'Database.php';
@@ -96,7 +107,17 @@ if (!$user) {
 // CRUD operace (jen pro přihlášené uživatele)
 switch ($method) {
     case 'GET':
-        if ($id) {
+        if (isset($path[0]) && $path[0] === 'schema' && isset($path[1])) {
+            $tableName = $path[1];
+            $schema = $db->getSchema($tableName);
+            if ($schema) {
+                echo json_encode($schema);
+            } else {
+                http_response_code(404);
+                echo json_encode(["error" => "Table not found"]);
+            }
+            exit;
+        } elseif ($id) {
             $result = $db->getById($table, $id);
             if ($result) {
                 http_response_code(200);

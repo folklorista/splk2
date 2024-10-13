@@ -1,0 +1,13 @@
+<nav>
+  @if (isLoggedIn()) {
+  <a routerLink="/" routerLinkActive="active-link">přehled</a>
+  <a routerLink="/places" routerLinkActive="active-link">místa</a>
+  <a routerLink="/groups" routerLinkActive="active-link">skupiny</a>
+  {{ user?.firstName }} {{ user?.lastName }} (<span
+    id="logout"
+    (click)="logout()"
+    >odhlásit</span
+  >) }
+</nav>
+
+<router-outlet></router-outlet>

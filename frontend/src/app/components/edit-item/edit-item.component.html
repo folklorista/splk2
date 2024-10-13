@@ -1,0 +1,26 @@
+<form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+  @for (column of schema; track schema) {
+    <div>
+      <label>{{ column.name }}</label>
+      @if (column.type === 'string') {
+        <input formControlName="{{ column.name }}" type="text" />
+      } @else if (column.type === 'number') {
+        <input formControlName="{{ column.name }}" type="number" />
+      } @else if (column.type === 'Date') {
+        <input formControlName="{{ column.name }}" type="date" />
+      } @else if (column.type === 'boolean') {
+        <input formControlName="{{ column.name }}" type="checkbox" />
+      } @else if (column.type === 'text') {
+        <textarea formControlName="{{ column.name }}"></textarea>
+      } @else if (column.type === 'enum') {
+        <select formControlName="{{ column.name }}">
+          @for (option of column.options; track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select>
+      }
+      <!-- Přidejte další typy podle potřeby -->
+    </div>
+  }
+  <button type="submit">Uložit</button>
+</form>
