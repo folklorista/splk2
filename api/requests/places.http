@@ -47,3 +47,33 @@ Authorization: Bearer {{token}}
 
 {
 }
+
+###
+
+curl 'http://splk2.test/api/groups/7' \
+  -X 'PUT' \
+  -H 'Accept: application/json, text/plain, */*' \
+  -H 'Accept-Language: cs-CZ,cs;q=0.9,en;q=0.8,sk;q=0.7' \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOjM0LCJpYXQiOjE3MzEyNjAzMzQsImV4cCI6MTc2Mjc5NjMzNCwidXNlciI6eyJmaXJzdE5hbWUiOiJKYW4iLCJsYXN0TmFtZSI6Ik5vdlx1MDBlMWsifX0.VtLiN5zw_j-0z9ZNaJkC2DHbNd4Y6F_uMMrPt4VpQ2g' \
+  -H 'Connection: keep-alive' \
+  -H 'Content-Type: application/json' \
+  -H 'Origin: http://localhost:4200' \
+  -H 'Referer: http://localhost:4200/' \
+  -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36' \
+  --data-raw '{"id":7,"name":"výbor","description":"jen ti nejvybranější","group_id":1,"created_at":"2023-10-18 20:57:28","updated_at":""}' \
+  --insecure
+
+###
+
+  curl 'http://splk2.test/api/places/21' \
+  -X 'PUT' \
+  -H 'Accept: application/json, text/plain, */*' \
+  -H 'Accept-Language: cs-CZ,cs;q=0.9,en;q=0.8,sk;q=0.7' \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOjM0LCJpYXQiOjE3MzEyNjAzMzQsImV4cCI6MTc2Mjc5NjMzNCwidXNlciI6eyJmaXJzdE5hbWUiOiJKYW4iLCJsYXN0TmFtZSI6Ik5vdlx1MDBlMWsifX0.VtLiN5zw_j-0z9ZNaJkC2DHbNd4Y6F_uMMrPt4VpQ2g' \
+  -H 'Connection: keep-alive' \
+  -H 'Content-Type: application/json' \
+  -H 'Origin: http://localhost:4200' \
+  -H 'Referer: http://localhost:4200/' \
+  -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36' \
+  --data-raw '{"id":0,"name":"test21","description":null,"gps_lat":0,"gps_lon":0,"created_at":"CURRENT_TIMESTAMP","updated_at":null}' \
+  --insecure

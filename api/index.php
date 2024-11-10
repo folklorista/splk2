@@ -135,8 +135,8 @@ switch ($method) {
     case 'POST':
         $data = json_decode(file_get_contents('php://input'), true);
         if ($data) {
-            $insertId = $db->insert($table, $data);
-            echo json_encode(['id' => $insertId]);
+            $result = $db->insert($table, $data);
+            echo json_encode($result);
         } else {
             http_response_code(400);
             echo json_encode(["error" => "Invalid input"]);
@@ -147,8 +147,8 @@ switch ($method) {
         if ($id) {
             $data = json_decode(file_get_contents('php://input'), true);
             if ($data) {
-                $success = $db->update($table, $id, $data);
-                echo json_encode(['success' => $success]);
+                $result = $db->update($table, $id, $data);
+                echo json_encode($result);
             } else {
                 http_response_code(400);
                 echo json_encode(["error" => "Invalid input"]);
@@ -161,8 +161,8 @@ switch ($method) {
 
     case 'DELETE':
         if ($id) {
-            $success = $db->delete($table, $id);
-            echo json_encode(['success' => $success]);
+            $result = $db->delete($table, $id);
+            echo json_encode($result);
         } else {
             http_response_code(400);
             echo json_encode(["error" => "ID is required"]);

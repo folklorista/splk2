@@ -88,5 +88,9 @@ This project is licensed under the MIT License.
 - Improve frontend error handling
 - Optimize database queries
 - Write documentation for API endpoints
-- Return `{ success: false }` on insert existing ID
-- Return `{ success: false }` on update/delete non-existing ID
+- Add enum `Data Action` (add, edit, view, remove)
+- Flash messages
+- Implement cross tables through foreign keys
+- One-click actions (add to group)
+- Checkboxes
+- Table sort

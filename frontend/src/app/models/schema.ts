@@ -1,3 +1,9 @@
+export interface Schema {
+  name: string;
+  comment: string;
+  columns: SchemaField[];
+}
+
 export type SchemaFieldType = 'number' | 'string' | 'enum' | 'Date' | 'boolean' | 'text';
 
 export interface SchemaField {
@@ -5,9 +11,8 @@ export interface SchemaField {
   type: SchemaFieldType;
   options: string[];
   null: boolean;
-  key: string; // Můžete také použít unii jako "key: 'PRI' | '' | ... " pokud znáte přesné hodnoty
+  key:  "PRI" | "UNI" | "MUL" | "";
   default: number | string | null; // Typ defaultní hodnoty
   extra: string;
+  comment: string;
 }
-
-export type Schema = SchemaField[];

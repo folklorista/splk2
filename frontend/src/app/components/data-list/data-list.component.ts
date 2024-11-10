@@ -2,6 +2,8 @@ import { Component, Input, OnInit } from '@angular/core';
 
 import { DataService } from '../../services/data/data.service';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { SchemaService } from '../../services/schema/schema.service';
+import { Schema, SchemaField } from '../../models/schema';
 
 @Component({
   selector: 'app-data-list',
@@ -15,16 +17,28 @@ export class DataListComponent implements OnInit {
 
   public data: any[] = [];
   public keys: string[] = []; // proměnná pro uložení klíčů
+  schema: Schema | undefined;
 
   constructor(
     private dataService: DataService,
+    private schemaService: SchemaService,
     private route: ActivatedRoute,
   ) { }
 
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       this.tableName = params['tableName'];
+      this.loadSchema();
       this.loadData();
+    });
+  }
+
+  loadSchema() {
+    if (!this.tableName) {
+      return;
+    }
+    this.schemaService.getSchema(this.tableName).subscribe(schema => {
+      this.schema = schema;
     });
   }
 
@@ -47,5 +61,9 @@ export class DataListComponent implements OnInit {
         console.error('Error fetching data:', error);
       },
     });
+  }
+
+  isSystemColumn(column: SchemaField, systemColumns: any = ['id', 'created_at', 'updated_at']) {
+    return systemColumns.includes(column.name);
   }
 }

@@ -13,7 +13,8 @@ export const routes: Routes = [
   { path: 'login', title: 'Přihlášení', component: LoginComponent },
   { path: 'dashboard', title: 'Přehled', component: DashboardComponent, canActivate: [authGuard] },
   { path: ':tableName', title: 'List', component: DataListComponent, canActivate: [authGuard] },
-  { path: ':tableName/:recordId', title: 'Edit Item', component: EditItemComponent, canActivate: [authGuard] },
-  { path: ':tableName/:recordId/edit', title: 'Edit Item', component: EditItemComponent, canActivate: [authGuard] },
+  { path: ':tableName/add', title: 'Add Item', component: EditItemComponent, canActivate: [authGuard], data: { action: 'add' } },
+  { path: ':tableName/:recordId', title: 'View Item', component: EditItemComponent, canActivate: [authGuard], data: { action: 'view' } },
+  { path: ':tableName/:recordId/:action', title: 'Edit Item', component: EditItemComponent, canActivate: [authGuard] },
   { path: '**', component: PageNotFoundComponent }
 ];

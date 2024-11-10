@@ -1,25 +1,47 @@
-<h1>{{ this.tableName }}</h1>
+<h1>{{ schema?.comment?.length ? schema?.comment : this.tableName }}</h1>
+
 @if (data.length > 0) {
 <table>
   <thead>
     <tr>
-      @for (key of keys; track key) {
-      <th>{{ key }}</th>
+      @for (column of schema?.columns; track column) {
+        @if (!isSystemColumn(column)) {
+        <th>
+          {{ column?.comment?.length ? column?.comment : column.name }}
+        </th>
+        }
       }
       <th></th>
     </tr>
   </thead>
   <tbody>
-    @for (item of data; track item[keys[0]]) {
+    @for (item of data; track item) {
     <tr>
-      @for (key of keys; track key) {
-      <td>{{ item[key] }}</td>
+      @for (column of schema?.columns; track column) {
+        @if (!isSystemColumn(column)) {
+          <td>{{ item[column.name] }}</td>
+        }
       }
-      <td><a routerLink="/places/{{ item.id }}">Show</a></td>
+      <td>
+        <a routerLink="/{{ this.tableName }}/{{ item.id }}">
+          <button>Zobrazit</button>
+        </a>
+        <a routerLink="/{{ this.tableName }}/{{ item.id }}/edit">
+          <button>Upravit</button>
+        </a>
+        <a routerLink="/{{ this.tableName }}/{{ item.id }}/remove">
+          <button>Smazat</button>
+        </a>
+      </td>
     </tr>
     }
   </tbody>
 </table>
+
+<a routerLink="/{{ this.tableName }}/add">
+  <button>Přidat</button>
+</a>
+
 } @else {
 <p>No data available</p>
 }
