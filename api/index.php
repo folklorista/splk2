@@ -20,7 +20,7 @@ require 'Auth.php';
 // Načtení konfigurace a inicializace DB a autentizace
 $config = require 'config.php';
 $db = new Database(config: $config);
-$auth = new Auth(secret: $config['jwt_secret']);
+$auth = new Auth(secret: $config['jwt_secret'], db: $db);
 
 // Získání HTTP metody a endpointu
 $method = $_SERVER['REQUEST_METHOD'];
@@ -43,7 +43,7 @@ if ($table == 'login' && $method == 'POST') {
         $password = $data['password'];
 
         // Ověření uživatelského jména a hesla
-        $user = $db->verifyUser('users', $email, $password);
+        $user = $auth->verifyPassword($email, $password);
 
         if ($user) {
             // Generování JWT tokenu pro ověřeného uživatele
@@ -68,7 +68,7 @@ if ($table == 'login' && $method == 'POST') {
         $password = $data['password'];
         $first_name = $data['first_name'];
         $last_name = $data['last_name'];
-
+        error_log(print_r($data, true));
         // Zkontrolovat, zda uživatelské jméno už neexistuje
         $existingUser = $db->getById('users', $email);
         if ($existingUser) {
@@ -78,7 +78,7 @@ if ($table == 'login' && $method == 'POST') {
         }
 
         // Hashování hesla
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        $hashedPassword = $auth->hashPassword($password);
 
         // Uložení uživatele do databáze
         $newUser = [
@@ -87,12 +87,12 @@ if ($table == 'login' && $method == 'POST') {
             'first_name' => $first_name,
             'last_name' => $last_name,
         ];
-
+        error_log(print_r($newUser, true));
         $userId = $db->insert('users', $newUser);
         echo json_encode(["message" => "User created", "user_id" => $userId]);
     } else {
         http_response_code(response_code: 400);
-        echo json_encode(value: ["error" => "Username and password are required"]);
+        echo json_encode(["error" => "Username and password are required"]);
     }
     exit;
 }
@@ -135,6 +135,9 @@ switch ($method) {
     case 'POST':
         $data = json_decode(file_get_contents('php://input'), true);
         if ($data) {
+            if (isset($data['password'])) {
+                $data['password'] = $auth->hashPassword($data['password']);
+            }
             $result = $db->insert($table, $data);
             echo json_encode($result);
         } else {
@@ -147,6 +150,9 @@ switch ($method) {
         if ($id) {
             $data = json_decode(file_get_contents('php://input'), true);
             if ($data) {
+                if (isset($data['password'])) {
+                    $data['password'] = $auth->hashPassword($data['password']);
+                }
                 $result = $db->update($table, $id, $data);
                 echo json_encode($result);
             } else {

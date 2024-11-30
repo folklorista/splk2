@@ -18,7 +18,9 @@
   } @else {
   <label>{{ column?.comment?.length ? column?.comment : column.name }}</label>
   <div>
-    @if (column.type === 'string') {
+    @if (column.name === 'password') {
+    <input formControlName="{{ column.name }}" type="password" />
+    } @else if (column.type === 'string') {
     <input formControlName="{{ column.name }}" type="text" />
     } @else if (column.type === 'number') {
     <input formControlName="{{ column.name }}" type="number" />

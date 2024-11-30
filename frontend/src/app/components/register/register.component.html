@@ -1,0 +1,41 @@
+<div class="register-container">
+  <h2>Registrace</h2>
+  <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+    <div>
+      <label for="first_name">Křestní jméno</label>
+      <input id="first_name" formControlName="first_name" type="first_name" placeholder="Jan">
+      <div *ngIf="registerForm.controls['first_name'].invalid && registerForm.controls['first_name'].touched">
+        <small class="error-message">Prosím zadejte své jméno.</small>
+      </div>
+    </div>
+
+    <div>
+      <label for="last_name">Příjmení</label>
+      <input id="last_name" formControlName="last_name" type="last_name" placeholder="Novák">
+      <div *ngIf="registerForm.controls['last_name'].invalid && registerForm.controls['last_name'].touched">
+        <small class="error-message">Prosím zadejte své příjmení.</small>
+      </div>
+    </div>
+
+    <div>
+      <label for="email">E-mail</label>
+      <input id="email" formControlName="email" type="email" placeholder="jan.novak@email.cz">
+      <div *ngIf="registerForm.controls['email'].invalid && registerForm.controls['email'].touched">
+        <small class="error-message">Prosím zadejte platný e-mail.</small>
+      </div>
+    </div>
+
+    <div>
+      <label for="password">Heslo</label>
+      <input id="password" formControlName="password" type="password" placeholder="Zadejte své heslo">
+      <div *ngIf="registerForm.controls['password'].invalid && registerForm.controls['password'].touched">
+        <small class="error-message">Heslo musí mít alespoň 8 znaků.</small>
+      </div>
+    </div>
+
+    <button type="submit" [disabled]="registerForm.invalid">Registrovat</button>
+  </form>
+
+  <p><small>Už máte účet? Můžete se <a routerLink="/login">přihlásit</a></small></p>
+
+</div>

@@ -1,7 +1,0 @@
-POST http://splk2.test/api/login
-Content-Type: application/json
-
-{
-    "email": "{{email}}",
-    "password": "{{password}}"
-}

@@ -15,7 +15,20 @@ class Database
     // Získání všech záznamů z tabulky
     public function getAll($table)
     {
-        $stmt = $this->pdo->query("SELECT * FROM `{$table}`");
+        $stmt = $this->pdo->query("DESCRIBE `{$table}`");
+        $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $columns = array_filter($columns, function ($column) {
+            return $column['Field'] !== 'password';
+        });
+
+        $columnNames = array_map(function ($column) {
+            return $column['Field'];
+        }, $columns);
+
+        $columnsList = implode(', ', $columnNames);
+        $stmt = $this->pdo->query("SELECT {$columnsList} FROM `{$table}`");
+
         return $stmt->fetchAll();
     }
 
@@ -80,21 +93,6 @@ class Database
         } else {
             return ['success' => true, 'message' => 'Record deleted'];
         }
-    }
-
-    // Ověření uživatelského jména a hesla
-    public function verifyUser($table, $email, $password)
-    {
-        $stmt = $this->pdo->prepare("SELECT * FROM `{$table}` WHERE email = :email");
-        $stmt->execute(['email' => $email]);
-        $user = $stmt->fetch();
-
-        // Ověříme, zda uživatel existuje a zda heslo odpovídá hashovanému heslu v databázi
-        if ($user && password_verify($password, $user['password'])) {
-            return $user; // Vracíme uživatele, pokud je vše v pořádku
-        }
-
-        return false; // Pokud uživatelské jméno neexistuje nebo heslo nesedí
     }
 
     public function getSchema($tableName)
@@ -208,4 +206,14 @@ class Database
         }
         return $result;
     }
+
+    // Funkce pro získání hashovaného hesla
+    public function getHashedPassword($email)
+    {
+        $query = "SELECT password FROM users WHERE email = :email";
+        $stmt = $this->pdo->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }    
 }

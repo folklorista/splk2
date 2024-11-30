@@ -1,4 +1,5 @@
 <div class="login-container">
+  <h2>Přihlášení</h2>
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
     <div>
       <label for="email">Email</label>
@@ -18,4 +19,6 @@
 
     <button type="submit" [disabled]="loginForm.invalid">Login</button>
   </form>
+
+  <p><small>Nemáte účet? Zkuste se <a routerLink="/register">zaregistrovat</a></small></p>
 </div>

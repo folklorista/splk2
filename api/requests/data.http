@@ -1,0 +1,48 @@
+@table = places
+@tableId = 1
+
+###
+GET {{host}}/api/{{table}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}
+
+###
+GET {{host}}/api/{{table}}/{{tableId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}
+
+###
+POST {{host}}/api/{{table}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Peklo",
+    "description": "Příliš žluťoučký kůň úpěl ďábelské ódy.",
+    "gps_lat": "49.2251697",
+    "gps_lon": "17.6656944"
+}
+
+###
+PUT {{host}}/api/{{table}}/{{tableId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Peklíčko"
+}
+
+
+###
+DELETE {{host}}/api/{{table}}/{{tableId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}

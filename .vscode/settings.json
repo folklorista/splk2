@@ -4,18 +4,20 @@
   "rest-client.environmentVariables": {
     "$shared": {
       "version": "v1",
-      "token": "",
-      "nonProdToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOjM0LCJpYXQiOjE3Mjg4NDI3MDksImV4cCI6MTc2MDM3ODcwOSwidXNlciI6eyJmaXJzdE5hbWUiOiJKYW4iLCJsYXN0TmFtZSI6Ik5vdlx1MDBlMWsifX0.fFpPSb35Bwg0JRKHtm3-rKo3mwh6mIp8XVAAs57UyIE"
+      "prodToken": "",
+      "nonProdToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOm51bGwsImlhdCI6MTczMjk1NTIzNCwiZXhwIjoxNzY0NDkxMjM0LCJ1c2VyIjp7ImZpcnN0TmFtZSI6bnVsbCwibGFzdE5hbWUiOm51bGx9fQ.5HAYxMfQQ3fODssFsBgp8hNqt6JisCjvwXSoM_qmpmo"
     },
     "local": {
-      "host": "localhost",
+      "host": "http://splk2.test",
       "token": "{{$shared nonProdToken}}",
       "email": "novy_uzivatel@test.cz",
-      "password": "test1234"
+      "password": "$2y$10$IL793KhtLhjlQbP6WG61r.nOeoy9tDDPX9.UTJXas8C3gnXzngV5."
     },
     "production": {
-      "host": "splk.foklorista.cz",
-      "token": "{{$shared prodToken}}"
+      "host": "https://kroje.vonica.cz",
+      "token": "{{$shared prodToken}}",
+      "email": "novy_uzivatel@test.cz",
+      "password": "$2y$10$IL793KhtLhjlQbP6WG61r.nOeoy9tDDPX9.UTJXas8C3gnXzngV5."
     }
   }
 }
