@@ -1,3 +1,11 @@
+GET {{host}}/api/schema
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}
+
+###
 GET {{host}}/api/schema/test
 Content-Type: application/json
 Authorization: Bearer {{token}}

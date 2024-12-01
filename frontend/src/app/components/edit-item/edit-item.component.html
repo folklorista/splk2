@@ -6,7 +6,7 @@
 </h1>
 
 @if (!formLoaded) {
-<p>Loading...</p>
+<p>Loading&hellip;</p>
 } @else {
 <form
   [formGroup]="editForm"
@@ -47,6 +47,7 @@
     <button (click)="deleteItem()" class="remove">Potvrdit smazání</button>
   }
 </form>
+}
 
 @if (action == 'add') {
   <a routerLink="/{{ this.tableName }}">
@@ -60,16 +61,16 @@
       <button>Zpět na seznam</button>
     </a>
 
-    <button (click)="action = 'edit'">Upravit</button>
-    <button (click)="action = 'remove'">Smazat</button>
+    <button (click)="setAction('edit')">Upravit</button>
+    <button (click)="setAction('remove')">Smazat</button>
   }
 
   @if (action == 'edit') {
-    <button (click)="action = 'view'">Zrušit</button>
+    <button (click)="setAction('view')">Zrušit</button>
   }
 
   @if (action == 'remove') {
-    <button (click)="action = 'view'">Zrušit</button>
+    <button (click)="setAction('view')">Zrušit</button>
   }
 
 <p>
@@ -78,4 +79,5 @@
   <small>, naposled upraven {{ itemData.updated_at }}</small>
   }.
 </p>
-} }
+}
+

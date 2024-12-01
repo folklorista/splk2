@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import * as bcrypt from 'bcryptjs'; // Import bcrypt knihovny
+import { ApiResponse } from '../../models/api-response';
 
 @Component({
   selector: 'app-login',
@@ -29,19 +29,14 @@ export class LoginComponent {
   onSubmit(): void {
     const loginData = this.loginForm.value;
 
-    // Hashování hesla pomocí bcrypt před odesláním
-    const hashedPassword = bcrypt.hashSync(loginData.password || '', 10);
-
-    // Nahradíme původní heslo hashem
-    const loginDataWithHashedPassword = {
-      email: loginData.email,
-      password: hashedPassword
-    };
-
-    // Odeslání požadavku s hashem hesla
-    this.http.post<{ token: string }>('/api/login', loginDataWithHashedPassword).subscribe({
+    this.http.post<ApiResponse<{ token: string }>>('/api/login', loginData).subscribe({
       next: response => {
-        localStorage.setItem('authToken', response.token);
+        if (!response.data) {
+          console.error('Login failed:', response);
+          alert('Login failed. Please check your credentials.');
+          return;
+        }
+        localStorage.setItem('authToken', response.data.token);
         this.router.navigate(['/dashboard']);
       },
       error: error => {

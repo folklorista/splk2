@@ -31,8 +31,13 @@ export class AppComponent {
 
   getTokenData(): TokenData | null {
     const token = this.localStorage.getItem('authToken');
-    if (token !== null) {
-      return JSON.parse(atob(token.split('.')[1]));
+    if (token !== null && token !== 'undefined') {
+      try {
+        return JSON.parse(atob(token.split('.')[1]));
+      } catch (e) {
+        console.error('Error parsing token data', e);
+        return null;
+      }
     }
 
     return null;

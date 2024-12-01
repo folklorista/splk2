@@ -1,20 +1,21 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { SchemaService } from '../../services/schema/schema.service';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ItemData } from '../../models/data';
 import { Schema, SchemaField } from '../../models/schema';
 import { DataService } from '../../services/data/data.service';
-import { ItemData } from '../../models/data';
-import { Router } from '@angular/router';
+import { SchemaService } from '../../services/schema/schema.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-edit-item',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, CommonModule],
   templateUrl: './edit-item.component.html',
   styleUrl: './edit-item.component.scss'
 })
-export class EditItemComponent implements OnInit {
+export class EditItemComponent implements OnInit, OnChanges {
   @Input() tableName: string | undefined;
   @Input() recordId: number | undefined;
   @Input() action: 'add' | 'edit' | 'view' | 'remove' = 'edit';
@@ -43,12 +44,19 @@ export class EditItemComponent implements OnInit {
     });
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['action']) {
+      this.updateFormState();
+    }
+  }
+
   async loadSchema() {
     if (!this.tableName) {
       return;
     }
     try {
-      this.schema = await this.schemaService.getSchema(this.tableName).toPromise();
+      const res = await firstValueFrom(this.schemaService.getSchema(this.tableName));
+      this.schema = res.data;
     } catch (error) {
       console.error('Error loading schema:', error);
     }
@@ -59,18 +67,19 @@ export class EditItemComponent implements OnInit {
       return;
     }
     if (!this.recordId) {
-      this.createForm();
+      await this.createForm();
       return;
     }
     try {
-      this.itemData = await this.dataService.getData(this.tableName, this.recordId).toPromise();
-      this.createForm();
+      const res = await firstValueFrom(this.dataService.getData(this.tableName, this.recordId));
+      this.itemData = res.data;
+      await this.createForm();
     } catch (error) {
       console.error('Error loading item data:', error);
     }
   }
 
-  createForm() {
+  async createForm() {
     if (!this.schema) {
       console.error('Schema not loaded');
       return;
@@ -85,15 +94,7 @@ export class EditItemComponent implements OnInit {
       this.editForm.addControl(column.name, this.fb.control(this.itemData[column.name]));
     }
 
-    // Pokud je action 'view' nebo 'remove', nastavit atributy disabled a readonly na true
-    if (this.action === 'view' || this.action === 'remove' || !this.action) {
-      for (const control in this.editForm.controls) {
-        if (this.editForm.controls.hasOwnProperty(control)) {
-          this.editForm.controls[control].disable();
-        }
-      }
-    }
-
+    this.updateFormState();
 
     this.formLoaded = true;
   }
@@ -115,13 +116,14 @@ export class EditItemComponent implements OnInit {
     this.dataService.createData(this.tableName, data).subscribe({
       next: (response) => {
         if (response.error) {
-          console.debug(response.error.errorInfo[2]);
+          console.debug(response.error);
         }
         if (response.message) {
           console.debug(response.message);
         }
-        if (response.success) {
-          this.router.navigate(['/', this.tableName, response.id]);
+
+        if (response.status === 201) {
+          this.router.navigate(['/', this.tableName, response.data.id]);
         }
       },
       error: (error) => {
@@ -137,12 +139,12 @@ export class EditItemComponent implements OnInit {
     this.dataService.updateData(this.tableName, this.recordId, data).subscribe({
       next: (response) => {
         if (response.error) {
-          console.debug(response.error.errorInfo[2]);
+          console.debug(response.error);
         }
         if (response.message) {
           console.debug(response.message);
         }
-        if (response.success) {
+        if (response.status === 200) {
           this.router.navigate(['/', this.tableName, this.recordId]);
         }
       },
@@ -163,12 +165,12 @@ export class EditItemComponent implements OnInit {
     this.dataService.deleteData(this.tableName, this.recordId).subscribe({
       next: (response) => {
         if (response.error) {
-          console.debug(response.error.errorInfo[2]);
+          console.debug(response.error);
         }
         if (response.message) {
           console.debug(response.message);
         }
-        if (response.success) {
+        if (response.status === 200) {
           this.router.navigate(['/', this.tableName]);
         }
       },
@@ -176,5 +178,27 @@ export class EditItemComponent implements OnInit {
         console.error('Error deleting item:', error);
       },
     });
+  }
+
+  updateFormState() {
+    // Dynamically disable/enable form controls based on action
+    if (this.action === 'view' || this.action === 'remove') {
+      for (const control in this.editForm.controls) {
+        if (this.editForm.controls.hasOwnProperty(control)) {
+          this.editForm.controls[control].disable();
+        }
+      }
+    } else if (this.action === 'edit' || this.action === 'add') {
+      for (const control in this.editForm.controls) {
+        if (this.editForm.controls.hasOwnProperty(control)) {
+          this.editForm.controls[control].enable();
+        }
+      }
+    }
+  }
+
+  public setAction(action: 'add' | 'edit' | 'view' | 'remove') {
+    this.action = action;
+    this.updateFormState();
   }
 }

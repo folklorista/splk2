@@ -1,5 +1,5 @@
 @table = places
-@tableId = 1
+@tableId = 36
 
 ###
 GET {{host}}/api/{{table}}

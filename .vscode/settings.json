@@ -11,13 +11,13 @@
       "host": "http://splk2.test",
       "token": "{{$shared nonProdToken}}",
       "email": "novy_uzivatel@test.cz",
-      "password": "$2y$10$IL793KhtLhjlQbP6WG61r.nOeoy9tDDPX9.UTJXas8C3gnXzngV5."
+      "password": "test1234"
     },
     "production": {
       "host": "https://kroje.vonica.cz",
       "token": "{{$shared prodToken}}",
       "email": "novy_uzivatel@test.cz",
-      "password": "$2y$10$IL793KhtLhjlQbP6WG61r.nOeoy9tDDPX9.UTJXas8C3gnXzngV5."
+      "password": "test1234"
     }
   }
 }

@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# Směřování pro API cesty
+RewriteCond %{REQUEST_URI} ^/api
+RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+
+# Směřování pro všechny ostatní cesty, které nevedou na skutečný soubor
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /www/doc/kroje.vonica.cz/www/index.csr.html [QSA,L]

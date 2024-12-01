@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import * as bcrypt from 'bcryptjs'; // Import bcrypt knihovny
 
 @Component({
   selector: 'app-register',
@@ -37,19 +36,8 @@ export class RegisterComponent {
 
     const registerData = this.registerForm.value;
 
-    // Hashování hesla pomocí bcrypt před odesláním na server
-    const hashedPassword = bcrypt.hashSync(registerData.password || '', 10);  // Salt = 10
-
-    // Vytvoření objektu pro odeslání na server
-    const registerDataWithHashedPassword = {
-      first_name: registerData.first_name,
-      last_name: registerData.last_name,
-      email: registerData.email,
-      password: hashedPassword
-    };
-
     // Odeslání dat na backend pro registraci
-    this.http.post('/api/register', registerDataWithHashedPassword).subscribe({
+    this.http.post('/api/register', registerData).subscribe({
       next: response => {
         console.log('Registrace proběhla úspěšně, nyní se můžete přihlásit', response);
         this.router.navigate(['/login']);  // Přesměrování na přihlašovací stránku po registraci

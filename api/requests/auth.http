@@ -1,13 +1,10 @@
-# password is test1234
-@hashedPassword = "$2y$10$IL793KhtLhjlQbP6WG61r.nOeoy9tDDPX9.UTJXas8C3gnXzngV5."
-
 ### Register
 POST {{host}}/api/register
 Content-Type: application/json
 
 {
-    "email": "novy_uzivatel5@test.cz",
-    "password": "{{hashedPassword}}",
+    "email": "novy_uzivatel6@test.cz",
+    "password": "{{password}}",
     "first_name": "Jan",
     "last_name": "Novák"
 }
@@ -20,12 +17,4 @@ Content-Type: application/json
 {
     "email": "{{email}}",
     "password": "{{password}}"
-}
-
-### Logout
-POST {{host}}/api/logout
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
 }

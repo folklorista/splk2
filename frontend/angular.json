@@ -55,6 +55,12 @@
                   "maximumError": "4kB"
                 }
               ],
+              "fileReplacements": [
+                {
+                  "replace": "src/app/config/config.local.ts",
+                  "with": "src/app/config/config.prod.ts"
+                }
+              ],
               "outputHashing": "all"
             },
             "development": {

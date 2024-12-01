@@ -1,17 +1,21 @@
 <?php
-require 'vendor/autoload.php';
+namespace App;
+
+use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 
 class Auth
 {
-    private $secret;
-    private $db;
+    private $config;
+    private Database $db;
+    private Logger $logger;
 
-    public function __construct($secret, $db)
+    public function __construct($config, Database $db, Logger $logger)
     {
-        $this->secret = $secret;
+        $this->config = $config;
         $this->db = $db;
+        $this->logger = $logger;
     }
 
     // Funkce pro ověření hesla
@@ -22,14 +26,12 @@ class Auth
         if ($storedHashedPassword) {
             // Porovnání odeslaného hesla (hashu) s uloženým hashem
             if (password_verify($submittedPassword, $storedHashedPassword)) {
-                // Heslo je správné
-                return ['success' => 'Heslo je správné.'];
+                return true;
             } else {
-                // Heslo je nesprávné
-                return ['error' => 'Nesprávné heslo.'];
+                return false;
             }
         } else {
-            return ['error' => 'Uživatel nebyl nalezen.'];
+            return false;
         }
     }
 
@@ -40,37 +42,49 @@ class Auth
             'iss' => "localhost", // Vydavatel tokenu
             'sub' => $user['id'], // Uživatelské ID
             'iat' => time(), // Vydáno
-            'exp' => time() + (1 * 60 * 60), // Platnost (1 hodina),
+            'exp' => time() + (365 * 24 * 60 * 60), // Platnost (1 hodina),
             'user' => [
                 'firstName' => $user['first_name'],
                 'lastName' => $user['last_name'],
             ],
         ];
-        return JWT::encode($payload, $this->secret, 'HS256');
+        return JWT::encode($payload, $this->config['jwt_secret'], 'HS256');
     }
 
     // Ověření JWT tokenu
     public function verifyToken($token)
     {
         try {
-            $decoded = JWT::decode($token, new Key($this->secret, 'HS256'));
+            $decoded = JWT::decode($token, new Key($this->config['jwt_secret'], 'HS256'));
             return (array) $decoded;
         } catch (Exception $e) {
             return false;
         }
     }
 
-    // Ověření hlavičky Authorization
-    public function authenticate()
-    {
-        $headers = apache_request_headers();
-        if (!isset($headers['Authorization'])) {
-            return false;
-        }
+// Ověření hlavičky Authorization
+public function authenticate()
+{
+    $headers = apache_request_headers();
 
-        $token = str_replace('Bearer ', '', $headers['Authorization']);
-        return $this->verifyToken($token);
+    // Kontrola obou variant hlavičky
+    $authorizationHeader = null;
+    foreach ($headers as $key => $value) {
+        if (strtolower($key) === 'authorization') {
+            $authorizationHeader = $value;
+            break;
+        }
     }
+
+    if (!$authorizationHeader) {
+        return false;
+    }
+
+    // Získání tokenu z hlavičky
+    $token = str_replace('Bearer ', '', $authorizationHeader);
+    return $this->verifyToken($token);
+}
+
 
     public function hashPassword($password)
     {

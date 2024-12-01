@@ -1,14 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { LocalStorageService } from './../local-storage/local-storage.service';
 import { Observable } from 'rxjs';
-import { table } from 'console';
+import { API_CONFIG } from '../../config/config.local';
+import { LocalStorageService } from './../local-storage/local-storage.service';
+import { ApiResponse } from '../../models/api-response';
 
 @Injectable({
   providedIn: 'root',
 })
 export class DataService {
-  private apiUrl = 'http://splk2.test/api';
 
   protected token: string | null = null;
 
@@ -17,48 +17,48 @@ export class DataService {
   }
 
   // Získání všech záznamů
-  getData(tableName: string, id?:number): Observable<any> {
+  getData(tableName: string, id?: number): Observable<ApiResponse<any>> {
     const headers = {
       Authorization: `Bearer ${this.token}`,
       'Content-Type': 'application/json',
     };
-    return this.http.get<any>(`${this.apiUrl}/${tableName}${id ? '/' + id : ''}`, { headers });
+    return this.http.get<ApiResponse<any>>(`${API_CONFIG.apiUrl}/${tableName}${id ? '/' + id : ''}`, { headers });
   }
 
   // Vytvoření nového záznamu
-  createData(tableName: string, data: any): Observable<any> {
+  createData(tableName: string, data: any): Observable<ApiResponse<any>> {
     const headers = {
       Authorization: `Bearer ${this.token}`,
       'Content-Type': 'application/json',
     };
-    return this.http.post<any>(`${this.apiUrl}/${tableName}`, data, { headers });
+    return this.http.post<ApiResponse<any>>(`${API_CONFIG.apiUrl}/${tableName}`, data, { headers });
   }
 
   // Aktualizace záznamu
-  updateData(tableName: string, id: number, data: any): Observable<any> {
+  updateData(tableName: string, id: number, data: any): Observable<ApiResponse<any>> {
     const headers = {
       Authorization: `Bearer ${this.token}`,
       'Content-Type': 'application/json',
     };
-    return this.http.put<any>(`${this.apiUrl}/${tableName}/${id}`, data, { headers });
+    return this.http.put<ApiResponse<any>>(`${API_CONFIG.apiUrl}/${tableName}/${id}`, data, { headers });
   }
 
   // Smazání záznamu
-  deleteData(tableName: string, id: number): Observable<any> {
+  deleteData(tableName: string, id: number): Observable<ApiResponse<any>> {
     const headers = {
       Authorization: `Bearer ${this.token}`,
       'Content-Type': 'application/json',
     };
-    return this.http.delete<any>(`${this.apiUrl}/${tableName}/${id}`, { headers });
+    return this.http.delete<ApiResponse<any>>(`${API_CONFIG.apiUrl}/${tableName}/${id}`, { headers });
   }
 
   // Vyhledání záznamu
-  search(tableName: string, search: string): Observable<any> {
+  search(tableName: string, search: string): Observable<ApiResponse<any>> {
     const headers = {
       Authorization: `Bearer ${this.token}`,
       'Content-Type': 'application/json',
     };
-    return this.http.get<any>(`${this.apiUrl}/${tableName}/search/${search}`, { headers });
+    return this.http.get<ApiResponse<any>>(`${API_CONFIG.apiUrl}/${tableName}/search/${search}`, { headers });
   }
 
 }

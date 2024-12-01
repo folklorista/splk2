@@ -1,148 +1,82 @@
 <?php
-// index.php
 
+namespace App;
+
+use Dotenv\Dotenv;
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+// Nastavení HTTP hlaviček
+Cors::setHeaders();
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    header("Access-Control-Allow-Origin: http://localhost:4200");
-    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-    header("Access-Control-Allow-Headers: Content-Type, Authorization");
-    exit(0); // Ukončit zpracování, protože OPTIONS nepotřebuje další odpověď
+    exit(0);
 }
-
-header("Access-Control-Allow-Origin: http://localhost:4200");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS"); // Povolené metody
-header("Access-Control-Allow-Headers: Content-Type, Authorization"); // Povolené hlavičky
-
 header(header: 'Content-Type: application/json');
-require 'config.php';
-require 'Database.php';
-require 'Auth.php';
 
-// Načtení konfigurace a inicializace DB a autentizace
-$config = require 'config.php';
-$db = new Database(config: $config);
-$auth = new Auth(secret: $config['jwt_secret'], db: $db);
+// Načtení konfigurace
+$dotenv = Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+$env = $_ENV['APP_ENV'] ?? 'local';
+$config = require __DIR__ . '/config/config.' . ($env === 'production' ? 'production' : 'local') . '.php';
+
+// Inicializace
+$logger = new Logger($config['log']);
+$db = new Database(config: $config['database'], logger: $logger);
+$auth = new Auth(config: $config['auth'], db: $db, logger: $logger);
+$endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger);
 
 // Získání HTTP metody a endpointu
 $method = $_SERVER['REQUEST_METHOD'];
-$path = explode(separator: '/', string: trim(string: $_SERVER['REQUEST_URI'], characters: '/'));
+$path = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
 
 // Validace endpointu
-if (count(value: $path) == 0 || empty($path[0])) {
-    http_response_code(response_code: 400);
-    echo json_encode(value: ["error" => "Invalid endpoint"]);
-    exit;
+$pathIndex = $config['pathIndex'];
+if (count($path) == 0 || empty($path[$pathIndex['table']])) {
+    Response::send(400, "Routing failed", null, "Invalid endpoint");
 }
 
-$table = $path[0];
-$id = $path[1] ?? null;
+// Rozdělení endpointu na tabulku a ID
+$tableName = $path[$pathIndex['table']];
+$id = $path[$pathIndex['id']] ?? null;
 
-if ($table == 'login' && $method == 'POST') {
+// Logika pro login a registraci
+if ($tableName == 'login' && $method == 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
-    if (isset($data['email']) && isset($data['password'])) {
-        $email = $data['email'];
-        $password = $data['password'];
-
-        // Ověření uživatelského jména a hesla
-        $user = $auth->verifyPassword($email, $password);
-
-        if ($user) {
-            // Generování JWT tokenu pro ověřeného uživatele
-            $token = $auth->generateToken($user);
-            echo json_encode(['token' => $token]);
-        } else {
-            http_response_code(401);
-            echo json_encode(["error" => "Invalid credentials"]);
-        }
-    } else {
-        http_response_code(400);
-        echo json_encode(["error" => "Username and password required"]);
-    }
-    exit;
-} elseif ($table == 'register' && $method == 'POST') {
-    // Registrace uživatele (POST /api/register)
-    $data = json_decode(json: file_get_contents(filename: 'php://input'), associative: true);
-
-    // Kontrola, zda uživatel poslal email a password
-    if (isset($data['email']) && isset($data['password'])) {
-        $email = $data['email'];
-        $password = $data['password'];
-        $first_name = $data['first_name'];
-        $last_name = $data['last_name'];
-        error_log(print_r($data, true));
-        // Zkontrolovat, zda uživatelské jméno už neexistuje
-        $existingUser = $db->getById('users', $email);
-        if ($existingUser) {
-            http_response_code(400);
-            echo json_encode(["error" => "Email already exists"]);
-            exit;
-        }
-
-        // Hashování hesla
-        $hashedPassword = $auth->hashPassword($password);
-
-        // Uložení uživatele do databáze
-        $newUser = [
-            'email' => $email,
-            'password' => $password,
-            'first_name' => $first_name,
-            'last_name' => $last_name,
-        ];
-        error_log(print_r($newUser, true));
-        $userId = $db->insert('users', $newUser);
-        echo json_encode(["message" => "User created", "user_id" => $userId]);
-    } else {
-        http_response_code(response_code: 400);
-        echo json_encode(["error" => "Username and password are required"]);
-    }
-    exit;
+    Response::sendPrepared($endpoints->loginUser($data));
+} elseif ($tableName == 'register' && $method == 'POST') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    Response::sendPrepared($endpoints->registerUser($data));
 }
 
 // Ověření tokenu pro ostatní endpointy
 $user = $auth->authenticate();
 if (!$user) {
-    http_response_code(401);
-    echo json_encode(["error" => "Unauthorized"]);
-    exit;
+    Response::send(401, "Unauthorized access", null, "You must be logged in to access this resource");
 }
+
 // CRUD operace (jen pro přihlášené uživatele)
 switch ($method) {
     case 'GET':
-        if (isset($path[0]) && $path[0] === 'schema' && isset($path[1])) {
-            $tableName = $path[1];
-            $schema = $db->getSchema($tableName);
+        if ($tableName === 'schema' && isset($id)) {
+            $schema = $db->getSchema($id);
             if ($schema) {
                 echo json_encode($schema);
             } else {
-                http_response_code(404);
-                echo json_encode(["error" => "Table not found"]);
+                Response::send(404, "Table not found");
             }
-            exit;
         } elseif ($id) {
-            $result = $db->getById($table, $id);
-            if ($result) {
-                http_response_code(200);
-                echo json_encode($result);
-            } else {
-                http_response_code(404);
-                echo json_encode(["error" => "Record not found"]);
-            }
+            Response::sendPrepared($endpoints->getRecordByIdEndpoint($tableName, $id));
         } else {
-            $result = $db->getAll($table);
-            echo json_encode($result);
+            Response::sendPrepared($endpoints->getAllRecords($tableName));
         }
         break;
 
     case 'POST':
         $data = json_decode(file_get_contents('php://input'), true);
         if ($data) {
-            if (isset($data['password'])) {
-                $data['password'] = $auth->hashPassword($data['password']);
-            }
-            $result = $db->insert($table, $data);
-            echo json_encode($result);
+            Response::sendPrepared($endpoints->createRecordEndpoint($tableName, $data));
         } else {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid input"]);
+            Response::send(400, "Empty input");
         }
         break;
 
@@ -150,33 +84,24 @@ switch ($method) {
         if ($id) {
             $data = json_decode(file_get_contents('php://input'), true);
             if ($data) {
-                if (isset($data['password'])) {
-                    $data['password'] = $auth->hashPassword($data['password']);
-                }
-                $result = $db->update($table, $id, $data);
-                echo json_encode($result);
+                Response::sendPrepared($endpoints->updateRecordEndpoint($tableName, $id, $data));
             } else {
-                http_response_code(400);
-                echo json_encode(["error" => "Invalid input"]);
+                Response::send(400, "Empty input");
             }
         } else {
-            http_response_code(400);
-            echo json_encode(["error" => "ID is required"]);
+            Response::send(400, "ID is required");
         }
         break;
 
     case 'DELETE':
         if ($id) {
-            $result = $db->delete($table, $id);
-            echo json_encode($result);
+            Response::sendPrepared($endpoints->deleteRecordEndpoint($tableName, $id));
         } else {
-            http_response_code(400);
-            echo json_encode(["error" => "ID is required"]);
+            Response::send(400, "ID is required");
         }
         break;
 
     default:
-        http_response_code(405);
-        echo json_encode(["error" => "Method not allowed"]);
+        Response::send(405, "Method not allowed");
         break;
 }
