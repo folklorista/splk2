@@ -1,52 +1,55 @@
 <h1>
-  @if (action === 'add') { Přidání položky do tabulky } @else if (action ===
-  'edit') { Editace položky v tabulce } @else if (action === 'remove') { Smazání
-  položky v tabulce } @else { Náhled položky v tabulce }
+  @if (action === 'add') { Přidání položky do tabulky }
+  @else if (action === 'edit') { Editace položky v tabulce }
+  @else if (action === 'remove') { Smazání položky v tabulce }
+  @else { Náhled položky v tabulce }
   <i>{{ schema?.comment?.length ? schema?.comment : tableName }}</i>
 </h1>
 
 @if (!formLoaded) {
-<p>Loading&hellip;</p>
+  <p>Loading&hellip;</p>
 } @else {
-<form
-  [formGroup]="editForm"
-  (ngSubmit)="onSubmit()"
->
-  @for (column of schema?.columns; track column) { @if (isSystemColumn(column))
-  {
-  <input formControlName="{{ column.name }}" type="hidden" />
-  } @else {
-  <label>{{ column?.comment?.length ? column?.comment : column.name }}</label>
-  <div>
-    @if (column.name === 'password') {
-    <input formControlName="{{ column.name }}" type="password" />
-    } @else if (column.type === 'string') {
-    <input formControlName="{{ column.name }}" type="text" />
-    } @else if (column.type === 'number') {
-    <input formControlName="{{ column.name }}" type="number" />
-    } @else if (column.type === 'Date') {
-    <input formControlName="{{ column.name }}" type="datetime-local" />
-    } @else if (column.type === 'boolean') {
-    <input formControlName="{{ column.name }}" type="checkbox" />
-    } @else if (column.type === 'text') {
-    <textarea formControlName="{{ column.name }}"></textarea>
-    } @else if (column.type === 'enum') {
-    <select formControlName="{{ column.name }}">
-      @for (option of column.options; track option) {
-      <option [value]="option">{{ option }}</option>
+  <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+    @for (column of schema?.columns; track column) {
+      @if (isSystemColumn(column)) {
+        <input formControlName="{{ column.name }}" type="hidden" />
+      } @else {
+        <label>{{ column?.comment?.length ? column?.comment : column.name }}</label>
+        <div>
+          @if (column.name === 'password') {
+            <input formControlName="{{ column.name }}" type="password" />
+          } @else if (column.foreign_key) {
+            <select formControlName="{{ column.name }}">
+              <option *ngFor="let option of foreignKeyData[column.name]" [value]="option.id">{{ option.name }}</option>
+            </select>
+          } @else if (column.type === 'string') {
+            <input formControlName="{{ column.name }}" type="text" />
+          } @else if (column.type === 'number') {
+            <input formControlName="{{ column.name }}" type="number" />
+          } @else if (column.type === 'Date') {
+            <input formControlName="{{ column.name }}" type="datetime-local" />
+          } @else if (column.type === 'boolean') {
+            <input formControlName="{{ column.name }}" type="checkbox" />
+          } @else if (column.type === 'text') {
+            <textarea formControlName="{{ column.name }}"></textarea>
+          } @else if (column.type === 'enum') {
+            <select formControlName="{{ column.name }}">
+              @for (option of column.options; track option) {
+                <option [value]="option">{{ option }}</option>
+              }
+            </select>
+          }
+        </div>
       }
-    </select>
     }
-  </div>
-  } }
 
-  @if (action == 'add' || action == 'edit') {
-    <button type="submit">Uložit</button>
-  }
-  @if (action == 'remove') {
-    <button (click)="deleteItem()" class="remove">Potvrdit smazání</button>
-  }
-</form>
+    @if (action == 'add' || action == 'edit') {
+      <button type="submit">Uložit</button>
+    }
+    @if (action == 'remove') {
+      <button (click)="deleteItem()" class="remove">Potvrdit smazání</button>
+    }
+  </form>
 }
 
 @if (action == 'add') {
@@ -73,11 +76,10 @@
     <button (click)="setAction('view')">Zrušit</button>
   }
 
-<p>
-  <small>Záznam vytvořen {{ itemData.created_at }}</small>
-  @if (itemData.updated_at) {
-  <small>, naposled upraven {{ itemData.updated_at }}</small>
-  }.
-</p>
+  <p>
+    <small>Záznam vytvořen {{ itemData.created_at }}</small>
+    @if (itemData.updated_at) {
+      <small>, naposled upraven {{ itemData.updated_at }}</small>
+    }.
+  </p>
 }
-

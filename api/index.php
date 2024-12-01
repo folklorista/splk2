@@ -27,7 +27,18 @@ $endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger);
 
 // Získání HTTP metody a endpointu
 $method = $_SERVER['REQUEST_METHOD'];
-$path = explode('/', trim($_SERVER['REQUEST_URI'], '/'));
+
+// Rozparsování URL
+$parsedUrl = parse_url($_SERVER['REQUEST_URI']);
+
+// Cesta
+$path = explode('/', trim($parsedUrl['path'], '/'));
+
+// Query string (pokud existuje)
+$queryParams = [];
+if (isset($parsedUrl['query'])) {
+    parse_str($parsedUrl['query'], $queryParams);
+}
 
 // Validace endpointu
 $pathIndex = $config['pathIndex'];
@@ -64,13 +75,30 @@ switch ($method) {
             } else {
                 Response::send(404, "Table not found");
             }
+        } elseif ($id === 'search' && isset($_GET['search'])) {
+            // Přidání endpointu pro vyhledávání
+            $searchQuery = $_GET['search'];
+            $searchResults = $db->searchRecords($tableName, $searchQuery);
+            if ($searchResults) {
+                echo json_encode($searchResults);
+            } else {
+                Response::send(404, "No records found matching search criteria");
+            }
+        } elseif ($id === 'options') {
+            // Přidání endpointu pro možnosti cizího klíče
+            $options = $db->getForeignKeyOptions($tableName);
+            if ($options) {
+                echo json_encode($options);
+            } else {
+                Response::send(404, "No options found for referenced table");
+            }
         } elseif ($id) {
             Response::sendPrepared($endpoints->getRecordByIdEndpoint($tableName, $id));
         } else {
             Response::sendPrepared($endpoints->getAllRecords($tableName));
         }
         break;
-
+    
     case 'POST':
         $data = json_decode(file_get_contents('php://input'), true);
         if ($data) {

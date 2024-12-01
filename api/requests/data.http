@@ -1,4 +1,4 @@
-@table = places
+@table = users
 @tableId = 36
 
 ###
@@ -16,6 +16,23 @@ Authorization: Bearer {{token}}
 
 {
 }
+
+###
+GET {{host}}/api/{{table}}/search?search=zk204
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}
+
+###
+GET {{host}}/api/{{table}}/options
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}
+
 
 ###
 POST {{host}}/api/{{table}}

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ItemData } from '../../models/data';
+import { ForeignKeyData, ItemData } from '../../models/data';
 import { Schema, SchemaField } from '../../models/schema';
 import { DataService } from '../../services/data/data.service';
 import { SchemaService } from '../../services/schema/schema.service';
@@ -24,6 +24,7 @@ export class EditItemComponent implements OnInit, OnChanges {
   schema: Schema | undefined;
   editForm: FormGroup;
   formLoaded = false;
+  public foreignKeyData: ForeignKeyData = {} // Mapa cizích klíčů
 
   constructor(
     private fb: FormBuilder,
@@ -57,6 +58,7 @@ export class EditItemComponent implements OnInit, OnChanges {
     try {
       const res = await firstValueFrom(this.schemaService.getSchema(this.tableName));
       this.schema = res.data;
+      this.loadForeignKeyData();
     } catch (error) {
       console.error('Error loading schema:', error);
     }
@@ -76,6 +78,19 @@ export class EditItemComponent implements OnInit, OnChanges {
       await this.createForm();
     } catch (error) {
       console.error('Error loading item data:', error);
+    }
+  }
+
+  // Načítání dat pro cizí klíče
+  async loadForeignKeyData() {
+    if (!this.schema) {
+      return;
+    }
+    for (const column of this.schema?.columns) {
+      if (column.foreign_key) {
+        const options = await firstValueFrom(this.dataService.getForeignKeyOptions(column.foreign_key.referenced_table))
+        this.foreignKeyData[column.name] = options;
+      }
     }
   }
 

@@ -4,7 +4,7 @@
   "rest-client.environmentVariables": {
     "$shared": {
       "version": "v1",
-      "prodToken": "",
+      "prodToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOjM0LCJpYXQiOjE3MzMwMTUyNzcsImV4cCI6MTc2NDU1MTI3NywidXNlciI6eyJmaXJzdE5hbWUiOiJKYW4iLCJsYXN0TmFtZSI6Ik5vdlx1MDBlMWsifX0.WBC1vMjQCzJlN_wV0kbAvbCUJWAs-RqmR6zyAswcSzU",
       "nonProdToken": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOm51bGwsImlhdCI6MTczMjk1NTIzNCwiZXhwIjoxNzY0NDkxMjM0LCJ1c2VyIjp7ImZpcnN0TmFtZSI6bnVsbCwibGFzdE5hbWUiOm51bGx9fQ.5HAYxMfQQ3fODssFsBgp8hNqt6JisCjvwXSoM_qmpmo"
     },
     "local": {

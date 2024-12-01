@@ -58,7 +58,16 @@ export class DataService {
       Authorization: `Bearer ${this.token}`,
       'Content-Type': 'application/json',
     };
-    return this.http.get<ApiResponse<any>>(`${API_CONFIG.apiUrl}/${tableName}/search/${search}`, { headers });
+    return this.http.get<ApiResponse<any>>(`${API_CONFIG.apiUrl}/${tableName}/search?search=${search}`, { headers });
+  }
+
+  // Získání možností pro cizí klíč z odkazované tabulky
+  getForeignKeyOptions(referencedTable: string): Observable<any> {
+    const headers = {
+      Authorization: `Bearer ${this.token}`,
+      'Content-Type': 'application/json',
+    };
+    return this.http.get<ApiResponse<any>>(`${API_CONFIG.apiUrl}/${referencedTable}/options`, { headers });
   }
 
 }

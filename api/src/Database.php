@@ -153,24 +153,66 @@ class Database
     {
         try {
             $result = [];
-
+    
+            // Získání základních informací o tabulce
             $stmt = $this->pdo->prepare("SHOW TABLE STATUS LIKE '$tableName';");
             $stmt->execute();
-
             $status = $stmt->fetch();
-
+    
             $result['name'] = [$status['Name']];
             $result['comment'] = [$status['Comment']];
-
+    
+            // Získání informací o sloupcích tabulky
             $stmt = $this->pdo->prepare("SHOW FULL COLUMNS FROM `$tableName`;");
             $stmt->execute();
-
             $fields = $stmt->fetchAll();
-
+    
+            // Příprava pole pro sloupce
             $columns = [];
-
+    
             foreach ($fields as $field) {
                 $type = $this->mapTypeToSimpleType($field['Type']);
+                
+                // Získání informací o cizím klíči pro tento sloupec
+                $stmt_fk = $this->pdo->prepare("
+                    SELECT 
+                        kcu.CONSTRAINT_NAME AS FOREIGN_KEY_CONSTRAINT, 
+                        kcu.REFERENCED_TABLE_NAME AS REFERENCED_TABLE, 
+                        kcu.REFERENCED_COLUMN_NAME AS REFERENCED_COLUMN
+                    FROM 
+                        INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+                    WHERE 
+                        kcu.TABLE_SCHEMA = DATABASE() 
+                        AND kcu.TABLE_NAME = :tableName
+                        AND kcu.COLUMN_NAME = :columnName
+                        AND kcu.REFERENCED_TABLE_NAME IS NOT NULL;
+                ");
+                $stmt_fk->execute([
+                    ':tableName' => $tableName,
+                    ':columnName' => $field['Field']
+                ]);
+                $foreignKey = $stmt_fk->fetch();
+    
+                // Získání informací o sloupcích, které odkazují na tento sloupec
+                $stmt_ref = $this->pdo->prepare("
+                    SELECT 
+                        kcu.CONSTRAINT_NAME AS REFERENCE_CONSTRAINT,
+                        kcu.TABLE_NAME AS REFERENCE_TABLE,
+                        kcu.COLUMN_NAME AS REFERENCE_COLUMN
+                    FROM 
+                        INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
+                    WHERE 
+                        kcu.TABLE_SCHEMA = DATABASE() 
+                        AND kcu.REFERENCED_TABLE_NAME = :tableName
+                        AND kcu.REFERENCED_COLUMN_NAME = :columnName;
+                ");
+                $stmt_ref->execute([
+                    ':tableName' => $tableName,
+                    ':columnName' => $field['Field']
+                ]);
+                $references = $stmt_ref->fetchAll();
+    
+                // Přidání informací do pole sloupců
                 $columns[] = [
                     'name' => $field['Field'],
                     'type' => $type,
@@ -181,17 +223,29 @@ class Database
                     'extra' => $field['Extra'],
                     'comment' => $field['Comment'],
                     'length' => $this->getLength($field['Type']),
-                    // 'raw' => $field,
+                    'foreign_key' => $foreignKey ? [
+                        'constraint' => $foreignKey['FOREIGN_KEY_CONSTRAINT'],
+                        'referenced_table' => $foreignKey['REFERENCED_TABLE'],
+                        'referenced_column' => $foreignKey['REFERENCED_COLUMN']
+                    ] : null,
+                    'references' => $references ? array_map(function($ref) {
+                        return [
+                            'constraint' => $ref['REFERENCE_CONSTRAINT'],
+                            'table' => $ref['REFERENCE_TABLE'],
+                            'column' => $ref['REFERENCE_COLUMN']
+                        ];
+                    }, $references) : []
                 ];
             }
-
+    
             $result['columns'] = $columns;
-
+    
             return Response::prepare(200, "Schema found", $result);
         } catch (PDOException $e) {
             return Response::prepare(400, "Schema not found", null, $e->getMessage());
         }
     }
+    
 
 // Funkce pro mapování datového typu
     private static function mapTypeToSimpleType($type)
@@ -274,4 +328,68 @@ class Database
         $stmt->execute();
         return $stmt->fetchColumn();
     }
+
+    public function searchRecords(string $tableName, string $searchQuery)
+    {
+        // Získání sloupců, které mají FULLTEXT index
+        $stmt = $this->pdo->prepare("SHOW INDEXES FROM $tableName WHERE Index_type = 'FULLTEXT'");
+        $stmt->execute();
+        $indexes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+        if (empty($indexes)) {
+            return []; // Pokud tabulka nemá FULLTEXT indexy, vracíme prázdné pole
+        }
+    
+        // Seznam sloupců s FULLTEXT indexem
+        $fulltextColumns = array_map(function($index) {
+            return $index['Column_name'];
+        }, $indexes);
+    
+        // Vytváříme dynamický SQL dotaz pro FULLTEXT hledání
+        // $searchQuery = $searchQuery; // Bez přidávání % pro MATCH AGAINST
+        $columns = implode(", ", $fulltextColumns); // Spojení názvů sloupců pro MATCH
+    
+        // Sestavení dotazu pro MATCH AGAINST
+        $sql = "SELECT * FROM $tableName WHERE MATCH($columns) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)";
+        
+        // Příprava a vykonání dotazu
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':searchQuery', $searchQuery);
+        $stmt->execute();
+    
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+
+    public function getForeignKeyOptions(string $referencedTable)
+    {
+        // Nejprve zkontrolujeme, zda tabulka obsahuje sloupec 'name'
+        $stmt = $this->pdo->prepare("SHOW COLUMNS FROM $referencedTable LIKE 'name'");
+        $stmt->execute();
+        $column = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        // Pokud sloupec 'name' existuje, použijeme ho
+        if ($column) {
+            $stmt = $this->pdo->prepare("SELECT id, name FROM $referencedTable");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    
+        // Pokud sloupec 'name' neexistuje, použijeme první index (např. kombinace first_name a last_name)
+        $stmt = $this->pdo->prepare("SHOW INDEX FROM $referencedTable WHERE Key_name = 'first_name_last_name'");
+        $stmt->execute();
+        $index = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+        // Pokud je index definován, použijeme sloupce z indexu
+        if ($index) {
+            $stmt = $this->pdo->prepare("SELECT id, CONCAT(first_name, ' ', last_name) AS name FROM $referencedTable");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    
+        // Pokud tabulka nemá ani 'name', ani vhodný index, vrátíme chybu
+        return null;
+    }
+    
+    
 }

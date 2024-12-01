@@ -1,5 +1,9 @@
 <h1>{{ schema?.comment?.length ? schema?.comment : this.tableName }}</h1>
 
+<div>
+  <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" placeholder="Search..." />
+</div>
+
 @if (data.length > 0) {
 <table>
   <thead>
@@ -19,7 +23,15 @@
     <tr>
       @for (column of schema?.columns; track column) {
         @if (!isSystemColumn(column)) {
-          <td>{{ item[column.name] }}</td>
+          <td>
+            @if (column.foreign_key && this.foreignKeyData[column.name]) {
+              <!-- Pokud je sloupec cizí klíč, zobrazíme name místo id -->
+              {{ getForeignKeyName(column.name, item[column.name]) }}
+            } @else {
+              <!-- Jinak zobrazíme původní hodnotu -->
+              {{ item[column.name] }}
+            }
+          </td>
         }
       }
       <td>
