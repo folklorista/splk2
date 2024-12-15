@@ -1,0 +1,52 @@
+# Prevent directory browsing
+Options -Indexes
+
+# Set encoding for the content
+AddDefaultCharset UTF-8
+
+# Cache control for static files
+<FilesMatch "\.(jpg|jpeg|png|gif|ico|css|js)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 day"
+</FilesMatch>
+
+# Disable caching for non-static files
+<FilesMatch "\.(html|htm|php|cgi|pl|asp)$">
+    ExpiresActive Off
+    Header set Pragma "no-cache"
+    Header set Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate"
+</FilesMatch>
+
+# Handle custom error page
+ErrorDocument 404 /error.html
+
+# Favicon location
+RewriteRule ^favicon.ico$ /favicon.ico [L]
+
+# Custom 404 error page
+RewriteRule ^error.html$ /error.html [L]
+
+# Handle files serving and try fallback to index.php (for SPA or frontend)
+RewriteRule ^files/(.*)$ /www/frontend/dist/splk2/$1 [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.php [L]
+
+# PHP handler and rewrite for all PHP files
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+    Options +ExecCGI
+</FilesMatch>
+
+# Disable access to hidden files like .htaccess
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Optionally disable php7 handling if not needed
+RewriteRule ^(.*)\.php7$ - [F]
+
+# Enable SSI for error pages if needed
+AddType text/html .shtml
+AddOutputFilter INCLUDES .shtml

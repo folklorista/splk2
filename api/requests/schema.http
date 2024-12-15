@@ -6,7 +6,15 @@ Authorization: Bearer {{token}}
 }
 
 ###
-GET {{host}}/api/schema/test
+GET {{host}}/api/schema/groups
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}
+
+###
+GET {{host}}/api/schema/loans
 Content-Type: application/json
 Authorization: Bearer {{token}}
 

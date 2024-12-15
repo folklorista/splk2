@@ -65,6 +65,21 @@ if (!$user) {
     Response::send(401, "Unauthorized access", null, "You must be logged in to access this resource");
 }
 
+// Endpoint pro záznamy na základě cizích klíčů
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['foreignKeys'])) {
+    $table = $_GET['table'] ?? null;
+    if (!$table) {
+        Response::send(400, 'Invalid request', null, 'Table name is required.');
+        return;
+    }
+
+    $queryParams = $_GET;
+    unset($queryParams['table'], $queryParams['foreignKeys']);
+
+    $endpoints->handleForeignKeys($table, $queryParams);
+    return;
+}
+
 // CRUD operace (jen pro přihlášené uživatele)
 switch ($method) {
     case 'GET':
@@ -75,6 +90,9 @@ switch ($method) {
             } else {
                 Response::send(404, "Table not found");
             }
+        } elseif ($tableName === 'categories') {
+            Response::sendPrepared($endpoints->categoriesEndpoint());
+
         } elseif ($id === 'search' && isset($_GET['search'])) {
             // Přidání endpointu pro vyhledávání
             $searchQuery = $_GET['search'];
@@ -98,11 +116,15 @@ switch ($method) {
             Response::sendPrepared($endpoints->getAllRecords($tableName));
         }
         break;
-    
+
     case 'POST':
         $data = json_decode(file_get_contents('php://input'), true);
         if ($data) {
-            Response::sendPrepared($endpoints->createRecordEndpoint($tableName, $data));
+            if ($tableName === 'categories') {
+                Response::sendPrepared($endpoints->saveOrUpdateCategoriesTree($data));
+            } else {
+                Response::sendPrepared($endpoints->createRecordEndpoint($tableName, $data));
+            }
         } else {
             Response::send(400, "Empty input");
         }

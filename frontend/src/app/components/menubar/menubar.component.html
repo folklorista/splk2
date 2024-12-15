@@ -1,0 +1,56 @@
+<nav>
+  @if (isLoggedIn()) {
+    <ul class="menubar">
+      <li class="menu-item">
+        <a routerLink="/" routerLinkActive="active-link">Domů</a>
+      </li>
+      <li class="menu-item">
+        <span>Audit</span>
+        <ul class="submenu">
+          <li><a routerLink="/audit_actions" routerLinkActive="active-link">Akce auditu</a></li>
+          <li><a routerLink="/audit_logs" routerLinkActive="active-link">Logy auditu</a></li>
+        </ul>
+      </li>
+      <li class="menu-item">
+        <span>Osoby</span>
+        <ul class="submenu">
+          <li><a routerLink="/persons" routerLinkActive="active-link">Osoby</a></li>
+          <li><a routerLink="/users" routerLinkActive="active-link">Uživatelé</a></li>
+          <li><a routerLink="/roles" routerLinkActive="active-link">Role</a></li>
+          <li><a routerLink="/users_groups" routerLinkActive="active-link">Uživatelé × Skupiny</a></li>
+          <li><a routerLink="/users_roles" routerLinkActive="active-link">Uživatelé × Role</a></li>
+          <li><a routerLink="/groups" routerLinkActive="active-link">Skupiny</a></li>
+        </ul>
+      </li>
+      <li class="menu-item">
+        <span>Zápůjčky</span>
+        <ul class="submenu">
+          <li><a routerLink="/loans" routerLinkActive="active-link">Zápůjčky</a></li>
+          <li><a routerLink="/loans_items" routerLinkActive="active-link">Položky zápůjček</a></li>
+        </ul>
+      </li>
+      <li class="menu-item">
+        <span>Předměty</span>
+        <ul class="submenu">
+          <li><a routerLink="/categories" routerLinkActive="active-link">Kategorie</a></li>
+          <li><a routerLink="/category_labels" routerLinkActive="active-link">Štítky kategorií</a></li>
+          <li><a routerLink="/items" routerLinkActive="active-link">Předměty</a></li>
+          <li><a routerLink="/items_labels" routerLinkActive="active-link">Štítky předmětů</a></li>
+          <li><a routerLink="/notifications" routerLinkActive="active-link">Notifikace</a></li>
+          <li><a routerLink="/files" routerLinkActive="active-link">Soubory</a></li>
+        </ul>
+      </li>
+      <li class="menu-item">
+        <span>Události a místa</span>
+        <ul class="submenu">
+          <li><a routerLink="/events" routerLinkActive="active-link">Události</a></li>
+          <li><a routerLink="/places" routerLinkActive="active-link">Místa</a></li>
+        </ul>
+      </li>
+      <li class="menu-item" id="user-info">
+        {{ user?.firstName }} {{ user?.lastName }}
+        <a id="logout" (click)="logout()">odhlásit</a>
+      </li>
+    </ul>
+  }
+</nav>

@@ -29,7 +29,8 @@
               {{ getForeignKeyName(column.name, item[column.name]) }}
             } @else {
               <!-- Jinak zobrazíme původní hodnotu -->
-              {{ item[column.name] }}
+              <!-- Pokud je hodnota null, zobrazíme pomlčku -->
+              {{ item[column.name] !== null ? item[column.name] : '&mdash;' }}
             }
           </td>
         }
@@ -49,11 +50,10 @@
     }
   </tbody>
 </table>
+} @else {
+  <p>No data available</p>
+}
 
 <a routerLink="/{{ this.tableName }}/add">
   <button>Přidat</button>
 </a>
-
-} @else {
-<p>No data available</p>
-}

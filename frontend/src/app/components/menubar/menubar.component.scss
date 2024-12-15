@@ -1,0 +1,108 @@
+a[routerLink] {
+  padding: 0 0.5rem;
+}
+
+a[routerLink]:not(.active-link),
+#logout {
+  cursor: pointer;
+  color: #007bff;
+  text-decoration: none;
+
+  &:hover {
+    color: #0056b3;
+    text-decoration: underline;
+  }
+
+  &:active {
+    color: #003d80;
+  }
+}
+
+.menubar {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 20px;
+
+  .menu-item {
+    position: relative;
+
+    > span, > a {
+      cursor: pointer;
+      padding: 10px 15px;
+      display: inline-block;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+    > span {
+      background-color: #0073e6;
+      color: #fff;
+      &:hover {
+        background-color: #005bb5;
+      }
+    }
+
+    li a {
+      color: #333;
+      text-decoration: none;
+      padding: 10px 0;
+      display: inline-block;
+      width: 100%;
+
+      &:hover {
+        background-color: #f9f9f9;
+      }
+    }
+
+    // Styl pro submenu
+    .submenu {
+      list-style: none;
+      padding: 10px 0;
+      margin: 0;
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 100%;
+      background-color: #ffffff;
+      border: 1px solid #ccc;
+      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      z-index: 10;
+      min-width: 200px; // Minimální šířka pro submenu
+      white-space: nowrap; // Zabraňuje zalamování textu
+      padding: 10px;
+
+      // Pro zanořená submenu
+      .menu-item {
+        position: relative;
+
+        > span {
+          padding: 8px 12px;
+          white-space: nowrap;
+          display: block;
+          background-color: #f9f9f9;
+          color: #333;
+
+          &:hover {
+            background-color: #0073e6;
+            color: #fff;
+          }
+        }
+
+        // Styl pro zanořené submenu
+        .submenu {
+          top: 0;
+          left: 100%;
+          border-radius: 4px;
+          min-width: 200px; // Minimální šířka pro zanořená submenu
+        }
+      }
+    }
+
+    // Zobrazení submenu při najetí
+    &:hover > .submenu {
+      display: block;
+    }
+  }
+}
