@@ -94,3 +94,4 @@ This project is licensed under the MIT License.
 - One-click actions (add to group)
 - Checkboxes
 - Table sort
+- bug: při prázdné tabulce persons se po rozkliknutí users nenačtou persons, ale data z users

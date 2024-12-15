@@ -1,0 +1,190 @@
+<div class="soucastka-card">
+  <h2>Detail krojové součástky</h2>
+
+  <!-- Evidenční číslo -->
+  <div class="field">
+    <strong>Evidenční číslo:</strong>
+    <span id="evidence-number">12345</span>
+  </div>
+
+  <!-- Zařazení do stromu kategorií -->
+  <div class="field">
+    <strong>Zařazení do stromu kategorií:</strong>
+    <span id="category-tree">kroj > pánský > Horňácko > košile</span>
+  </div>
+
+  <!-- Konfekční velikost -->
+  <div class="field">
+    <strong>Konfekční velikost:</strong>
+    <span id="size">M</span>
+  </div>
+
+  <!-- Stav -->
+  <div class="field">
+    <strong>Stav:</strong>
+    <span id="condition">1 - Nový</span>
+  </div>
+
+  <!-- Vyřazená součástka -->
+  <div class="field">
+    <strong>Vyřazená součástka:</strong>
+    <span id="excluded">Ne</span>
+  </div>
+
+  <!-- Poznámka -->
+  <div class="field">
+    <strong>Poznámka:</strong>
+    <p id="note">Bez poznámek</p>
+  </div>
+
+  <!-- Fotografie -->
+  <div class="field">
+    <strong>Fotografie:</strong>
+    <img id="photo" src="example-photo.jpg" alt="Fotografie součástky">
+  </div>
+
+  <!-- Tabulka výpůjček -->
+  <div class="field">
+    <strong>Výpůjčky:</strong>
+    <table class="loan-table">
+      <thead>
+        <tr>
+          <th>Datum vypůjčení</th>
+          <th>Datum vrácení</th>
+          <th>Jméno osoby</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>01.12.2024</td>
+          <td>10.12.2024</td>
+          <td>Jan Novák</td>
+        </tr>
+        <tr>
+          <td>15.12.2024</td>
+          <td>-</td>
+          <td>Petra Svobodová</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Historie oprav -->
+  <div class="field">
+    <strong>Historie oprav:</strong>
+    <table class="repair-table">
+      <thead>
+        <tr>
+          <th>Datum opravy</th>
+          <th>Typ opravy</th>
+          <th>Poznámka</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>05.12.2024</td>
+          <td>Šití</td>
+          <td>Opravená trhlina na rukávu</td>
+        </tr>
+        <tr>
+          <td>20.11.2024</td>
+          <td>Čištění</td>
+          <td>Odstranění skvrn</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Cena / Hodnota -->
+  <div class="field">
+    <strong>Cena / Hodnota:</strong>
+    <div>
+      <span id="price">5000 CZK</span>
+      <div>
+        <strong>Datum pořízení:</strong> <span id="purchase-date">01.11.2023</span>
+      </div>
+      <div>
+        <strong>Původ:</strong> <span id="source">Nová</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Štítky -->
+  <div class="field">
+    <strong>Štítky:</strong>
+    <ul id="tags">
+      <li>černá výšivka</li>
+    </ul>
+  </div>
+</div>
+
+<style>
+  .soucastka-card {
+    font-family: Arial, sans-serif;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }
+
+  .soucastka-card h2 {
+    text-align: center;
+    color: #333;
+  }
+
+  .field {
+    margin-bottom: 15px;
+  }
+
+  .field strong {
+    display: inline-block;
+    width: 200px;
+    color: #555;
+  }
+
+  .field span, .field p {
+    color: #000;
+  }
+
+  .loan-table, .repair-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  .loan-table th, .repair-table th {
+    background-color: #f2f2f2;
+    padding: 8px;
+    border: 1px solid #ccc;
+    text-align: left;
+  }
+
+  .loan-table td, .repair-table td {
+    padding: 8px;
+    border: 1px solid #ccc;
+  }
+
+  #photo {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  #tags {
+    list-style: none;
+    padding: 0;
+  }
+
+  #tags li {
+    display: inline;
+    background-color: #e0e0e0;
+    color: #333;
+    padding: 5px 10px;
+    margin-right: 5px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+</style>

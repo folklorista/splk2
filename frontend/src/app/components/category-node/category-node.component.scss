@@ -1,0 +1,70 @@
+.category-item {
+  margin: 10px 0;
+}
+
+.category-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.category-content span {
+  cursor: pointer;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.category-content span:hover {
+  text-decoration: underline;
+}
+
+.category-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+.btn.icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 5px;
+}
+
+.btn.icon.edit {
+  color: #ffc107;
+}
+
+.btn.icon.delete {
+  color: #dc3545;
+}
+
+.btn.icon.add {
+  color: #28a745;
+}
+
+.btn.icon:hover {
+  opacity: 0.8;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.btn.icon.move {
+  color: #17a2b8;
+}
+
+.btn.icon.up,
+.btn.icon.down {
+  color: #6c757d;
+}
+
+.btn.icon.up:hover,
+.btn.icon.down:hover,
+.btn.icon.move:hover {
+  opacity: 0.8;
+}

@@ -17,28 +17,48 @@
         <label>{{ column?.comment?.length ? column?.comment : column.name }}</label>
         <div>
           @if (column.name === 'password') {
-            <input formControlName="{{ column.name }}" type="password" />
+            <input formControlName="{{ column.name }}" type="password" [required]="!column.null" />
           } @else if (column.foreign_key) {
-            <select formControlName="{{ column.name }}">
+            <select formControlName="{{ column.name }}" [required]="!column.null">
               <option *ngFor="let option of foreignKeyData[column.name]" [value]="option.id">{{ option.name }}</option>
             </select>
           } @else if (column.type === 'string') {
-            <input formControlName="{{ column.name }}" type="text" />
+            <input formControlName="{{ column.name }}" type="text" [required]="!column.null" />
           } @else if (column.type === 'number') {
-            <input formControlName="{{ column.name }}" type="number" />
-          } @else if (column.type === 'Date') {
-            <input formControlName="{{ column.name }}" type="datetime-local" />
+            <input formControlName="{{ column.name }}" type="number" [required]="!column.null" />
+          } @else if (column.type === 'date') {
+            <input formControlName="{{ column.name }}" type="date" [required]="!column.null" />
+          } @else if (column.type === 'datetime') {
+            <input formControlName="{{ column.name }}" type="datetime-local" [required]="!column.null" />
           } @else if (column.type === 'boolean') {
             <input formControlName="{{ column.name }}" type="checkbox" />
           } @else if (column.type === 'text') {
-            <textarea formControlName="{{ column.name }}"></textarea>
+            <textarea formControlName="{{ column.name }}" [required]="!column.null"></textarea>
           } @else if (column.type === 'enum') {
-            <select formControlName="{{ column.name }}">
+            <select formControlName="{{ column.name }}" [required]="!column.null">
               @for (option of column.options; track option) {
                 <option [value]="option">{{ option }}</option>
               }
             </select>
           }
+        </div>
+
+        <!-- Chybové hlášení -->
+        <div *ngIf="editForm.get(column.name)?.invalid && editForm.get(column.name)?.touched" class="error">
+          <small>
+            @if (!column.null && editForm.get(column.name)?.errors?.['required']) {
+              {{ column?.comment?.length ? column?.comment : column.name }} je povinný.
+            }
+            @if (editForm.get(column.name)?.errors?.['email']) {
+              Zadejte platný email.
+            }
+            @if (editForm.get(column.name)?.errors?.['min']) {
+              Hodnota musí být větší než {{ editForm.get(column.name)?.errors?.['min'].min }}.
+            }
+            @if (editForm.get(column.name)?.errors?.['max']) {
+              Hodnota musí být menší než {{ editForm.get(column.name)?.errors?.['max'].max }}.
+            }
+          </small>
         </div>
       }
     }

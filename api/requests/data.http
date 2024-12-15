@@ -1,4 +1,8 @@
-@table = users
+@table = users_groups
+@foreignKey1 = group_id
+@foreignKey1Value = 5
+@foreignKey2 = group_id
+@foreignKey2Value = 7
 @tableId = 36
 
 ###
@@ -6,7 +10,7 @@ GET {{host}}/api/{{table}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
-{
+{   
 }
 
 ###
@@ -62,4 +66,12 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
+}
+
+###
+GET {{host}}/api/{{table}}?foreignKeys=true&{{foreignKey1}}={{foreignKey1Value}}&{{foreignKey2}}={{foreignKey2Value}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{   
 }

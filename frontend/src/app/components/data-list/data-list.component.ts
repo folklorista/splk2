@@ -45,7 +45,7 @@ export class DataListComponent implements OnInit {
     }
     try {
       this.schemaService.getSchema(this.tableName).subscribe(async res => {
-        this.schema = res.data;
+        this.schema = res?.data ?? [];
         await this.loadForeignKeyData(); // Načíst data pro cizí klíče
       });
     } catch (error) {
@@ -64,14 +64,14 @@ export class DataListComponent implements OnInit {
       // Pokud je aktivní hledání, použijeme vyhledávací endpoint
       if (this.searchQuery) {
         this.dataService.search(this.tableName, this.searchQuery).subscribe(res => {
-          this.data = res.data;
+          this.data = res?.data ?? [];
           if (this.data.length > 0) {
             this.keys = Object.keys(this.data[0]);
           }
         });
       } else {
         this.dataService.getData(this.tableName).subscribe(async res => {
-          this.data = res.data;
+          this.data = res?.data ?? [];
           if (this.data.length > 0) {
             this.keys = Object.keys(this.data[0]);
           }

@@ -1,0 +1,16 @@
+###
+
+GET {{host}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{   
+}
+
+###
+
+POST {{host}}/api/categories
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{"id":1,"name":"Kroj","children":[{"id":2,"name":"pánský","children":[{"id":6,"name":"Horňácko","children":[{"id":8,"name":"Košile","children":[]},{"name":"traslavice","children":[]}]},{"id":7,"name":"Moravské Kopanice","children":[{"id":9,"name":"Komplet","children":[]}]}]},{"id":3,"name":"dámský","children":[{"id":10,"name":"Slovácko","children":[{"id":12,"name":"Šaty","children":[]}]},{"id":11,"name":"Morava","children":[{"id":13,"name":"Sukně","children":[]}]}]},{"id":4,"name":"dívčí","children":[]},{"id":5,"name":"chlapecký","children":[]}]}

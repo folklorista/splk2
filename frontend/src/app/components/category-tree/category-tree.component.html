@@ -1,0 +1,17 @@
+<h1>Strom kategorií</h1>
+@if (rootCategory) {
+<button (click)="saveCategories()" class="btn save">💾 Uložit změny</button>
+<app-category-node
+  [category]="rootCategory"
+  [parent]="null"
+  [index]="null"
+  (onEdit)="editCategory($event)"
+  (onDelete)="deleteCategory($event)"
+  (onAdd)="addSubcategory($event)"
+  (onMove)="moveCategory($event)"
+  (onSwap)="swapCategories($event)"
+>
+</app-category-node>
+} @else {
+  <p>No data available</p>
+}

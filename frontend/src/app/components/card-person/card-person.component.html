@@ -1,0 +1,45 @@
+<div class="card-person">
+  <h1>{{ person.first_name }} {{ person.last_name }}</h1>
+  <p>
+    <strong>Email:</strong> {{ person.email }}<br />
+    <strong>Phone:</strong> {{ person.phone }}
+  </p>
+
+  <h2>Zápůjčky</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Začátek</th>
+        <th>Konec</th>
+        <th>Uzavřeno</th>
+        <th>Komentář</th>
+        <th>Položky</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (loan of loans; track loan) {
+      <tr>
+        <td>{{ loan.start_date | date: 'short' }}</td>
+        <td>{{ loan.end_date | date: 'short' }}</td>
+        <td>{{ loan.closed_date | date: 'short' }}</td>
+        <td>{{ loan.comment }}</td>
+        <td>
+          <ul>
+            @for (item of loan.loan_items; track item) {
+            <li>
+              <strong>ID:</strong> {{ item.item_id }},
+              <strong>Vráceno:</strong> {{ item.return_date | date: 'short' }},
+              <strong>Komentář:</strong> {{ item.comment }}
+            </li>
+            }
+          </ul>
+        </td>
+      </tr>
+      }
+    </tbody>
+  </table>
+
+  @if (loans.length === 0) {
+  <p>Žádné zápůjčky</p>
+  }
+</div>

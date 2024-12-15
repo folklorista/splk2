@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+
 import { ForeignKeyData, ItemData } from '../../models/data';
 import { Schema, SchemaField } from '../../models/schema';
 import { DataService } from '../../services/data/data.service';
 import { SchemaService } from '../../services/schema/schema.service';
-import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-edit-item',

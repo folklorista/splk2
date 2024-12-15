@@ -112,4 +112,129 @@ class Endpoints
         return $this->db->delete($table, $id);
     }
 
+    public function handleForeignKeys($table, $queryParams)
+    {
+        // Sestavení podmínek WHERE na základě queryParams
+        $conditions = [];
+        foreach ($queryParams as $key => $value) {
+            if ($this->db->isForeignKey($table, $key)) {
+                $conditions[] = "`$key` = '$value'";
+            }
+        }
+
+        if (empty($conditions)) {
+            Response::send(400, 'No valid foreign keys provided.');
+            return;
+        }
+
+        $whereClause = implode(' AND ', $conditions);
+
+        // Volání funkce getAll s generovaným WHERE
+        $result = $this->db->getAll($table, $whereClause);
+
+        // Zpracování výsledku z getAll
+        if ($result['statusCode'] === 200) {
+            Response::send(200, 'Records found', $result['data']);
+        } elseif ($result['statusCode'] === 204) {
+            Response::send(204, 'No records found');
+        } else {
+            Response::send(500, 'Error retrieving records', null, $result['error'] ?? 'Unknown error');
+        }
+    }
+
+    public function getCategoriesTree(): array
+    {
+        // Načte data přes třídu Database
+        $categories = $this->db->getAllCategories();
+
+        // Převod na stromovou strukturu
+        return $this->buildCategoriesTree($categories);
+    }
+
+    private function buildCategoriesTree(array $categories, int $parentId = null): array
+    {
+        Logger::log($categories);
+        $tree = [];
+        foreach ($categories as $category) {
+            if ($category['parent_id'] === $parentId) {
+                $children = $this->buildCategoriesTree($categories, $category['id']);
+                $tree[] = [
+                    'id' => $category['id'],
+                    'name' => $category['name'],
+                    'children' => $children,
+                ];
+            }
+        }
+        return $tree;
+    }
+
+    public function categoriesEndpoint(): void
+    {
+        $tree = $this->getCategoriesTree();
+        Response::send(200, 'Records found', $tree);
+    }
+
+    public function saveOrUpdateCategoriesTree(array $categories, ?int $parentId = null): void
+    {
+        foreach ($categories as $index => $category) {
+            // Zkontrolujeme, zda má kategorie platné jméno
+            if (empty($category['name'])) {
+                Logger::log($category);
+                throw new \InvalidArgumentException("Kategorie musí mít název.");
+            }
+
+            // Zpracování ID (existuje nebo ne)
+            $categoryId = null;
+
+            if (!empty($category['id'])) {
+                $exists = $this->db->categoryExists($category['id']);
+                if ($exists) {
+                    // Aktualizace existující kategorie
+                    $this->db->updateCategory([
+                        'id' => $category['id'],
+                        'name' => $category['name'],
+                        'parent_id' => $parentId,
+                        'position' => $index,
+                    ]);
+                    $categoryId = $category['id'];
+                } else {
+                    // ID neexistuje – vytvoříme nový záznam
+                    $categoryId = $this->db->insertCategory([
+                        'name' => $category['name'],
+                        'parent_id' => $parentId,
+                        'position' => $index,
+                    ]);
+                }
+            } else {
+                // Vytvoříme novou kategorii
+                $categoryId = $this->db->insertCategory([
+                    'name' => $category['name'],
+                    'parent_id' => $parentId,
+                    'position' => $index,
+                ]);
+            }
+
+            // Rekurzivní zpracování dětí, pokud existují
+            if (!empty($category['children']) && is_array($category['children'])) {
+                $this->saveOrUpdateCategoriesTree($category['children'], $categoryId);
+            }
+        }
+    }
+
+    public function categoriesSaveOrUpdateEndpoint(): void
+    {
+        // Načtení dat z requestu
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!$data || !isset($data['children'])) {
+            Response::send(400, 'Invalid data', $data);
+            return;
+        }
+
+        // Aktualizace nebo uložení nového stromu
+        $this->saveOrUpdateCategoriesTree($data['children']);
+
+        Response::send(200, 'Categories saved or updated successfully', $data);
+    }
+
 }

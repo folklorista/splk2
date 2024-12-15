@@ -4,7 +4,7 @@ export interface Schema {
   columns: SchemaField[];
 }
 
-export type SchemaFieldType = 'number' | 'string' | 'enum' | 'Date' | 'boolean' | 'text';
+export type SchemaFieldType = 'number' | 'string' | 'enum' | 'date' | 'datetime' | 'boolean' | 'text';
 
 export interface SchemaField {
   [x: string]: any;
