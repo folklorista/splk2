@@ -153,7 +153,6 @@ class Endpoints
 
     private function buildCategoriesTree(array $categories, int $parentId = null): array
     {
-        Logger::log($categories);
         $tree = [];
         foreach ($categories as $category) {
             if ($category['parent_id'] === $parentId) {
@@ -168,18 +167,40 @@ class Endpoints
         return $tree;
     }
 
+    private function flattenCategoriesTree(array $tree, int $parentId = null): array
+    {
+        $flat = [];
+    
+        // Zpracování aktuálního uzlu stromu
+        $flat[] = [
+            'id' => $tree['id'] ?? null, // Ošetření chybějícího ID
+            'name' => $tree['name'] ?? 'Unknown', // Ošetření chybějícího názvu
+            'parent_id' => $parentId,
+        ];
+    
+        // Pokud uzel obsahuje děti, zpracuj je rekurzivně
+        if (!empty($tree['children']) && is_array($tree['children'])) {
+            foreach ($tree['children'] as $child) {
+                $flat = array_merge($flat, $this->flattenCategoriesTree($child, $tree['id'] ?? null));
+            }
+        }
+    
+        return $flat;
+    }
+
     public function categoriesEndpoint(): void
     {
         $tree = $this->getCategoriesTree();
         Response::send(200, 'Records found', $tree);
     }
 
-    public function saveOrUpdateCategoriesTree(array $categories, ?int $parentId = null): void
+    public function saveOrUpdateCategoriesTree(array $tree, ?int $parentId = null): void
     {
+        $categories = $this->flattenCategoriesTree($tree, $parentId);
+
         foreach ($categories as $index => $category) {
             // Zkontrolujeme, zda má kategorie platné jméno
             if (empty($category['name'])) {
-                Logger::log($category);
                 throw new \InvalidArgumentException("Kategorie musí mít název.");
             }
 
@@ -193,7 +214,7 @@ class Endpoints
                     $this->db->updateCategory([
                         'id' => $category['id'],
                         'name' => $category['name'],
-                        'parent_id' => $parentId,
+                        'parent_id' => $category['parent_id'],
                         'position' => $index,
                     ]);
                     $categoryId = $category['id'];
@@ -201,7 +222,7 @@ class Endpoints
                     // ID neexistuje – vytvoříme nový záznam
                     $categoryId = $this->db->insertCategory([
                         'name' => $category['name'],
-                        'parent_id' => $parentId,
+                        'parent_id' => $category['parent_id'],
                         'position' => $index,
                     ]);
                 }
@@ -209,7 +230,7 @@ class Endpoints
                 // Vytvoříme novou kategorii
                 $categoryId = $this->db->insertCategory([
                     'name' => $category['name'],
-                    'parent_id' => $parentId,
+                    'parent_id' => $category['parent_id'],
                     'position' => $index,
                 ]);
             }
@@ -221,18 +242,15 @@ class Endpoints
         }
     }
 
-    public function categoriesSaveOrUpdateEndpoint(): void
+    public function categoriesSaveOrUpdateEndpoint($data): void
     {
-        // Načtení dat z requestu
-        $data = json_decode(file_get_contents('php://input'), true);
-
         if (!$data || !isset($data['children'])) {
             Response::send(400, 'Invalid data', $data);
             return;
         }
 
         // Aktualizace nebo uložení nového stromu
-        $this->saveOrUpdateCategoriesTree($data['children']);
+        $this->saveOrUpdateCategoriesTree($data);
 
         Response::send(200, 'Categories saved or updated successfully', $data);
     }

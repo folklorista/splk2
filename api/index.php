@@ -121,7 +121,7 @@ switch ($method) {
         $data = json_decode(file_get_contents('php://input'), true);
         if ($data) {
             if ($tableName === 'categories') {
-                Response::sendPrepared($endpoints->saveOrUpdateCategoriesTree($data));
+                Response::sendPrepared($endpoints->categoriesSaveOrUpdateEndpoint($data));
             } else {
                 Response::sendPrepared($endpoints->createRecordEndpoint($tableName, $data));
             }
