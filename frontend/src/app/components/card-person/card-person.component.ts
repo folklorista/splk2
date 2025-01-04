@@ -6,11 +6,10 @@ import { tableNames } from '../../types';
 
 
 @Component({
-  selector: 'app-card-person',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './card-person.component.html',
-  styleUrl: './card-person.component.scss'
+    selector: 'app-card-person',
+    imports: [CommonModule],
+    templateUrl: './card-person.component.html',
+    styleUrl: './card-person.component.scss'
 })
 export class CardPersonComponent implements OnInit {
   @Input() personId!: number;

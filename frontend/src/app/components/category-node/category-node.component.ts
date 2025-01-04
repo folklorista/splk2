@@ -1,11 +1,10 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
-  selector: 'app-category-node',
-  templateUrl: './category-node.component.html',
-  styleUrls: ['./category-node.component.scss'],
-  standalone: true,
-  imports: []
+    selector: 'app-category-node',
+    templateUrl: './category-node.component.html',
+    styleUrls: ['./category-node.component.scss'],
+    imports: []
 })
 export class CategoryNodeComponent {
   @Input() category!: { name: string; children: any[] };

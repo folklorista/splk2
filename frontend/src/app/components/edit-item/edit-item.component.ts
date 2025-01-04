@@ -10,11 +10,10 @@ import { DataService } from '../../services/data/data.service';
 import { SchemaService } from '../../services/schema/schema.service';
 
 @Component({
-  selector: 'app-edit-item',
-  standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, CommonModule],
-  templateUrl: './edit-item.component.html',
-  styleUrl: './edit-item.component.scss'
+    selector: 'app-edit-item',
+    imports: [ReactiveFormsModule, RouterLink, CommonModule],
+    templateUrl: './edit-item.component.html',
+    styleUrl: './edit-item.component.scss'
 })
 export class EditItemComponent implements OnInit, OnChanges {
   @Input() tableName: string | undefined;

@@ -4,12 +4,11 @@ import { DataService } from '../../services/data/data.service';
 import { tableNames } from '../../types';
 
 @Component({
-  selector: 'app-category-tree',
-  templateUrl: './category-tree.component.html',
-  styleUrls: ['./category-tree.component.scss'],
-  standalone: true,
-  imports: [CategoryNodeComponent],
-  providers: [DataService]
+    selector: 'app-category-tree',
+    templateUrl: './category-tree.component.html',
+    styleUrls: ['./category-tree.component.scss'],
+    imports: [CategoryNodeComponent],
+    providers: [DataService]
 })
 export class CategoryTreeComponent {
   rootCategory: any;

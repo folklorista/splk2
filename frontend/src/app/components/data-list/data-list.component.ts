@@ -10,11 +10,10 @@ import { ForeignKeyData } from '../../models/data';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-data-list',
-  templateUrl: './data-list.component.html',
-  styleUrls: ['./data-list.component.scss'],
-  standalone: true,
-  imports: [RouterLink, CommonModule, FormsModule],
+    selector: 'app-data-list',
+    templateUrl: './data-list.component.html',
+    styleUrls: ['./data-list.component.scss'],
+    imports: [RouterLink, CommonModule, FormsModule]
 })
 export class DataListComponent implements OnInit {
   @Input() tableName: string | undefined;

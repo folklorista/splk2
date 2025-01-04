@@ -14,11 +14,10 @@ type TokenData = {
 }
 
 @Component({
-  selector: 'app-menubar',
-  standalone: true,
-  imports: [RouterLink],
-  templateUrl: './menubar.component.html',
-  styleUrl: './menubar.component.scss'
+    selector: 'app-menubar',
+    imports: [RouterLink],
+    templateUrl: './menubar.component.html',
+    styleUrl: './menubar.component.scss'
 })
 export class MenubarComponent {
 
