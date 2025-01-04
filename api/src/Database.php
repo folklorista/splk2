@@ -438,8 +438,6 @@ class Database
        
     public function insertCategory(array $categoryData): int
     {
-        Logger::log('insertCategory');
-        Logger::log($categoryData);
         $stmt = $this->pdo->prepare("INSERT INTO categories (name, parent_id, position, created_at, updated_at)
                   VALUES (:name, :parent_id, :position, NOW(), NOW())");
         $stmt->execute($categoryData);
@@ -450,9 +448,6 @@ class Database
     
     public function updateCategory(array $categoryData): void
     {
-        Logger::log('updateCategory');
-        Logger::log($categoryData);
-
         $stmt = $this->pdo->prepare("UPDATE categories 
                   SET name = :name, parent_id = :parent_id, position = :position, updated_at = NOW()
                   WHERE id = :id");
