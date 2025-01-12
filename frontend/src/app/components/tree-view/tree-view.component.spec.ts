@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CategoryNodeComponent } from './category-node.component';
+import { TreeViewComponent } from './tree-view.component';
 
-describe('CategoryNodeComponent', () => {
-  let component: CategoryNodeComponent;
-  let fixture: ComponentFixture<CategoryNodeComponent>;
+describe('TreeViewComponent', () => {
+  let component: TreeViewComponent;
+  let fixture: ComponentFixture<TreeViewComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [CategoryNodeComponent]
+      imports: [TreeViewComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(CategoryNodeComponent);
+    fixture = TestBed.createComponent(TreeViewComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

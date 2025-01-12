@@ -26,7 +26,7 @@
           <td>
             @if (column.foreign_key && this.foreignKeyData[column.name]) {
               <!-- Pokud je sloupec cizí klíč, zobrazíme name místo id -->
-              {{ getForeignKeyName(column.name, item[column.name]) }}
+              {{ getForeignKeyName(column.name, item[column.name], true) }}
             } @else {
               <!-- Jinak zobrazíme původní hodnotu -->
               <!-- Pokud je hodnota null, zobrazíme pomlčku -->

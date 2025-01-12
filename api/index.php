@@ -90,7 +90,7 @@ switch ($method) {
             } else {
                 Response::send(404, "Table not found");
             }
-        } elseif ($tableName === 'categories') {
+        } elseif ($tableName === 'categories' && !isset($id)) {
             Response::sendPrepared($endpoints->categoriesEndpoint());
 
         } elseif ($id === 'search' && isset($_GET['search'])) {
@@ -120,11 +120,7 @@ switch ($method) {
     case 'POST':
         $data = json_decode(file_get_contents('php://input'), true);
         if ($data) {
-            if ($tableName === 'categories') {
-                Response::sendPrepared($endpoints->categoriesSaveOrUpdateEndpoint($data));
-            } else {
-                Response::sendPrepared($endpoints->createRecordEndpoint($tableName, $data));
-            }
+            Response::sendPrepared($endpoints->createRecordEndpoint($tableName, $data));
         } else {
             Response::send(400, "Empty input");
         }
@@ -139,7 +135,16 @@ switch ($method) {
                 Response::send(400, "Empty input");
             }
         } else {
-            Response::send(400, "ID is required");
+            if ($tableName === 'categories') {
+                $data = json_decode(file_get_contents('php://input'), true);
+                if ($data) {
+                    Response::sendPrepared($endpoints->categoriesSaveOrUpdateEndpoint($data));
+                } else {
+                    Response::send(400, "Empty input");
+                }
+            } else {
+                Response::send(400, "ID is required");
+            }
         }
         break;
 

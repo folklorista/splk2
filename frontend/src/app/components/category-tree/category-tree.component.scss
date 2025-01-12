@@ -27,6 +27,7 @@ ul {
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
+  margin-right: 1em;
 }
 
 .btn.edit {
@@ -68,4 +69,22 @@ ul {
 
 .btn.save:hover {
   background-color: #218838;
+}
+
+
+.category-item-root {
+  position: relative; // Zajišťuje správné vrstvení
+  z-index: 1; // Stejná vrstva jako ostatní položky
+}
+
+.category-item-root.cdk-drop-list-dragging {
+  z-index: 10; // Zvýšení vrstvy pouze během přetahování
+}
+
+/* Kontejner pro celý strom */
+.tree-container {
+  position: relative;
+  margin-left: 20px; /* Odsazení pro propojení čar */
+  padding-left: 20px; /* Odsazení od levého okraje */
+  border-left: 2px solid #ddd; /* Vizualizace spojení mezi položkami */
 }

@@ -158,7 +158,7 @@ class Endpoints
             if ($category['parent_id'] === $parentId) {
                 $children = $this->buildCategoriesTree($categories, $category['id']);
                 $tree[] = [
-                    'id' => $category['id'],
+                    'id' => (string) $category['id'],
                     'name' => $category['name'],
                     'children' => $children,
                 ];
@@ -167,26 +167,28 @@ class Endpoints
         return $tree;
     }
 
-    private function flattenCategoriesTree(array $tree, int $parentId = null): array
+    private function flattenCategoriesTree(array $trees, int $parentId = null): array
     {
         $flat = [];
     
-        // Zpracování aktuálního uzlu stromu
-        $flat[] = [
-            'id' => $tree['id'] ?? null, // Ošetření chybějícího ID
-            'name' => $tree['name'] ?? 'Unknown', // Ošetření chybějícího názvu
-            'parent_id' => $parentId,
-        ];
+        // Iterace přes všechny kořenové uzly
+        foreach ($trees as $tree) {
+            // Zpracování aktuálního uzlu stromu
+            $flat[] = [
+                'id' => $tree['id'] ?? null, // Ošetření chybějícího ID
+                'name' => $tree['name'] ?? 'Unknown', // Ošetření chybějícího názvu
+                'parent_id' => $parentId,
+            ];
     
-        // Pokud uzel obsahuje děti, zpracuj je rekurzivně
-        if (!empty($tree['children']) && is_array($tree['children'])) {
-            foreach ($tree['children'] as $child) {
-                $flat = array_merge($flat, $this->flattenCategoriesTree($child, $tree['id'] ?? null));
+            // Pokud uzel obsahuje děti, zpracuj je rekurzivně
+            if (!empty($tree['children']) && is_array($tree['children'])) {
+                $flat = array_merge($flat, $this->flattenCategoriesTree($tree['children'], $tree['id'] ?? null));
             }
         }
     
         return $flat;
     }
+    
 
     public function categoriesEndpoint(): void
     {
@@ -197,6 +199,8 @@ class Endpoints
     public function saveOrUpdateCategoriesTree(array $tree, ?int $parentId = null): void
     {
         $categories = $this->flattenCategoriesTree($tree, $parentId);
+
+
 
         foreach ($categories as $index => $category) {
             // Zkontrolujeme, zda má kategorie platné jméno
@@ -212,7 +216,7 @@ class Endpoints
                 if ($exists) {
                     // Aktualizace existující kategorie
                     $this->db->updateCategory([
-                        'id' => $category['id'],
+                        'id' => intval($category['id']),
                         'name' => $category['name'],
                         'parent_id' => $category['parent_id'],
                         'position' => $index,
@@ -244,7 +248,7 @@ class Endpoints
 
     public function categoriesSaveOrUpdateEndpoint($data): void
     {
-        if (!$data || !isset($data['children'])) {
+        if (!$data || !is_array($data)) {
             Response::send(400, 'Invalid data', $data);
             return;
         }

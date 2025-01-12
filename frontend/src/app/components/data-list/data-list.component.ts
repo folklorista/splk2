@@ -10,10 +10,10 @@ import { ForeignKeyData } from '../../models/data';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-    selector: 'app-data-list',
-    templateUrl: './data-list.component.html',
-    styleUrls: ['./data-list.component.scss'],
-    imports: [RouterLink, CommonModule, FormsModule]
+  selector: 'app-data-list',
+  templateUrl: './data-list.component.html',
+  styleUrls: ['./data-list.component.scss'],
+  imports: [RouterLink, CommonModule, FormsModule]
 })
 export class DataListComponent implements OnInit {
   @Input() tableName: string | undefined;
@@ -96,13 +96,19 @@ export class DataListComponent implements OnInit {
   }
 
   // Metoda pro získání name podle ID pro cizí klíče
-  getForeignKeyName(columnName: string, id: number): string {
+  getForeignKeyName(columnName: string, id: number, removePrefix = false): string {
     const foreignKeyArray = this.foreignKeyData[columnName];
     const option = foreignKeyArray ? foreignKeyArray.find(item => item.id === id) : undefined;
-    return option ? option.name : `${id}`; // Vrátí name nebo ID, pokud nenalezeno
+    let name = option ? option.name : `${id}`; // Vrátí name nebo ID, pokud nenalezeno
+
+    if (removePrefix) {
+      name = name.replace(/^—+\s/, ''); // Odstraní prefix u stromových struktur
+    }
+
+    return name;
   }
 
-  isSystemColumn(column: SchemaField, systemColumns: any = ['id', 'created_at', 'updated_at']) {
+  isSystemColumn(column: SchemaField, systemColumns: any = ['id', 'position', 'created_at', 'updated_at']) {
     return systemColumns.includes(column.name);
   }
 

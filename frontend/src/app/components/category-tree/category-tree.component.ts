@@ -1,41 +1,51 @@
 import { Component } from '@angular/core';
-import { CategoryNodeComponent } from '../category-node/category-node.component';
+import { Router } from '@angular/router';
 import { DataService } from '../../services/data/data.service';
-import { tableNames } from '../../types';
+import { tableNames, TreeNode } from '../../types';
+import { TreeViewComponent } from '../tree-view/tree-view.component';
 
 @Component({
-    selector: 'app-category-tree',
-    templateUrl: './category-tree.component.html',
-    styleUrls: ['./category-tree.component.scss'],
-    imports: [CategoryNodeComponent],
-    providers: [DataService]
+  selector: 'app-category-tree',
+  templateUrl: './category-tree.component.html',
+  styleUrls: ['./category-tree.component.scss'],
+  imports: [
+    TreeViewComponent,
+  ],
+  providers: [DataService]
 })
 export class CategoryTreeComponent {
-  rootCategory: any;
+  nodes: TreeNode[] = [];
 
-  constructor(private dataService: DataService) {
+  constructor(
+    private dataService: DataService,
+    private router: Router,
+  ) {
     this.loadCategories();
+  }
+
+  createCategory() {
+    this.router.navigate(['categories/0/add']);
   }
 
   // Načtení dat
   loadCategories() {
     this.dataService.getData(tableNames.categories).subscribe((res) => {
-      this.rootCategory = res.data[0];
-      console.debug('Načtena stromová struktura:', this.rootCategory);
+      this.nodes = res.data;
+      console.debug('Načtena stromová struktura:', this.nodes);
     });
   }
 
   // Uložení dat
   saveCategories() {
-    if (this.rootCategory) {
-      this.dataService.createData(tableNames.categories, this.rootCategory).subscribe(() => {
+    if (this.nodes) {
+      this.dataService.updateData(tableNames.categories, 0, this.nodes).subscribe(() => {
         console.debug('Stromová struktura byla úspěšně uložena.');
         alert('Změny byly uloženy!');
       });
     }
   }
 
-  deleteCategory(category: any) {
+  deleteCategory(category: TreeNode) {
     const deleteCategoryRecursively = (categories: any[], target: any): boolean => {
       const index = categories.indexOf(target);
       if (index !== -1) {
@@ -50,18 +60,22 @@ export class CategoryTreeComponent {
       return false;
     };
 
-    deleteCategoryRecursively([this.rootCategory], category);
+    deleteCategoryRecursively([this.nodes], category);
   }
 
-  editCategory(category: any) {
-    alert(`Kategorie "${category.name}" byla upravena.`);
+  editCategory(category: TreeNode) {
+    const tableName = 'categories'; // Název tabulky
+    const recordId = category.id;       // ID uzlu
+    const action = 'edit';          // Akce (editace)
+
+    this.router.navigate([`${tableName}/${recordId}/${action}`]);
   }
 
 
-  addSubcategory(category: any) {
-    const newCategory = { name: 'Nová kategorie', children: [] };
+  addSubcategory(category: TreeNode) {
+    const newCategory: TreeNode = { id: '0', name: 'Nová kategorie', children: [] };
     category.children.push(newCategory);
-    alert(`Přidána podkategorie k: ${category.name}`);
+    alert(`Přidána podkategorie k: ${category['name']}`);
   }
 
   moveCategory(event: { source: any; target: any }) {
@@ -86,7 +100,7 @@ export class CategoryTreeComponent {
       return null;
     };
 
-    const categoryToMove = removeCategory([this.rootCategory], source);
+    const categoryToMove = removeCategory([this.nodes], source);
     if (!categoryToMove) {
       console.error('Nepodařilo se najít kategorii k přesunutí:', source);
       return;

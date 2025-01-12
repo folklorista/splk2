@@ -370,19 +370,33 @@ class Database
 
     public function getForeignKeyOptions(string $referencedTable)
     {
-        // Nejprve zkontrolujeme, zda tabulka obsahuje sloupec 'name'
+        // Kontrola přítomnosti sloupce 'name'
         $stmt = $this->pdo->prepare("SHOW COLUMNS FROM $referencedTable LIKE 'name'");
         $stmt->execute();
         $column = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        // Kontrola přítomnosti stromové struktury (sloupce 'parent_id' a 'position')
+        $stmtParentId = $this->pdo->prepare("SHOW COLUMNS FROM $referencedTable LIKE 'parent_id'");
+        $stmtParentId->execute();
+        $parentColumn = $stmtParentId->fetch(PDO::FETCH_ASSOC);
+
+        $stmtPosition = $this->pdo->prepare("SHOW COLUMNS FROM $referencedTable LIKE 'position'");
+        $stmtPosition->execute();
+        $positionColumn = $stmtPosition->fetch(PDO::FETCH_ASSOC);
+
+        $isTree = $parentColumn && $positionColumn;
+        $orderBy = $isTree ? " ORDER BY position" : "";
+
         // Pokud sloupec 'name' existuje, použijeme ho
         if ($column) {
-            $stmt = $this->pdo->prepare("SELECT id, name FROM $referencedTable");
+            $selectColumns = $isTree ? "id, parent_id, name" : "id, name";
+            $stmt = $this->pdo->prepare("SELECT $selectColumns FROM $referencedTable $orderBy");
             $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $isTree ? $this->addIndentation($data) : $data;
         }
 
-        // Pokud sloupec 'name' neexistuje, použijeme speciální index '_name'
+        // Kontrola speciálního indexu '_name'
         $stmt = $this->pdo->prepare("SHOW INDEX FROM $referencedTable WHERE Key_name = '_name'");
         $stmt->execute();
 
@@ -391,15 +405,45 @@ class Database
             return null;
         }
 
-        // získáme všechny column_name z indexu
+        // Získání všech column_name z indexu
         $columns = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $index) {
             $columns[] = $index['Column_name'];
         }
 
-        $stmt = $this->pdo->prepare("SELECT id, CONCAT(" . join(', " ", ', $columns) . ") AS name FROM $referencedTable");
+        $selectColumns = $isTree ? "id, parent_id, CONCAT(" . join(', " ", ', $columns) . ") AS name" : "id, CONCAT(" . join(', " ", ', $columns) . ") AS name";
+        $stmt = $this->pdo->prepare("SELECT $selectColumns FROM $referencedTable" . $orderBy);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $isTree ? $this->addIndentation($data) : $data;
+    }
+
+    private function addIndentation(array $data): array
+    {
+        $levels = [];
+        $result = [];
+
+        foreach ($data as $row) {
+            $id = $row['id'];
+            $parentId = $row['parent_id'] ?? null;
+
+            // Výpočet úrovně
+            $level = 0;
+            if ($parentId !== null && isset($levels[$parentId])) {
+                $level = $levels[$parentId] + 1;
+            }
+            $levels[$id] = $level;
+
+            // Přidání odsazení k 'name'
+            $row['name'] = str_repeat('—', $level) . ' ' . $row['name'];
+
+            // Odstranění sloupce 'parent_id'
+            unset($row['parent_id']);
+
+            $result[] = $row;
+        }
+
+        return $result;
     }
 
     public function isForeignKey(string $table, string $column)
@@ -428,30 +472,30 @@ class Database
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
+
     public function categoryExists(int $id): bool
     {
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM categories WHERE id = :id");
         $stmt->execute(['id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
-       
+
     public function insertCategory(array $categoryData): int
     {
         $stmt = $this->pdo->prepare("INSERT INTO categories (name, parent_id, position, created_at, updated_at)
                   VALUES (:name, :parent_id, :position, NOW(), NOW())");
         $stmt->execute($categoryData);
-    
+
         // Vrátíme ID vloženého záznamu
         return $this->pdo->lastInsertId();
     }
-    
+
     public function updateCategory(array $categoryData): void
     {
-        $stmt = $this->pdo->prepare("UPDATE categories 
+        $stmt = $this->pdo->prepare("UPDATE categories
                   SET name = :name, parent_id = :parent_id, position = :position, updated_at = NOW()
                   WHERE id = :id");
         $stmt->execute($categoryData);
     }
-    
+
 }

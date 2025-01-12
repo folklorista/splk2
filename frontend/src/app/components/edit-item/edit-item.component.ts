@@ -169,7 +169,7 @@ export class EditItemComponent implements OnInit, OnChanges {
     });
   }
 
-  isSystemColumn(column: SchemaField, systemColumns: any = ['id', 'created_at', 'updated_at']) {
+  isSystemColumn(column: SchemaField, systemColumns: any = ['id', 'position', 'created_at', 'updated_at']) {
     return systemColumns.includes(column.name);
   }
 
