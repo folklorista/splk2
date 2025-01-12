@@ -3,6 +3,7 @@ export enum tableNames {
   loans = 'loans',
   loanItems = 'loan_items',
   categories = 'categories',
+  groups = 'groups',
 }
 
 export interface TreeNode {

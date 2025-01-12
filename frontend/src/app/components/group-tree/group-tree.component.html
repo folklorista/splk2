@@ -1,0 +1,20 @@
+<h1>Strom skupin</h1>
+@if (nodes && nodes .length) {
+<button (click)="saveGroups()" class="btn save">💾 Uložit změny</button>
+<button (click)="createGroup()" class="btn save">➕ Nová položka</button>
+<div class="tree-container">
+  <app-tree-view
+    [nodes]="nodes"
+    (onEdit)="editGroup($event)"
+    (onDelete)="deleteGroup($event)"
+    (onAdd)="addSubgroup($event)"
+    (onMove)="moveGroup($event)"
+    (onSwap)="swapGroups($event)"
+  >
+  </app-tree-view>
+</div>
+
+} @else {
+<p>No data available</p>
+}
+

@@ -340,7 +340,7 @@ class Database
     public function searchRecords(string $tableName, string $searchQuery)
     {
         // Získání sloupců, které mají FULLTEXT index
-        $stmt = $this->pdo->prepare("SHOW INDEXES FROM $tableName WHERE Index_type = 'FULLTEXT'");
+        $stmt = $this->pdo->prepare("SHOW INDEXES FROM `$tableName` WHERE Index_type = 'FULLTEXT'");
         $stmt->execute();
         $indexes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -358,7 +358,7 @@ class Database
         $columns = implode(", ", $fulltextColumns); // Spojení názvů sloupců pro MATCH
 
         // Sestavení dotazu pro MATCH AGAINST
-        $sql = "SELECT * FROM $tableName WHERE MATCH($columns) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)";
+        $sql = "SELECT * FROM `$tableName` WHERE MATCH($columns) AGAINST(:searchQuery IN NATURAL LANGUAGE MODE)";
 
         // Příprava a vykonání dotazu
         $stmt = $this->pdo->prepare($sql);
@@ -371,16 +371,16 @@ class Database
     public function getForeignKeyOptions(string $referencedTable)
     {
         // Kontrola přítomnosti sloupce 'name'
-        $stmt = $this->pdo->prepare("SHOW COLUMNS FROM $referencedTable LIKE 'name'");
+        $stmt = $this->pdo->prepare("SHOW COLUMNS FROM `$referencedTable` LIKE 'name'");
         $stmt->execute();
         $column = $stmt->fetch(PDO::FETCH_ASSOC);
 
         // Kontrola přítomnosti stromové struktury (sloupce 'parent_id' a 'position')
-        $stmtParentId = $this->pdo->prepare("SHOW COLUMNS FROM $referencedTable LIKE 'parent_id'");
+        $stmtParentId = $this->pdo->prepare("SHOW COLUMNS FROM `$referencedTable` LIKE 'parent_id'");
         $stmtParentId->execute();
         $parentColumn = $stmtParentId->fetch(PDO::FETCH_ASSOC);
 
-        $stmtPosition = $this->pdo->prepare("SHOW COLUMNS FROM $referencedTable LIKE 'position'");
+        $stmtPosition = $this->pdo->prepare("SHOW COLUMNS FROM `$referencedTable` LIKE 'position'");
         $stmtPosition->execute();
         $positionColumn = $stmtPosition->fetch(PDO::FETCH_ASSOC);
 
@@ -390,14 +390,14 @@ class Database
         // Pokud sloupec 'name' existuje, použijeme ho
         if ($column) {
             $selectColumns = $isTree ? "id, parent_id, name" : "id, name";
-            $stmt = $this->pdo->prepare("SELECT $selectColumns FROM $referencedTable $orderBy");
+            $stmt = $this->pdo->prepare("SELECT $selectColumns FROM `$referencedTable` $orderBy");
             $stmt->execute();
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
             return $isTree ? $this->addIndentation($data) : $data;
         }
 
         // Kontrola speciálního indexu '_name'
-        $stmt = $this->pdo->prepare("SHOW INDEX FROM $referencedTable WHERE Key_name = '_name'");
+        $stmt = $this->pdo->prepare("SHOW INDEX FROM `$referencedTable` WHERE Key_name = '_name'");
         $stmt->execute();
 
         if ($stmt->rowCount() === 0) {
@@ -412,7 +412,7 @@ class Database
         }
 
         $selectColumns = $isTree ? "id, parent_id, CONCAT(" . join(', " ", ', $columns) . ") AS name" : "id, CONCAT(" . join(', " ", ', $columns) . ") AS name";
-        $stmt = $this->pdo->prepare("SELECT $selectColumns FROM $referencedTable" . $orderBy);
+        $stmt = $this->pdo->prepare("SELECT $selectColumns FROM `$referencedTable`" . $orderBy);
         $stmt->execute();
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
         return $isTree ? $this->addIndentation($data) : $data;
@@ -466,36 +466,69 @@ class Database
         return $stmt->fetchColumn() !== false;
     }
 
-    public function getAllCategories(): array
+    // Tree structures
+
+    public function getAllTreeRecords(string $tableName): array
     {
-        $stmt = $this->pdo->prepare("SELECT id, parent_id, name FROM categories ORDER BY position ASC");
+        $stmt = $this->pdo->prepare("SELECT id, parent_id, name FROM `$tableName` ORDER BY position ASC");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function categoryExists(int $id): bool
+    public function treeRecordExists(string $tableName, int $id): bool
     {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM categories WHERE id = :id");
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM `$tableName` WHERE id = :id");
         $stmt->execute(['id' => $id]);
         return $stmt->fetchColumn() > 0;
     }
 
-    public function insertCategory(array $categoryData): int
+    public function insertTreeRecord(string $tableName, array $treeRecord): int
     {
-        $stmt = $this->pdo->prepare("INSERT INTO categories (name, parent_id, position, created_at, updated_at)
+        $stmt = $this->pdo->prepare("INSERT INTO `$tableName` (name, parent_id, position, created_at, updated_at)
                   VALUES (:name, :parent_id, :position, NOW(), NOW())");
-        $stmt->execute($categoryData);
+        $stmt->execute($treeRecord);
 
         // Vrátíme ID vloženého záznamu
         return $this->pdo->lastInsertId();
     }
 
-    public function updateCategory(array $categoryData): void
+    public function updateTreeRecord(string $tableName, array $treeRecord): void
     {
-        $stmt = $this->pdo->prepare("UPDATE categories
+        $stmt = $this->pdo->prepare("UPDATE `$tableName`
                   SET name = :name, parent_id = :parent_id, position = :position, updated_at = NOW()
                   WHERE id = :id");
-        $stmt->execute($categoryData);
+        $stmt->execute($treeRecord);
     }
 
+    // Audit log
+
+    public function logAction(
+        AuditAction $actionType,
+        ?int $userId = null,
+        ?string $tableName = null,
+        ?int $recordId = null,
+        ?string $details = null,
+        ?array $data = null
+    ): void {
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $jsonData = $data ? json_encode($data) : null;
+
+        $stmt = $this->pdo->prepare("
+        INSERT INTO audit_logs
+            (action_id, user_id, table_name, record_id, details, data, ip_address, user_agent)
+        VALUES
+            (:action_id, :user_id, :table_name, :record_id, :details, :data, :ip_address, :user_agent)
+    ");
+        $stmt->execute([
+            'action_id' => $actionType->value,
+            'user_id' => $userId,
+            'table_name' => $tableName,
+            'record_id' => $recordId,
+            'details' => $details,
+            'data' => $jsonData,
+            'ip_address' => $ipAddress,
+            'user_agent' => $userAgent,
+        ]);
+    }
 }

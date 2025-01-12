@@ -3,7 +3,6 @@
 SET NAMES utf8;
 SET time_zone = '+00:00';
 SET foreign_key_checks = 0;
-SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
 SET NAMES utf8mb4;
 
@@ -293,4 +292,4 @@ CREATE TABLE `users_roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci COMMENT='role uživatele';
 
 
--- 2025-01-04 15:12:16
+-- 2025-01-12 09:09:27

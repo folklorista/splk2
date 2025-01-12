@@ -90,8 +90,8 @@ switch ($method) {
             } else {
                 Response::send(404, "Table not found");
             }
-        } elseif ($tableName === 'categories' && !isset($id)) {
-            Response::sendPrepared($endpoints->categoriesEndpoint());
+        } elseif (in_array($tableName, ['categories', 'groups']) && !isset($id)) {
+            Response::sendPrepared($endpoints->loadTreeEndpoint($tableName));
 
         } elseif ($id === 'search' && isset($_GET['search'])) {
             // Přidání endpointu pro vyhledávání
@@ -120,7 +120,7 @@ switch ($method) {
     case 'POST':
         $data = json_decode(file_get_contents('php://input'), true);
         if ($data) {
-            Response::sendPrepared($endpoints->createRecordEndpoint($tableName, $data));
+            Response::sendPrepared($endpoints->createRecordEndpoint($tableName, $data, $user['user']));
         } else {
             Response::send(400, "Empty input");
         }
@@ -130,15 +130,15 @@ switch ($method) {
         if ($id) {
             $data = json_decode(file_get_contents('php://input'), true);
             if ($data) {
-                Response::sendPrepared($endpoints->updateRecordEndpoint($tableName, $id, $data));
+                Response::sendPrepared($endpoints->updateRecordEndpoint($tableName, $id, $data, $user['user']));
             } else {
                 Response::send(400, "Empty input");
             }
         } else {
-            if ($tableName === 'categories') {
+            if (in_array($tableName, ['categories', 'groups'])) {
                 $data = json_decode(file_get_contents('php://input'), true);
                 if ($data) {
-                    Response::sendPrepared($endpoints->categoriesSaveOrUpdateEndpoint($data));
+                    Response::sendPrepared($endpoints->treeSaveOrUpdateEndpoint($tableName, $data, $user['user']));
                 } else {
                     Response::send(400, "Empty input");
                 }
@@ -150,7 +150,7 @@ switch ($method) {
 
     case 'DELETE':
         if ($id) {
-            Response::sendPrepared($endpoints->deleteRecordEndpoint($tableName, $id));
+            Response::sendPrepared($endpoints->deleteRecordEndpoint($tableName, $id, $user['user']));
         } else {
             Response::send(400, "ID is required");
         }

@@ -3,7 +3,7 @@ POST {{host}}/api/register
 Content-Type: application/json
 
 {
-    "email": "novy_uzivatel6@test.cz",
+    "email": "{{email}}",
     "password": "{{password}}",
     "first_name": "Jan",
     "last_name": "Novák"

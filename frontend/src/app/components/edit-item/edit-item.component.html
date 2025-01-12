@@ -20,6 +20,9 @@
             <input formControlName="{{ column.name }}" type="password" [required]="!column.null" />
           } @else if (column.foreign_key) {
             <select formControlName="{{ column.name }}" [required]="!column.null">
+              @if (column.null) {
+                <option [ngValue]="null" selected>-</option>
+              }
               <option *ngFor="let option of foreignKeyData[column.name]" [value]="option.id">{{ option.name }}</option>
             </select>
           } @else if (column.type === 'string') {

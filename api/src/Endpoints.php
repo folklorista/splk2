@@ -70,7 +70,8 @@ class Endpoints
                     return Response::prepare(401, "Invalid credentials");
                 }
                 $token = $this->auth->generateToken($userResponse['data']);
-                return Response::prepare(200, "Logged in", ['token' => $token]);
+                $this->db->logAction(AuditAction::USER_LOGIN, $userResponse['data']['id']); // Přihlášení uživatele
+                return Response::prepare(200, "User logged in", ['token' => $token]);
             }
             return Response::prepare(401, "Invalid credentials");
         }
@@ -89,27 +90,35 @@ class Endpoints
     }
 
     // Funkce pro POST operaci - vytvoření nového záznamu
-    public function createRecordEndpoint($table, $data)
+    public function createRecordEndpoint($table, $data, $user)
     {
         if (isset($data['password'])) {
             $data['password'] = $this->auth->hashPassword($data['password']);
         }
-        return $this->db->insert($table, $data);
+
+        $response = $this->db->insert($table, $data);
+        $this->db->logAction(AuditAction::DATA_INSERT, $user->id, $table, $response['data']['id'], $response['message'], $data);
+
+        return $response;
     }
 
     // Funkce pro PUT operaci - aktualizace záznamu
-    public function updateRecordEndpoint($table, $id, $data)
+    public function updateRecordEndpoint($table, $id, $data, $user)
     {
         if (isset($data['password'])) {
             $data['password'] = $this->auth->hashPassword($data['password']);
         }
-        return $this->db->update($table, $id, $data);
+        $response = $this->db->update($table, $id, $data);
+        $this->db->logAction(AuditAction::DATA_UPDATE, $user->id, $table, $id, $response['message'], $data);
+        return $response;
     }
 
     // Funkce pro DELETE operaci - smazání záznamu
-    public function deleteRecordEndpoint($table, $id)
+    public function deleteRecordEndpoint($table, $id, $user)
     {
-        return $this->db->delete($table, $id);
+        $response = $this->db->delete($table, $id);
+        $this->db->logAction(AuditAction::DATA_DELETE, $user->id, $table, $id, $response['message']);
+        return $response;
     }
 
     public function handleForeignKeys($table, $queryParams)
@@ -142,24 +151,24 @@ class Endpoints
         }
     }
 
-    public function getCategoriesTree(): array
+    public function getTree(string $tableName): array
     {
         // Načte data přes třídu Database
-        $categories = $this->db->getAllCategories();
+        $records = $this->db->getAllTreeRecords($tableName);
 
         // Převod na stromovou strukturu
-        return $this->buildCategoriesTree($categories);
+        return $this->buildTree($tableName, $records);
     }
 
-    private function buildCategoriesTree(array $categories, int $parentId = null): array
+    private function buildTree(string $tableName, array $records, int $parentId = null): array
     {
         $tree = [];
-        foreach ($categories as $category) {
-            if ($category['parent_id'] === $parentId) {
-                $children = $this->buildCategoriesTree($categories, $category['id']);
+        foreach ($records as $record) {
+            if ($record['parent_id'] === $parentId) {
+                $children = $this->buildTree($tableName, $records, $record['id']);
                 $tree[] = [
-                    'id' => (string) $category['id'],
-                    'name' => $category['name'],
+                    'id' => (string) $record['id'],
+                    'name' => $record['name'],
                     'children' => $children,
                 ];
             }
@@ -167,10 +176,10 @@ class Endpoints
         return $tree;
     }
 
-    private function flattenCategoriesTree(array $trees, int $parentId = null): array
+    private function flattenTree(array $trees, int $parentId = null): array
     {
         $flat = [];
-    
+
         // Iterace přes všechny kořenové uzly
         foreach ($trees as $tree) {
             // Zpracování aktuálního uzlu stromu
@@ -179,84 +188,85 @@ class Endpoints
                 'name' => $tree['name'] ?? 'Unknown', // Ošetření chybějícího názvu
                 'parent_id' => $parentId,
             ];
-    
+
             // Pokud uzel obsahuje děti, zpracuj je rekurzivně
             if (!empty($tree['children']) && is_array($tree['children'])) {
-                $flat = array_merge($flat, $this->flattenCategoriesTree($tree['children'], $tree['id'] ?? null));
+                $flat = array_merge($flat, $this->flattenTree($tree['children'], $tree['id'] ?? null));
             }
         }
-    
+
         return $flat;
     }
-    
 
-    public function categoriesEndpoint(): void
+    public function loadTreeEndpoint(string $tableName): void
     {
-        $tree = $this->getCategoriesTree();
+        $tree = $this->getTree($tableName);
         Response::send(200, 'Records found', $tree);
     }
 
-    public function saveOrUpdateCategoriesTree(array $tree, ?int $parentId = null): void
+    public function saveOrUpdateTree(string $tableName, array $tree, ?int $parentId = null): void
     {
-        $categories = $this->flattenCategoriesTree($tree, $parentId);
+        $records = $this->flattenTree($tree, $parentId);
 
-
-
-        foreach ($categories as $index => $category) {
-            // Zkontrolujeme, zda má kategorie platné jméno
-            if (empty($category['name'])) {
-                throw new \InvalidArgumentException("Kategorie musí mít název.");
+        foreach ($records as $index => $record) {
+            // Zkontrolujeme, zda má záznam platné jméno
+            if (empty($record['name'])) {
+                throw new \InvalidArgumentException("Položka musí mít název.");
             }
 
             // Zpracování ID (existuje nebo ne)
-            $categoryId = null;
+            $recordId = null;
 
-            if (!empty($category['id'])) {
-                $exists = $this->db->categoryExists($category['id']);
+            if (!empty($record['id'])) {
+                $exists = $this->db->treeRecordExists($tableName, $record['id']);
                 if ($exists) {
-                    // Aktualizace existující kategorie
-                    $this->db->updateCategory([
-                        'id' => intval($category['id']),
-                        'name' => $category['name'],
-                        'parent_id' => $category['parent_id'],
+                    // Aktualizace existujícího záznamu
+                    $this->db->updateTreeRecord($tableName, [
+                        'id' => intval($record['id']),
+                        'name' => $record['name'],
+                        'parent_id' => $record['parent_id'],
                         'position' => $index,
                     ]);
-                    $categoryId = $category['id'];
+                    $recordId = $record['id'];
                 } else {
                     // ID neexistuje – vytvoříme nový záznam
-                    $categoryId = $this->db->insertCategory([
-                        'name' => $category['name'],
-                        'parent_id' => $category['parent_id'],
+                    $recordId = $this->db->insertTreeRecord($tableName, [
+                        'name' => $record['name'],
+                        'parent_id' => $record['parent_id'],
                         'position' => $index,
                     ]);
                 }
             } else {
-                // Vytvoříme novou kategorii
-                $categoryId = $this->db->insertCategory([
-                    'name' => $category['name'],
-                    'parent_id' => $category['parent_id'],
+                // Vytvoříme nový záznam
+                $treeRecordId = $this->db->insertTreeRecord($tableName, [
+                    'name' => $record['name'],
+                    'parent_id' => $record['parent_id'],
                     'position' => $index,
                 ]);
             }
 
             // Rekurzivní zpracování dětí, pokud existují
-            if (!empty($category['children']) && is_array($category['children'])) {
-                $this->saveOrUpdateCategoriesTree($category['children'], $categoryId);
+            if (!empty($record['children']) && is_array($record['children'])) {
+                $this->saveOrUpdateTree($tableName, $record['children'], $recordId);
             }
         }
     }
 
-    public function categoriesSaveOrUpdateEndpoint($data): void
+    public function treeSaveOrUpdateEndpoint(string $tableName, $data, $user): void
     {
         if (!$data || !is_array($data)) {
-            Response::send(400, 'Invalid data', $data);
+            $message = 'Invalid data';
+            $this->db->logAction(AuditAction::TREE_UPDATE, $user->id, $tableName, null, $message, $data);
+            Response::send(400, $message, $data);
             return;
         }
 
         // Aktualizace nebo uložení nového stromu
-        $this->saveOrUpdateCategoriesTree($data);
+        $this->saveOrUpdateTree($tableName, $data);
 
-        Response::send(200, 'Categories saved or updated successfully', $data);
+        $message = 'Tree structure saved or updated successfully';
+        $this->db->logAction(AuditAction::TREE_UPDATE, $user->id, $tableName, null, $message, $data);
+        Response::send(200, $message, $data);
     }
 
 }

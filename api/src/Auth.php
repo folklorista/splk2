@@ -44,6 +44,7 @@ class Auth
             'iat' => time(), // Vydáno
             'exp' => time() + (365 * 24 * 60 * 60), // Platnost (1 hodina),
             'user' => [
+                'id' => $user['id'],
                 'firstName' => $user['first_name'],
                 'lastName' => $user['last_name'],
             ],
