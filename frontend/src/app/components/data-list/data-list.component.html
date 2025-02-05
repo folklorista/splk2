@@ -29,8 +29,13 @@
               {{ getForeignKeyName(column.name, item[column.name], true) }}
             } @else {
               <!-- Jinak zobrazíme původní hodnotu -->
-              <!-- Pokud je hodnota null, zobrazíme pomlčku -->
-              {{ item[column.name] !== null ? item[column.name] : '&mdash;' }}
+              @if (typeof item[column.name] === 'boolean') {
+                <!-- Pokud je hodnota boolean, zobrazíme fajfku nebo křížek -->
+                {{ item[column.name] ? '✔️' : '❌' }}
+              } @else {
+                <!-- Pokud je hodnota null, zobrazíme pomlčku, jinak zobrazíme hodnotu -->
+                {{ item[column.name] !== null ? item[column.name] : '&mdash;' }}
+              }
             }
           </td>
         }

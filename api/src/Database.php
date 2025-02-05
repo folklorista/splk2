@@ -46,6 +46,22 @@ class Database
             $stmt = $this->pdo->query($query);
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+            if ($result) {
+                // Úprava hodnot pro sloupce typu tinyint(1)
+                foreach ($result as &$row) {
+                    foreach ($columns as $column) {
+                        if ($column['Type'] === 'tinyint(1)' && array_key_exists($column['Field'], $row)) {
+                            $value = $row[$column['Field']];
+                            if (is_null($value)) {
+                                $row[$column['Field']] = null; // Zachování null
+                            } else {
+                                $row[$column['Field']] = $value == 0 ? false : true; // 0 -> false, jinak true
+                            }
+                        }
+                    }
+                }
+            }
+
             if (!$result) {
                 return Response::prepare(204, "No records found", []);
             } else {
@@ -87,6 +103,13 @@ class Database
     {
         try {
             $data = $this->removeSystemColumns($data);
+
+            foreach ($data as $key => $value) {
+                if (is_bool($value)) {
+                    $data[$key] = $value ? 1 : 0;
+                }
+            }
+
             $columns = implode(", ", array_keys($data));
             $placeholders = ":" . implode(", :", array_keys($data));
             $stmt = $this->pdo->prepare("INSERT INTO `{$table}` ({$columns}) VALUES ({$placeholders})");
@@ -111,6 +134,13 @@ class Database
     {
         try {
             $data = $this->removeSystemColumns($data);
+
+            foreach ($data as $key => $value) {
+                if (is_bool($value)) {
+                    $data[$key] = $value ? 1 : 0;
+                }
+            }
+
             $fields = implode(", ", array_map(fn($key) => "{$key} = :{$key}", array_keys($data)));
             $data['id'] = $id;
             $stmt = $this->pdo->prepare("UPDATE `{$table}` SET {$fields} WHERE id = :id");
@@ -223,10 +253,10 @@ class Database
                 $columns[] = [
                     'name' => $field['Field'],
                     'type' => $type,
-                    'options' => $type === 'enum' ? explode("','", trim($field['Type'], "enum('')")) : [],
+                    'options' => $this->getOptions($type, $field),
                     'null' => $field['Null'] === 'YES',
                     'key' => $field['Key'],
-                    'default' => $type == 'number' ? (float) $field['Default'] : $field['Default'],
+                    'default' => $this->getDefaultValue($type, $field),
                     'extra' => $field['Extra'],
                     'comment' => $field['Comment'],
                     'length' => $this->getLength($field['Type']),
@@ -259,7 +289,9 @@ class Database
         // Odstranění případných bílých znaků a převod na lowercase pro snadnější porovnání
         $type = strtolower(trim($type));
 
-        if (strpos($type, 'int') !== false) {
+        if (strpos($type, 'bool') !== false || strpos($type, 'boolean') !== false || strpos($type, 'tinyint(1)') !== false) {
+            return 'boolean';
+        } elseif (strpos($type, 'int') !== false) {
             return 'number';
         } elseif (strpos($type, 'varchar') !== false || strpos($type, 'char') !== false) {
             return 'string';
@@ -271,8 +303,6 @@ class Database
             return 'datetime';
         } elseif (strpos($type, 'float') !== false || strpos($type, 'double') !== false || strpos($type, 'decimal') !== false) {
             return 'number';
-        } elseif (strpos($type, 'bool') !== false || strpos($type, 'boolean') !== false) {
-            return 'boolean';
         } elseif (strpos($type, 'enum') !== false) {
             return 'enum';
         } elseif (strpos($type, 'set') !== false) {
@@ -370,11 +400,6 @@ class Database
 
     public function getForeignKeyOptions(string $referencedTable)
     {
-        // Kontrola přítomnosti sloupce 'name'
-        $stmt = $this->pdo->prepare("SHOW COLUMNS FROM `$referencedTable` LIKE 'name'");
-        $stmt->execute();
-        $column = $stmt->fetch(PDO::FETCH_ASSOC);
-
         // Kontrola přítomnosti stromové struktury (sloupce 'parent_id' a 'position')
         $stmtParentId = $this->pdo->prepare("SHOW COLUMNS FROM `$referencedTable` LIKE 'parent_id'");
         $stmtParentId->execute();
@@ -387,13 +412,34 @@ class Database
         $isTree = $parentColumn && $positionColumn;
         $orderBy = $isTree ? " ORDER BY position" : "";
 
+        if ($isTree) {
+            $stmt = $this->pdo->prepare("SELECT id FROM `$referencedTable` $orderBy");
+            $stmt->execute();
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $data = [];
+            foreach ($rows as $row) {
+                $id = $row['id'];
+                $this->pdo->exec("CALL `get_tree_path`('$referencedTable', $id, @`fullPath`)");
+                $pathStmt = $this->pdo->query("SELECT " . "@" . "`fullPath` AS name");
+                $path = $pathStmt->fetch(PDO::FETCH_ASSOC);
+                $data[] = ['id' => $id, 'name' => $path['name']];
+            }
+
+            return $data;
+        }
+
+        // Kontrola přítomnosti sloupce 'name'
+        $stmt = $this->pdo->prepare("SHOW COLUMNS FROM `$referencedTable` LIKE 'name'");
+        $stmt->execute();
+        $column = $stmt->fetch(PDO::FETCH_ASSOC);
+
         // Pokud sloupec 'name' existuje, použijeme ho
         if ($column) {
-            $selectColumns = $isTree ? "id, parent_id, name" : "id, name";
+            $selectColumns = "id, name";
             $stmt = $this->pdo->prepare("SELECT $selectColumns FROM `$referencedTable` $orderBy");
             $stmt->execute();
-            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $isTree ? $this->addIndentation($data) : $data;
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         // Kontrola speciálního indexu '_name'
@@ -411,11 +457,40 @@ class Database
             $columns[] = $index['Column_name'];
         }
 
-        $selectColumns = $isTree ? "id, parent_id, CONCAT(" . join(', " ", ', $columns) . ") AS name" : "id, CONCAT(" . join(', " ", ', $columns) . ") AS name";
-        $stmt = $this->pdo->prepare("SELECT $selectColumns FROM `$referencedTable`" . $orderBy);
-        $stmt->execute();
-        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return $isTree ? $this->addIndentation($data) : $data;
+        $data = [];
+        foreach ($columns as &$indexedColumn) {
+            if ($indexedColumn === 'category_id') {
+                $stmt = $this->pdo->prepare("SELECT id FROM `$referencedTable`");
+                $stmt->execute();
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($rows as $row) {
+                    $id = $row['id'];
+                    $this->pdo->exec("CALL `get_tree_path`('categories', $id" . ", " . "@" . "`fullPath`)");
+                    $pathStmt = $this->pdo->query("SELECT " . "@" . "`fullPath` AS name");
+                    $path = $pathStmt->fetch(PDO::FETCH_ASSOC);
+                    $data[] = ['id' => $id, 'name' => $path['name']];
+                }
+            } elseif ($indexedColumn === 'group_id') {
+                $stmt = $this->pdo->prepare("SELECT id FROM `$referencedTable`");
+                $stmt->execute();
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($rows as $row) {
+                    $id = $row['id'];
+                    $this->pdo->exec("CALL `get_tree_path`('groups', $id" . ", " . "@" . "`fullPath`)");
+                    $pathStmt = $this->pdo->query("SELECT " . "@" . "`fullPath` AS name");
+                    $path = $pathStmt->fetch(PDO::FETCH_ASSOC);
+                    $data[] = ['id' => $id, 'name' => $path['name']];
+                }
+            } else {
+                // TODO: nefunguje index kombinující groups a categories
+                $selectColumns = "id, CONCAT(" . join(', " ", ', $columns) . ") AS name";
+                $stmt = $this->pdo->prepare("SELECT $selectColumns FROM `$referencedTable`" . $orderBy);
+                $stmt->execute();
+                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                return $isTree ? $this->addIndentation($data) : $data;
+            }
+        }
+        return $data;
     }
 
     private function addIndentation(array $data): array
@@ -530,5 +605,27 @@ class Database
             'ip_address' => $ipAddress,
             'user_agent' => $userAgent,
         ]);
+    }
+
+    private function getDefaultValue($type, $field): mixed
+    {
+        switch ($type) {
+            case 'number':
+                return (float) $field['Default'];
+            case 'boolean':
+                return (bool) $field['Default'];
+            default:
+                return $field['Default'];
+        }
+    }
+
+    private function getOptions($type, $field): array | bool
+    {
+        switch ($type) {
+            case 'enum':
+                return explode("','", trim($field['Type'], "enum('')"));
+            default:
+                return [];
+        }
     }
 }
