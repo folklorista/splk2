@@ -457,40 +457,37 @@ class Database
             $columns[] = $index['Column_name'];
         }
 
+        $columnsToConcat = [];
+        $joins = [''];
+
         $data = [];
         foreach ($columns as &$indexedColumn) {
-            if ($indexedColumn === 'category_id') {
-                $stmt = $this->pdo->prepare("SELECT id FROM `$referencedTable`");
-                $stmt->execute();
-                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                foreach ($rows as $row) {
-                    $id = $row['id'];
-                    $this->pdo->exec("CALL `get_tree_path`('categories', $id" . ", " . "@" . "`fullPath`)");
-                    $pathStmt = $this->pdo->query("SELECT " . "@" . "`fullPath` AS name");
-                    $path = $pathStmt->fetch(PDO::FETCH_ASSOC);
-                    $data[] = ['id' => $id, 'name' => $path['name']];
-                }
+           if ($indexedColumn === 'category_id') {
+                $joins[] = "categories ON (`" . $referencedTable . "`.category_id = categories.id)";
+                $columnsToConcat[] = "`categories`.`prefix`";
             } elseif ($indexedColumn === 'group_id') {
-                $stmt = $this->pdo->prepare("SELECT id FROM `$referencedTable`");
-                $stmt->execute();
-                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                foreach ($rows as $row) {
-                    $id = $row['id'];
-                    $this->pdo->exec("CALL `get_tree_path`('groups', $id" . ", " . "@" . "`fullPath`)");
-                    $pathStmt = $this->pdo->query("SELECT " . "@" . "`fullPath` AS name");
-                    $path = $pathStmt->fetch(PDO::FETCH_ASSOC);
-                    $data[] = ['id' => $id, 'name' => $path['name']];
-                }
+                $joins[] = "groups ON (`" . $referencedTable . "`.group_id = groups.id)";
+                $columnsToConcat[] = "`groups`.`name`";
             } else {
-                // TODO: nefunguje index kombinující groups a categories
-                $selectColumns = "id, CONCAT(" . join(', " ", ', $columns) . ") AS name";
-                $stmt = $this->pdo->prepare("SELECT $selectColumns FROM `$referencedTable`" . $orderBy);
-                $stmt->execute();
-                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                return $isTree ? $this->addIndentation($data) : $data;
+                $columnsToConcat[] = "`" . $referencedTable . "`.`" . $indexedColumn . "`";
             }
         }
-        return $data;
+
+        $query = "SELECT `"
+        . $referencedTable
+        . "`.`id`, CONCAT("
+        . join(", ' ', ", $columnsToConcat)
+        . ") as name FROM `"
+        . $referencedTable .
+        "` "
+        . join(" JOIN ", $joins)
+        . $orderBy;
+
+        Logger::log($query);
+
+        $stmt = $this->pdo->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     private function addIndentation(array $data): array
