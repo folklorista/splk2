@@ -73,7 +73,7 @@ export class EditItemComponent implements OnInit, OnChanges {
       return;
     }
     try {
-      const res = await firstValueFrom(this.dataService.getData(this.tableName, this.recordId));
+      const res = await firstValueFrom(this.dataService.getDataById(this.tableName, this.recordId));
       this.itemData = res.data;
       await this.createForm();
     } catch (error) {

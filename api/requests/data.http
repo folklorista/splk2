@@ -17,9 +17,11 @@ Authorization: Bearer {{token}}
 
 GET {{host}}/api/{{table}}
 X-Pagination-Limit: 2
-X-Pagination-Offset: 3
+X-Pagination-Offset: 2
 X-Sort-By: created_at
 X-Sort-Direction: ASC
+X-Search-Query: 18
+X-Search-Columns: inventory_number
 Authorization: Bearer {{token}}
 
 {

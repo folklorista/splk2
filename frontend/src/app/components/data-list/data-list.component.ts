@@ -61,21 +61,12 @@ export class DataListComponent implements OnInit {
 
     try {
       // Pokud je aktivní hledání, použijeme vyhledávací endpoint
-      if (this.searchQuery) {
-        this.dataService.search(this.tableName, this.searchQuery).subscribe(res => {
-          this.data = res?.data ?? [];
-          if (this.data.length > 0) {
-            this.keys = Object.keys(this.data[0]);
-          }
-        });
-      } else {
-        this.dataService.getData(this.tableName).subscribe(async res => {
-          this.data = res?.data ?? [];
-          if (this.data.length > 0) {
-            this.keys = Object.keys(this.data[0]);
-          }
-        });
-      }
+      this.dataService.getData(this.tableName, this.searchQuery).subscribe(async res => {
+        this.data = res?.data ?? [];
+        if (this.data.length > 0) {
+          this.keys = Object.keys(this.data[0]);
+        }
+      });
     } catch (error) {
       console.error('Error fetching data:', error);
     };

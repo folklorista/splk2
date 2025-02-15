@@ -19,26 +19,62 @@ class Database
         $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     }
 
-// Získání všech záznamů z tabulky se stránkováním a řazením
+    // Získání všech záznamů z tabulky se stránkováním a řazením
     public function getAll(
         string $table,
         string $whereClause = "",
         int $limit = null,
         int $offset = null,
         string $orderBy = null,
-        string $orderDir = 'ASC'
+        string $orderDir = 'ASC',
+        string $searchQuery = null,
+        array $searchColumns = null
     ) {
         try {
             // Načtení sloupců tabulky (bez sloupce 'password')
             $stmt    = $this->pdo->query("DESCRIBE `{$table}`");
             $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            $columns = array_filter($columns, function ($column) {
-                return $column['Field'] !== 'password';
-            });
-
+            $columns     = array_filter($columns, fn($column) => $column['Field'] !== 'password');
             $columnNames = array_map(fn($column) => $column['Field'], $columns);
             $columnsList = implode(', ', $columnNames);
+            $whereClause = '';
+
+            if ($searchQuery !== null) {
+                $schema = $this->getSchema($table);
+                $searchableSolumns = $this->getSearchableColumns($schema);
+
+                // Kontrola, zda jsou vybrané sloupce validní a vyloučení sloupců id, created_at, updated_at
+            if ($searchColumns !== null) {
+                    $searchColumns = array_filter($searchColumns, fn($col) => in_array($col, $columnNames) && in_array($col, $searchableSolumns));
+            } else {
+                    $searchColumns = array_filter($columnNames, fn($col) => in_array($col, $searchableSolumns));
+            }
+
+            // Zjištění, zda existuje FULLTEXT index
+            $fulltextAvailable = false;
+            $indexStmt         = $this->pdo->query("SHOW INDEX FROM `{$table}` WHERE Index_type = 'FULLTEXT'");
+            $indexes           = $indexStmt->fetchAll(PDO::FETCH_ASSOC);
+            if (! empty($indexes)) {
+                $fulltextAvailable = true;
+            }
+
+                // Dekódování `$searchQuery`
+                if ($searchQuery !== null) {
+                    $searchQuery = urldecode($searchQuery);
+                }
+
+            // Sestavení WHERE podmínky pro vyhledávání
+                if ($fulltextAvailable) {
+                    // Použití FULLTEXT indexu
+                    $searchClause = "MATCH(" . implode(',', $searchColumns) . ") AGAINST (:searchQuery IN BOOLEAN MODE)";
+                } else {
+                    // Použití LIKE pro běžné vyhledávání
+                    $searchParts  = array_map(fn($col) => "`$col` LIKE :searchQuery", $searchColumns);
+                    $searchClause = implode(' OR ', $searchParts);
+                }
+                $whereClause = ! empty($whereClause) ? "($whereClause) AND ($searchClause)" : $searchClause;
+            }
 
             // Sestavení SQL dotazu
             $query = "SELECT {$columnsList} FROM `{$table}`";
@@ -52,22 +88,34 @@ class Database
             }
 
             // Přidání stránkování
-            if ($limit !== null && $offset !== null) {
-                $query .= " LIMIT {$limit} OFFSET {$offset}";
-            } elseif ($limit !== null) {
-                $query .= " LIMIT {$limit}";
+            if ($limit !== null) {
+                $query .= " LIMIT {$limit} OFFSET " . ($offset ?? 0);
             }
+
+            $stmt = $this->pdo->prepare($query);
+
+            // Pokud je vyhledávání, připravíme hodnotu LIKE nebo FULLTEXT
+            if ($searchQuery !== null) {
+                $searchParam = $fulltextAvailable ? $searchQuery : "%$searchQuery%";
+                $stmt->bindValue(':searchQuery', $searchParam, PDO::PARAM_STR);
+            }
+
+            $stmt->execute();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             // Výpočet celkového počtu záznamů
             $countQuery = "SELECT COUNT(*) as total FROM `{$table}`";
             if (! empty($whereClause)) {
                 $countQuery .= " WHERE {$whereClause}";
             }
-            $countStmt    = $this->pdo->query($countQuery);
-            $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+            $countStmt = $this->pdo->prepare($countQuery);
 
-            $stmt   = $this->pdo->query($query);
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($searchQuery !== null) {
+                $countStmt->bindValue(':searchQuery', $searchParam, PDO::PARAM_STR);
+            }
+
+            $countStmt->execute();
+            $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
             if ($result) {
                 // Úprava hodnot pro sloupce typu tinyint(1)
@@ -85,49 +133,40 @@ class Database
                 }
             }
 
-            if (! $result) {
-                return Response::prepare(
-                    statusCode: 204,
-                    message: "No records found",
-                    data: [],
-                    error: null,
-                    meta: [],
-                );
-            } else {
-                $meta = [];
-
-                // Přidání stránkování do meta informací, pokud je nastaveno
-                if ($limit !== null) {
-                    $meta['pagination'] = [
-                        'limit'         => $limit,
-                        'offset'        => $offset ?? 0,
-                        'total_records' => $totalRecords,
-                        'total_pages'   => ceil($totalRecords / $limit),
-                    ];
-                }
-
-                // Přidání řazení do meta informací, pokud je použito
-                if ($orderBy !== null) {
-                    $meta['sorting'] = [
-                        'order_by'  => $orderBy,
-                        'direction' => $orderDir,
-                    ];
-                }
-
-                return Response::prepare(
-                    statusCode: 200,
-                    message: "Records found",
-                    data: $result,
-                    error: null,
-                    meta: $meta
-                );
+            // Přidání meta informací
+            $meta = [];
+            if ($limit !== null) {
+                $meta['pagination'] = [
+                    'limit'         => $limit,
+                    'offset'        => $offset ?? 0,
+                    'total_records' => $totalRecords,
+                    'total_pages'   => ceil($totalRecords / $limit),
+                ];
             }
+            if ($orderBy !== null) {
+                $meta['sorting'] = [
+                    'order_by'  => $orderBy,
+                    'direction' => $orderDir,
+                ];
+            }
+            if ($searchQuery !== null) {
+                $meta['search'] = [
+                    'query'    => $searchQuery,
+                    'columns'  => $searchColumns,
+                    'fulltext' => $fulltextAvailable,
+                ];
+            }
+
+            return Response::prepare(
+                statusCode: ! empty($result) ? 200 : 204,
+                message: ! empty($result) ? "Records found" : "No records found",
+                data: $result,
+                error: null,
+                meta: $meta
+            );
+
         } catch (PDOException $e) {
-            if ($e->getCode() === '42S02') {
-                return Response::prepare(404, "Table not found");
-            } else {
-                return Response::prepare(400, "Records not found", null, $e->getMessage());
-            }
+            return Response::prepare(500, "Database error", null, $e->getMessage());
         }
     }
 
@@ -679,5 +718,30 @@ class Database
             default:
                 return [];
         }
+    }
+
+    private function getSearchableColumns(array $schema): array {
+        $filteredColumns = [];
+    
+        if (!isset($schema['data']['columns']) || !is_array($schema['data']['columns'])) {
+            return $filteredColumns;
+        }
+    
+        foreach ($schema['data']['columns'] as $column) {
+            // Podmínky pro vyloučení sloupců
+            if (
+                ($column['key'] ?? '') === 'PRI' ||   // Primární klíč
+                ($column['foreign_key'] ?? '') ||     // Cizí klíč
+                ($column['type'] ?? '') === 'datetime' || // Datetime
+                ($column['type'] ?? '') === 'boolean' ||  // Boolean
+                ($column['name'] ?? '') === 'password'    // Password
+            ) {
+                continue;
+            }
+    
+            $filteredColumns[] = $column['name'];
+        }
+    
+        return $filteredColumns;
     }
 }

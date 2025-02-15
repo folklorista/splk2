@@ -1,5 +1,4 @@
 <?php
-
 namespace App;
 
 use Dotenv\Dotenv;
@@ -16,13 +15,13 @@ header(header: 'Content-Type: application/json');
 // Načtení konfigurace
 $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->load();
-$env = $_ENV['APP_ENV'] ?? 'local';
+$env    = $_ENV['APP_ENV'] ?? 'local';
 $config = require __DIR__ . '/config/config.' . ($env === 'production' ? 'production' : 'local') . '.php';
 
 // Inicializace
-$logger = new Logger($config['log']);
-$db = new Database(config: $config['database'], logger: $logger);
-$auth = new Auth(config: $config['auth'], db: $db, logger: $logger);
+$logger    = new Logger($config['log']);
+$db        = new Database(config: $config['database'], logger: $logger);
+$auth      = new Auth(config: $config['auth'], db: $db, logger: $logger);
 $endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger);
 
 // Získání HTTP metody a endpointu
@@ -48,7 +47,7 @@ if (count($path) == 0 || empty($path[$pathIndex['table']])) {
 
 // Rozdělení endpointu na tabulku a ID
 $tableName = $path[$pathIndex['table']];
-$id = $path[$pathIndex['id']] ?? null;
+$id        = $path[$pathIndex['id']] ?? null;
 
 // Logika pro login a registraci
 if ($tableName == 'login' && $method == 'POST') {
@@ -61,14 +60,14 @@ if ($tableName == 'login' && $method == 'POST') {
 
 // Ověření tokenu pro ostatní endpointy
 $user = $auth->authenticate();
-if (!$user) {
+if (! $user) {
     Response::send(401, "Unauthorized access", null, "You must be logged in to access this resource");
 }
 
 // Endpoint pro záznamy na základě cizích klíčů
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['foreignKeys'])) {
     $table = $_GET['table'] ?? null;
-    if (!$table) {
+    if (! $table) {
         Response::send(400, 'Invalid request', null, 'Table name is required.');
         return;
     }
@@ -81,10 +80,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['foreignKeys'])) {
 }
 
 // Zpracování stránkování a řazení z HTTP hlaviček
-$limit = isset($_SERVER['HTTP_X_PAGINATION_LIMIT']) ? (int) $_SERVER['HTTP_X_PAGINATION_LIMIT'] : null;
-$offset = isset($_SERVER['HTTP_X_PAGINATION_OFFSET']) ? (int) $_SERVER['HTTP_X_PAGINATION_OFFSET'] : null;
-$orderBy = $_SERVER['HTTP_X_SORT_BY'] ?? null;
-$orderDir = strtoupper($_SERVER['HTTP_X_SORT_DIRECTION'] ?? 'ASC');
+$limit         = isset($_SERVER['HTTP_X_PAGINATION_LIMIT']) ? (int) $_SERVER['HTTP_X_PAGINATION_LIMIT'] : null;
+$offset        = isset($_SERVER['HTTP_X_PAGINATION_OFFSET']) ? (int) $_SERVER['HTTP_X_PAGINATION_OFFSET'] : null;
+$orderBy       = $_SERVER['HTTP_X_SORT_BY'] ?? null;
+$orderDir      = strtoupper($_SERVER['HTTP_X_SORT_DIRECTION'] ?? 'ASC');
+$searchQuery   = $_SERVER['HTTP_X_SEARCH_QUERY'] ?? null;
+$searchColumns = isset($_SERVER['HTTP_X_SEARCH_COLUMNS']) ? explode(',', $_SERVER['HTTP_X_SEARCH_COLUMNS']) : null;
 
 // Ověření, zda orderDir obsahuje jen "ASC" nebo "DESC"
 $orderDir = in_array($orderDir, ['ASC', 'DESC']) ? $orderDir : 'ASC';
@@ -99,12 +100,12 @@ switch ($method) {
             } else {
                 Response::send(404, "Table not found");
             }
-        } elseif (in_array($tableName, ['categories', 'groups']) && !isset($id)) {
+        } elseif (in_array($tableName, ['categories', 'groups']) && ! isset($id)) {
             Response::sendPrepared($endpoints->loadTreeEndpoint($tableName));
 
         } elseif ($id === 'search' && isset($_GET['search'])) {
             // Přidání endpointu pro vyhledávání
-            $searchQuery = $_GET['search'];
+            $searchQuery   = $_GET['search'];
             $searchResults = $db->searchRecords($tableName, $searchQuery);
             if ($searchResults) {
                 echo json_encode($searchResults);
@@ -122,7 +123,9 @@ switch ($method) {
         } elseif ($id) {
             Response::sendPrepared($endpoints->getRecordByIdEndpoint($tableName, $id));
         } else {
-            Response::sendPrepared($endpoints->getAllRecords($tableName, "", $limit, $offset, $orderBy, $orderDir));
+            Response::sendPrepared(
+                $endpoints->getAllRecords($tableName, "", $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns)
+            );
         }
         break;
 

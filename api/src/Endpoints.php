@@ -90,9 +90,11 @@ class Endpoints
         int $limit = null, 
         int $offset = null, 
         string $orderBy = null, 
-        string $orderDir = 'ASC'
+        string $orderDir = 'ASC',
+        string $searchQuery = null,
+        array $searchColumns = null
     ) {
-        return $this->db->getAll($table, $whereClause, $limit, $offset, $orderBy, $orderDir);
+        return $this->db->getAll($table, $whereClause, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns);
     }
     
     // Funkce pro POST operaci - vytvoření nového záznamu
