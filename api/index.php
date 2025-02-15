@@ -80,6 +80,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['foreignKeys'])) {
     return;
 }
 
+// Zpracování stránkování a řazení z HTTP hlaviček
+$limit = isset($_SERVER['HTTP_X_PAGINATION_LIMIT']) ? (int) $_SERVER['HTTP_X_PAGINATION_LIMIT'] : null;
+$offset = isset($_SERVER['HTTP_X_PAGINATION_OFFSET']) ? (int) $_SERVER['HTTP_X_PAGINATION_OFFSET'] : null;
+$orderBy = $_SERVER['HTTP_X_SORT_BY'] ?? null;
+$orderDir = strtoupper($_SERVER['HTTP_X_SORT_DIRECTION'] ?? 'ASC');
+
+// Ověření, zda orderDir obsahuje jen "ASC" nebo "DESC"
+$orderDir = in_array($orderDir, ['ASC', 'DESC']) ? $orderDir : 'ASC';
+
 // CRUD operace (jen pro přihlášené uživatele)
 switch ($method) {
     case 'GET':
@@ -113,7 +122,7 @@ switch ($method) {
         } elseif ($id) {
             Response::sendPrepared($endpoints->getRecordByIdEndpoint($tableName, $id));
         } else {
-            Response::sendPrepared($endpoints->getAllRecords($tableName));
+            Response::sendPrepared($endpoints->getAllRecords($tableName, "", $limit, $offset, $orderBy, $orderDir));
         }
         break;
 

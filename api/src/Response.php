@@ -4,14 +4,19 @@ namespace App;
 class Response
 {
     // Funkce pro přípravu odpovědi jako pole
-    public static function prepare(int $statusCode, string $message, mixed $data = null, string $error = null)
-    {
+    public static function prepare(
+        int $statusCode, 
+        string $message, 
+        mixed $data = null, 
+        string $error = null, 
+        array $meta = []
+    ) {
         $response = [
             'status' => $statusCode,
             'message' => $message,
-            'data' => $data,
+            'data' => $data
         ];
-
+    
         if ($statusCode >= 400 && $error === null) {
             $error = match ($statusCode) {
                 400 => "Invalid input",
@@ -22,25 +27,41 @@ class Response
                 default => "Unknown error",
             };
         }
-
+    
         if ($error !== null) {
             $response['error'] = $error;
         }
-
+    
+        // Přidání meta informací, pokud existují
+        if (!empty(array_filter($meta))) {
+            $response['meta'] = $meta;
+        }
+    
         return $response;
     }
 
-    // Metoda pro odeslání připravené odpovědi (pole)
+    // Metoda pro odeslání připravené odpovědi (pole) včetně meta informací o stránkování a řazení
     public static function sendPrepared(array $response)
     {
-        return self::send($response['status'], $response['message'], $response['data'], key_exists('error', $response) ? $response['error']: null);
+        return self::send(
+            statusCode: $response['status'], 
+            message: $response['message'], 
+            data: $response['data'], 
+            error: $response['error'] ?? null,
+            meta: $response['meta'] ?? [],
+        );
     }
 
     // Funkce pro odeslání odpovědi (pokud již máme připravené pole)
-    public static function send(int $statusCode, string $message, mixed $data = null, string $error = null)
-    {
+    public static function send(
+        int $statusCode, 
+        string $message, 
+        mixed $data = null, 
+        string $error = null, 
+        array $meta = []
+    ) {
         http_response_code($statusCode);
-        echo json_encode(self::prepare($statusCode, $message, $data, $error));
+        echo json_encode(self::prepare($statusCode, $message, $data, $error, $meta));
         exit;
     }
 }

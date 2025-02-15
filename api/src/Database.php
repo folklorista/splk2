@@ -13,37 +13,60 @@ class Database
     {
         $this->logger = $logger;
 
-        $dsn = "mysql:host={$config['host']};dbname={$config['dbname']};charset=utf8mb4";
+        $dsn       = "mysql:host={$config['host']};dbname={$config['dbname']};charset=utf8mb4";
         $this->pdo = new PDO($dsn, $config['username'], $config['password']);
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     }
 
-    // Získání všech záznamů z tabulky
-    public function getAll(string $table, string $whereClause = "")
-    {
+// Získání všech záznamů z tabulky se stránkováním a řazením
+    public function getAll(
+        string $table,
+        string $whereClause = "",
+        int $limit = null,
+        int $offset = null,
+        string $orderBy = null,
+        string $orderDir = 'ASC'
+    ) {
         try {
             // Načtení sloupců tabulky (bez sloupce 'password')
-            $stmt = $this->pdo->query("DESCRIBE `{$table}`");
+            $stmt    = $this->pdo->query("DESCRIBE `{$table}`");
             $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $columns = array_filter($columns, function ($column) {
                 return $column['Field'] !== 'password';
             });
 
-            $columnNames = array_map(function ($column) {
-                return $column['Field'];
-            }, $columns);
-
+            $columnNames = array_map(fn($column) => $column['Field'], $columns);
             $columnsList = implode(', ', $columnNames);
 
             // Sestavení SQL dotazu
             $query = "SELECT {$columnsList} FROM `{$table}`";
-            if (!empty($whereClause)) {
+            if (! empty($whereClause)) {
                 $query .= " WHERE {$whereClause}";
             }
 
-            $stmt = $this->pdo->query($query);
+            // Přidání řazení
+            if ($orderBy !== null && in_array($orderBy, $columnNames)) {
+                $query .= " ORDER BY `{$orderBy}` " . ($orderDir === 'DESC' ? 'DESC' : 'ASC');
+            }
+
+            // Přidání stránkování
+            if ($limit !== null && $offset !== null) {
+                $query .= " LIMIT {$limit} OFFSET {$offset}";
+            } elseif ($limit !== null) {
+                $query .= " LIMIT {$limit}";
+            }
+
+            // Výpočet celkového počtu záznamů
+            $countQuery = "SELECT COUNT(*) as total FROM `{$table}`";
+            if (! empty($whereClause)) {
+                $countQuery .= " WHERE {$whereClause}";
+            }
+            $countStmt    = $this->pdo->query($countQuery);
+            $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+            $stmt   = $this->pdo->query($query);
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             if ($result) {
@@ -62,10 +85,42 @@ class Database
                 }
             }
 
-            if (!$result) {
-                return Response::prepare(204, "No records found", []);
+            if (! $result) {
+                return Response::prepare(
+                    statusCode: 204,
+                    message: "No records found",
+                    data: [],
+                    error: null,
+                    meta: [],
+                );
             } else {
-                return Response::prepare(200, "Records found", $result);
+                $meta = [];
+
+                // Přidání stránkování do meta informací, pokud je nastaveno
+                if ($limit !== null) {
+                    $meta['pagination'] = [
+                        'limit'         => $limit,
+                        'offset'        => $offset ?? 0,
+                        'total_records' => $totalRecords,
+                        'total_pages'   => ceil($totalRecords / $limit),
+                    ];
+                }
+
+                // Přidání řazení do meta informací, pokud je použito
+                if ($orderBy !== null) {
+                    $meta['sorting'] = [
+                        'order_by'  => $orderBy,
+                        'direction' => $orderDir,
+                    ];
+                }
+
+                return Response::prepare(
+                    statusCode: 200,
+                    message: "Records found",
+                    data: $result,
+                    error: null,
+                    meta: $meta
+                );
             }
         } catch (PDOException $e) {
             if ($e->getCode() === '42S02') {
@@ -84,7 +139,7 @@ class Database
             $stmt->execute(['id' => $id]); // line 43
             $result = $stmt->fetch();
 
-            if (!$result) {
+            if (! $result) {
                 return Response::prepare(404, "Record not found");
             } else {
                 return Response::prepare(200, "Record found", $result);
@@ -110,10 +165,10 @@ class Database
                 }
             }
 
-            $columns = implode(", ", array_keys($data));
+            $columns      = implode(", ", array_keys($data));
             $placeholders = ":" . implode(", :", array_keys($data));
-            $stmt = $this->pdo->prepare("INSERT INTO `{$table}` ({$columns}) VALUES ({$placeholders})");
-            $result = $stmt->execute($data);
+            $stmt         = $this->pdo->prepare("INSERT INTO `{$table}` ({$columns}) VALUES ({$placeholders})");
+            $result       = $stmt->execute($data);
 
             if ($result) {
                 return Response::prepare(201, "Record created", ['id' => $this->pdo->lastInsertId()]);
@@ -141,12 +196,12 @@ class Database
                 }
             }
 
-            $fields = implode(", ", array_map(fn($key) => "{$key} = :{$key}", array_keys($data)));
+            $fields     = implode(", ", array_map(fn($key) => "{$key} = :{$key}", array_keys($data)));
             $data['id'] = $id;
-            $stmt = $this->pdo->prepare("UPDATE `{$table}` SET {$fields} WHERE id = :id");
+            $stmt       = $this->pdo->prepare("UPDATE `{$table}` SET {$fields} WHERE id = :id");
 
             // Ošetřit, zda byl záznam nalezen
-            if (!$stmt->execute($data)) {
+            if (! $stmt->execute($data)) {
                 return Response::prepare(400, "Record not updated");
             }
 
@@ -170,7 +225,7 @@ class Database
     {
         try {
             $stmt = $this->pdo->prepare("DELETE FROM `{$table}` WHERE id = :id");
-            if (!$stmt->execute(['id' => $id])) {
+            if (! $stmt->execute(['id' => $id])) {
                 return Response::prepare(400, "Record not deleted");
             } elseif ($stmt->rowCount() === 0) {
                 return Response::prepare(404, "Record not found");
@@ -196,7 +251,7 @@ class Database
             $stmt->execute();
             $status = $stmt->fetch();
 
-            $result['name'] = [$status['Name']];
+            $result['name']    = [$status['Name']];
             $result['comment'] = [$status['Comment']];
 
             // Získání informací o sloupcích tabulky
@@ -225,7 +280,7 @@ class Database
                         AND kcu.REFERENCED_TABLE_NAME IS NOT NULL;
                 ");
                 $stmt_fk->execute([
-                    ':tableName' => $tableName,
+                    ':tableName'  => $tableName,
                     ':columnName' => $field['Field'],
                 ]);
                 $foreignKey = $stmt_fk->fetch();
@@ -244,32 +299,32 @@ class Database
                         AND kcu.REFERENCED_COLUMN_NAME = :columnName;
                 ");
                 $stmt_ref->execute([
-                    ':tableName' => $tableName,
+                    ':tableName'  => $tableName,
                     ':columnName' => $field['Field'],
                 ]);
                 $references = $stmt_ref->fetchAll();
 
                 // Přidání informací do pole sloupců
                 $columns[] = [
-                    'name' => $field['Field'],
-                    'type' => $type,
-                    'options' => $this->getOptions($type, $field),
-                    'null' => $field['Null'] === 'YES',
-                    'key' => $field['Key'],
-                    'default' => $this->getDefaultValue($type, $field),
-                    'extra' => $field['Extra'],
-                    'comment' => $field['Comment'],
-                    'length' => $this->getLength($field['Type']),
+                    'name'        => $field['Field'],
+                    'type'        => $type,
+                    'options'     => $this->getOptions($type, $field),
+                    'null'        => $field['Null'] === 'YES',
+                    'key'         => $field['Key'],
+                    'default'     => $this->getDefaultValue($type, $field),
+                    'extra'       => $field['Extra'],
+                    'comment'     => $field['Comment'],
+                    'length'      => $this->getLength($field['Type']),
                     'foreign_key' => $foreignKey ? [
-                        'constraint' => $foreignKey['FOREIGN_KEY_CONSTRAINT'],
-                        'referenced_table' => $foreignKey['REFERENCED_TABLE'],
+                        'constraint'        => $foreignKey['FOREIGN_KEY_CONSTRAINT'],
+                        'referenced_table'  => $foreignKey['REFERENCED_TABLE'],
                         'referenced_column' => $foreignKey['REFERENCED_COLUMN'],
                     ] : null,
-                    'references' => $references ? array_map(function ($ref) {
+                    'references'  => $references ? array_map(function ($ref) {
                         return [
                             'constraint' => $ref['REFERENCE_CONSTRAINT'],
-                            'table' => $ref['REFERENCE_TABLE'],
-                            'column' => $ref['REFERENCE_COLUMN'],
+                            'table'      => $ref['REFERENCE_TABLE'],
+                            'column'     => $ref['REFERENCE_COLUMN'],
                         ];
                     }, $references) : [],
                 ];
@@ -316,8 +371,8 @@ class Database
     private static function getEnumValues(string $tableName, string $columnName, $pdo)
     {
         if ($pdo && $tableName && $columnName) {
-            $query = "SHOW COLUMNS FROM `$tableName` LIKE '$columnName'";
-            $stmt = $pdo->query($query);
+            $query  = "SHOW COLUMNS FROM `$tableName` LIKE '$columnName'";
+            $stmt   = $pdo->query($query);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($result && preg_match("/^enum\(‘(.*)’\)$/", $result['Type'], $matches)) {
@@ -350,7 +405,7 @@ class Database
     {
         $result = [];
         foreach ($data as $key => $value) {
-            if (!in_array($key, $systemColumns)) {
+            if (! in_array($key, $systemColumns)) {
                 $result[$key] = $value;
             }
         }
@@ -361,7 +416,7 @@ class Database
     public function getHashedPassword(string $email)
     {
         $query = "SELECT password FROM users WHERE email = :email";
-        $stmt = $this->pdo->prepare($query);
+        $stmt  = $this->pdo->prepare($query);
         $stmt->bindParam(':email', $email);
         $stmt->execute();
         return $stmt->fetchColumn();
@@ -383,8 +438,8 @@ class Database
             return $index['Column_name'];
         }, $indexes);
 
-        // Vytváříme dynamický SQL dotaz pro FULLTEXT hledání
-        // $searchQuery = $searchQuery; // Bez přidávání % pro MATCH AGAINST
+                                                    // Vytváříme dynamický SQL dotaz pro FULLTEXT hledání
+                                                    // $searchQuery = $searchQuery; // Bez přidávání % pro MATCH AGAINST
         $columns = implode(", ", $fulltextColumns); // Spojení názvů sloupců pro MATCH
 
         // Sestavení dotazu pro MATCH AGAINST
@@ -409,7 +464,7 @@ class Database
         $stmtPosition->execute();
         $positionColumn = $stmtPosition->fetch(PDO::FETCH_ASSOC);
 
-        $isTree = $parentColumn && $positionColumn;
+        $isTree  = $parentColumn && $positionColumn;
         $orderBy = $isTree ? " ORDER BY position" : "";
 
         if ($isTree) {
@@ -422,8 +477,8 @@ class Database
                 $id = $row['id'];
                 $this->pdo->exec("CALL `get_tree_path`('$referencedTable', $id, @`fullPath`)");
                 $pathStmt = $this->pdo->query("SELECT " . "@" . "`fullPath` AS name");
-                $path = $pathStmt->fetch(PDO::FETCH_ASSOC);
-                $data[] = ['id' => $id, 'name' => $path['name']];
+                $path     = $pathStmt->fetch(PDO::FETCH_ASSOC);
+                $data[]   = ['id' => $id, 'name' => $path['name']];
             }
 
             return $data;
@@ -437,7 +492,7 @@ class Database
         // Pokud sloupec 'name' existuje, použijeme ho
         if ($column) {
             $selectColumns = "id, name";
-            $stmt = $this->pdo->prepare("SELECT $selectColumns FROM `$referencedTable` $orderBy");
+            $stmt          = $this->pdo->prepare("SELECT $selectColumns FROM `$referencedTable` $orderBy");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
@@ -458,15 +513,15 @@ class Database
         }
 
         $columnsToConcat = [];
-        $joins = [''];
+        $joins           = [''];
 
         $data = [];
         foreach ($columns as &$indexedColumn) {
-           if ($indexedColumn === 'category_id') {
-                $joins[] = "categories ON (`" . $referencedTable . "`.category_id = categories.id)";
+            if ($indexedColumn === 'category_id') {
+                $joins[]           = "categories ON (`" . $referencedTable . "`.category_id = categories.id)";
                 $columnsToConcat[] = "`categories`.`prefix`";
             } elseif ($indexedColumn === 'group_id') {
-                $joins[] = "groups ON (`" . $referencedTable . "`.group_id = groups.id)";
+                $joins[]           = "groups ON (`" . $referencedTable . "`.group_id = groups.id)";
                 $columnsToConcat[] = "`groups`.`name`";
             } else {
                 $columnsToConcat[] = "`" . $referencedTable . "`.`" . $indexedColumn . "`";
@@ -481,7 +536,7 @@ class Database
         . $referencedTable .
         "` "
         . join(" JOIN ", $joins)
-        . $orderBy;
+            . $orderBy;
 
         Logger::log($query);
 
@@ -496,7 +551,7 @@ class Database
         $result = [];
 
         foreach ($data as $row) {
-            $id = $row['id'];
+            $id       = $row['id'];
             $parentId = $row['parent_id'] ?? null;
 
             // Výpočet úrovně
@@ -532,7 +587,7 @@ class Database
                 AND kcu.REFERENCED_TABLE_NAME IS NOT NULL;
         ");
         $stmt->execute([
-            ':table' => $table,
+            ':table'  => $table,
             ':column' => $column,
         ]);
         return $stmt->fetchColumn() !== false;
@@ -584,7 +639,7 @@ class Database
     ): void {
         $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-        $jsonData = $data ? json_encode($data) : null;
+        $jsonData  = $data ? json_encode($data) : null;
 
         $stmt = $this->pdo->prepare("
         INSERT INTO audit_logs
@@ -593,12 +648,12 @@ class Database
             (:action_id, :user_id, :table_name, :record_id, :details, :data, :ip_address, :user_agent)
     ");
         $stmt->execute([
-            'action_id' => $actionType->value,
-            'user_id' => $userId,
+            'action_id'  => $actionType->value,
+            'user_id'    => $userId,
             'table_name' => $tableName,
-            'record_id' => $recordId,
-            'details' => $details,
-            'data' => $jsonData,
+            'record_id'  => $recordId,
+            'details'    => $details,
+            'data'       => $jsonData,
             'ip_address' => $ipAddress,
             'user_agent' => $userAgent,
         ]);

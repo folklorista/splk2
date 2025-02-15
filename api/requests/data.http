@@ -1,4 +1,4 @@
-@table = users_groups
+@table = items
 @foreignKey1 = group_id
 @foreignKey1Value = 5
 @foreignKey2 = group_id
@@ -14,6 +14,18 @@ Authorization: Bearer {{token}}
 }
 
 ###
+
+GET {{host}}/api/{{table}}
+X-Pagination-Limit: 2
+X-Pagination-Offset: 3
+X-Sort-By: created_at
+X-Sort-Direction: ASC
+Authorization: Bearer {{token}}
+
+{
+}
+
+###
 GET {{host}}/api/{{table}}/{{tableId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -23,6 +35,14 @@ Authorization: Bearer {{token}}
 
 ###
 GET {{host}}/api/{{table}}/search?search=zk204
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+}
+
+###
+GET {{host}}/api/items/options
 Content-Type: application/json
 Authorization: Bearer {{token}}
 

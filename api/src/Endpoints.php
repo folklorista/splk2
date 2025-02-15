@@ -84,11 +84,17 @@ class Endpoints
         return $this->db->get($table, $id);
     }
 
-    public function getAllRecords($table)
-    {
-        return $this->db->getAll($table);
+    public function getAllRecords(
+        string $table, 
+        string $whereClause = "", 
+        int $limit = null, 
+        int $offset = null, 
+        string $orderBy = null, 
+        string $orderDir = 'ASC'
+    ) {
+        return $this->db->getAll($table, $whereClause, $limit, $offset, $orderBy, $orderDir);
     }
-
+    
     // Funkce pro POST operaci - vytvoření nového záznamu
     public function createRecordEndpoint($table, $data, $user)
     {
