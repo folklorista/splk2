@@ -1,45 +1,54 @@
 <h1>{{ schema?.comment?.length ? schema?.comment : this.tableName }}</h1>
 
 <div>
-  <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" placeholder="Search..." />
+  <input
+    type="text"
+    [(ngModel)]="searchQuery"
+    (ngModelChange)="onSearchChange()"
+    placeholder="Search..."
+  />
 </div>
 
 @if (data.length > 0) {
+  <app-pagination
+  [offset]="offset"
+  [limit]="limit"
+  [totalRecords]="totalRecords"
+  [pageCount]="pageCount"
+  (pageChange)="changePage($event)"
+  (limitChange)="changeLimit($event)"
+></app-pagination>
+
 <table>
   <thead>
     <tr>
-      @for (column of schema?.columns; track column) {
-        @if (!isSystemColumn(column)) {
-        <th>
-          {{ column?.comment?.length ? column?.comment : column.name }}
-        </th>
-        }
-      }
+      @for (column of schema?.columns; track column) { @if
+      (!isSystemColumn(column)) {
+      <th (click)="changeSort(column.name)">
+        {{ column?.comment?.length ? column?.comment : column.name }}
+        <span *ngIf="sortBy === column.name">{{
+          sortDirection === "ASC" ? "▲" : "▼"
+        }}</span>
+      </th>
+      } }
       <th></th>
     </tr>
   </thead>
   <tbody>
     @for (item of data; track item) {
     <tr>
-      @for (column of schema?.columns; track column) {
-        @if (!isSystemColumn(column)) {
-          <td>
-            @if (column.foreign_key && this.foreignKeyData[column.name]) {
-              <!-- Pokud je sloupec cizí klíč, zobrazíme name místo id -->
-              {{ getForeignKeyName(column.name, item[column.name], true) }}
-            } @else {
-              <!-- Jinak zobrazíme původní hodnotu -->
-              @if (typeof item[column.name] === 'boolean') {
-                <!-- Pokud je hodnota boolean, zobrazíme fajfku nebo křížek -->
-                {{ item[column.name] ? '✔️' : '❌' }}
-              } @else {
-                <!-- Pokud je hodnota null, zobrazíme pomlčku, jinak zobrazíme hodnotu -->
-                {{ item[column.name] !== null ? item[column.name] : '&mdash;' }}
-              }
-            }
-          </td>
-        }
-      }
+      @for (column of schema?.columns; track column) { @if
+      (!isSystemColumn(column)) {
+      <td>
+        @if (column.foreign_key && this.foreignKeyData[column.name]) {
+        {{ getForeignKeyName(column.name, item[column.name], true) }}
+        } @else { @if (typeof item[column.name] === 'boolean') {
+        {{ item[column.name] ? "&#x2713;" : "×" }}
+        } @else {
+        {{ item[column.name] !== null ? item[column.name] : "&mdash;" }}
+        } }
+      </td>
+      } }
       <td>
         <a routerLink="/{{ this.tableName }}/{{ item.id }}">
           <button>Zobrazit</button>
@@ -55,6 +64,16 @@
     }
   </tbody>
 </table>
+
+<app-pagination
+  [offset]="offset"
+  [limit]="limit"
+  [totalRecords]="totalRecords"
+  [pageCount]="pageCount"
+  (pageChange)="changePage($event)"
+  (limitChange)="changeLimit($event)"
+></app-pagination>
+
 } @else {
   <p>No data available</p>
 }

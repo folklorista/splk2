@@ -1,0 +1,40 @@
+<div class="pagination">
+  <!-- Předchozí stránka -->
+  <button
+    (click)="changePage(offset - limit)"
+    [disabled]="offset === 0"
+    title="Předchozí stránka"
+  >
+    &#9664; <!-- Šipka vlevo -->
+  </button>
+
+  <!-- Číslo stránky -->
+  <!-- span>{{ offset / limit + 1 }}/{{ pageCount }}</span-->
+
+  <!-- Rozsah záznamů -->
+  <span title="Zobrazený rozsah">
+    {{ offset + 1 }}-{{ (offset + limit) > totalRecords ? totalRecords : (offset + limit) }} / {{ totalRecords }}
+  </span>
+
+  <!-- Výběr počtu záznamů na stránce -->
+  <div title="Počet záznamů na stránce">
+    <select (change)="changeLimit($event)">
+      <option
+        *ngFor="let option of [5, 10, 20, 50, 100]"
+        [value]="option"
+        [selected]="option === limit"
+      >
+        {{ option }}
+      </option>
+    </select>
+  </div>
+
+  <!-- Další stránka -->
+  <button
+    (click)="changePage(offset + limit)"
+    [disabled]="offset + limit >= totalRecords"
+    title="Další stránka"
+  >
+    &#9654; <!-- Šipka vpravo -->
+  </button>
+</div>

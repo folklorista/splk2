@@ -1,5 +1,4 @@
 import { Component, Input, OnInit } from '@angular/core';
-
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Schema, SchemaField } from '../../models/schema';
@@ -8,21 +7,31 @@ import { SchemaService } from '../../services/schema/schema.service';
 import { firstValueFrom } from 'rxjs';
 import { ForeignKeyData } from '../../models/data';
 import { FormsModule } from '@angular/forms';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 @Component({
   selector: 'app-data-list',
   templateUrl: './data-list.component.html',
   styleUrls: ['./data-list.component.scss'],
-  imports: [RouterLink, CommonModule, FormsModule]
+  imports: [RouterLink, CommonModule, FormsModule, PaginationComponent]
 })
 export class DataListComponent implements OnInit {
   @Input() tableName: string | undefined;
+
+  DEFAULT_LIMIT = 20;
 
   public data: any[] = [];
   public keys: string[] = []; // proměnná pro uložení klíčů
   public schema: Schema | undefined;
   public searchQuery: string = ''; // Vyhledávací dotaz
   public foreignKeyData: ForeignKeyData = {} // Mapa cizích klíčů
+  public limit: number = this.DEFAULT_LIMIT;
+  public offset: number = 0;
+  public totalRecords: number = 0;
+  public pageCount: number = 0;
+  public sortBy: string = 'created_at';
+  public sortDirection: 'ASC' | 'DESC' = 'DESC';
+
 
   constructor(
     private dataService: DataService,
@@ -61,11 +70,13 @@ export class DataListComponent implements OnInit {
 
     try {
       // Pokud je aktivní hledání, použijeme vyhledávací endpoint
-      this.dataService.getData(this.tableName, this.searchQuery).subscribe(async res => {
+      this.dataService.getData(this.tableName, this.searchQuery, [], this.sortBy, this.sortDirection, this.limit, this.offset).subscribe(async res => {
         this.data = res?.data ?? [];
+        this.totalRecords = res?.meta?.pagination?.total_records ?? 0;
         if (this.data.length > 0) {
           this.keys = Object.keys(this.data[0]);
         }
+        this.pageCount = Math.ceil(this.totalRecords / this.limit);
       });
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -103,8 +114,29 @@ export class DataListComponent implements OnInit {
     return systemColumns.includes(column.name);
   }
 
-  // Metoda, která se volá při změně vyhledávacího textu
   onSearchChange() {
-    this.loadData(); // Po změně textu provedeme opětovné načtení dat
+    this.offset = 0;
+    this.loadData();
+  }
+
+  changePage(newOffset: number) {
+    this.offset = newOffset;
+    this.loadData();
+  }
+
+  changeSort(column: string) {
+    if (this.sortBy === column) {
+      this.sortDirection = this.sortDirection === 'ASC' ? 'DESC' : 'ASC';
+    } else {
+      this.sortBy = column;
+      this.sortDirection = 'ASC';
+    }
+    this.loadData();
+  }
+
+  changeLimit(newLimit?: number) {
+    this.limit = newLimit ? newLimit : this.DEFAULT_LIMIT;
+    this.offset = 0;
+    this.loadData();
   }
 }
