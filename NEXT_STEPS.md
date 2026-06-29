@@ -8,15 +8,18 @@
 
 ### 🔴 VYSOKÁ PRIORITA (Doporučuju hned)
 
-#### 1. Implementovat Unit Testy
-- **Co**: Napsat 10-15 unit testů na RuleValidator
+#### 1. ✅ Implementovat Unit Testy (HOTOVO)
+- **Co**: ✅ Napsat 10-15 unit testů na RuleValidator
+- **Status**: DOKONČENO - 40 unit testů
 - **Kde**: `api/tests/Unit/RuleValidatorTest.php`
-- **Očekávaný výstup**: Testy na:
-  - Validation constraints (required, type, length, unique)
-  - Hook execution (beforeCreate, beforeDelete)
-  - Error handling
-- **Čas**: 2 hodiny
-- **Priority**: ⭐⭐⭐ (Protože máš framework)
+- **Pokryto**:
+  - ✅ Validation constraints (required, type, length, unique, enum, min/max)
+  - ✅ Hook execution (beforeCreate, beforeDelete)
+  - ✅ Error handling
+  - ✅ Database mocking
+  - ✅ UPDATE partial validation
+- **Čas**: ⏱️ ~2 hodiny
+- **Priority**: ⭐⭐⭐
 
 ```bash
 # Spustit:
@@ -312,6 +315,6 @@ Každý bod má:
 - ✅ Architektura (RuleValidator, table-rules)
 - ✅ Dokumentace (OpenAPI, API.md, příklady)
 - ✅ E2E test (funguje)
-- ⏳ Unit testy (zbývá)
+- ✅ Unit testy (40 testů, všechny prošly)
 - ⏳ Production config (zbývá)
 - ⏳ CI/CD (zbývá)
