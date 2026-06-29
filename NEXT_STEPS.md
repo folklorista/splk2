@@ -79,16 +79,20 @@ curl http://localhost:8000/health
 
 ### 🟡 STŘEDNÍ PRIORITA (Dělat později)
 
-#### 4. Nastavit GitHub Actions CI/CD
-- **Co**: Auto-run testy na každý push a PR
+#### 4. ✅ Nastavit GitHub Actions CI/CD (HOTOVO)
+- **Co**: ✅ Auto-run testy na každý push a PR
+- **Status**: DOKONČENO
 - **Soubor**: `.github/workflows/api-tests.yml`
 - **Dělá**:
-  - Spustí API server
-  - Nainstaluje dependencies
-  - Spustí E2E testy
-  - Spustí unit testy
-  - Vykáže výsledky
-- **Čas**: 1.5 hodiny
+  - ✅ Nainstaluje PHP 8.3 + Composer dependencies
+  - ✅ Setup MySQL 8.0 service
+  - ✅ Spustí unit testy (RuleValidator, constraints, hooks)
+  - ✅ Spustí API server na pozadí
+  - ✅ Spustí E2E testy (CRUD, auth, tree operations)
+  - ✅ Ověří health check endpoint
+  - ✅ Vykáže code coverage
+- **Triggers**: Push na master/develop, PRs na master
+- **Čas**: ⏱️ ~1.5 hodiny
 - **Priority**: ⭐⭐ (Nice to have)
 
 ```yaml
@@ -244,11 +248,11 @@ curl http://localhost:8000/health
 
 ### Týden 2-3 (BY MĚLO)
 ```
-- [ ] GitHub Actions (1.5h)
-- [ ] API Docs UI (1h)
+- [x] GitHub Actions (1.5h) ✅
+- [ ] API Docs UI (1h) ← NEXT
 - [ ] Rate limiting (1.5h)
 - [ ] Soft deletes (2h)
-- [ ] Total: 6 hodin
+- [ ] Total: 6 hodin (1.5h done, 4.5h remaining)
 ```
 
 ### Později (NICE TO HAVE)
@@ -323,5 +327,6 @@ Každý bod má:
 - ✅ Unit testy (40 testů, všechny prošly)
 - ✅ Environment config (.env, fallback defaults)
 - ✅ Health check endpoint (GET /health, vrací JSON status)
-- ⏳ CI/CD - GitHub Actions (zbývá - 1.5h)
+- ✅ CI/CD - GitHub Actions (auto-run testů na push/PR)
+- ⏳ API Docs UI (zbývá - 1h)
 - ⏳ Advanced features (rate limiting, soft deletes, RBAC, webhooks)
