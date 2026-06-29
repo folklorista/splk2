@@ -54,6 +54,31 @@ if (count($path) == 0 || empty($path[$pathIndex['table']])) {
 $tableName = $path[$pathIndex['table']];
 $id        = $path[$pathIndex['id']] ?? null;
 
+// Health check endpoint (no authentication required)
+if ($tableName === 'health' && $method === 'GET') {
+    $dbStatus = 'OK';
+    try {
+        $db->execute('SELECT 1');
+    } catch (\Exception $e) {
+        $dbStatus = 'ERROR: ' . $e->getMessage();
+    }
+
+    $uptime = function_exists('uptime') ? uptime() : (
+        isset($_SERVER['REQUEST_TIME']) ? time() - $_SERVER['REQUEST_TIME'] : 0
+    );
+
+    http_response_code(200);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status' => $dbStatus === 'OK' ? 'operational' : 'degraded',
+        'database' => $dbStatus,
+        'uptime' => $uptime,
+        'timestamp' => date('c'),
+        'version' => '1.0.0',
+    ]);
+    exit;
+}
+
 // Logika pro login a registraci
 if ($tableName == 'login' && $method == 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
