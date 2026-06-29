@@ -118,11 +118,20 @@ curl http://localhost:8000/health
 
 ---
 
-#### 6. Implementovat Rate Limiting
-- **Co**: Max 100 requests/min per IP/user
-- **Soubor**: `api/src/RateLimiter.php` + middleware v index.php
-- **Benefit**: Ochrana proti DDoS, API abuse
-- **Čas**: 1.5 hodiny
+#### 6. ✅ Implementovat Rate Limiting (HOTOVO)
+- **Co**: ✅ Max 100 requests/min per IP
+- **Status**: DOKONČENO
+- **Soubor**: `api/src/RateLimiter.php` + middleware v index.php (public/index.php)
+- **Omezení**:
+  - 100 requests/minute per IP address
+  - Vrátí HTTP 429 Too Many Requests když překročeno
+  - Exempt endpoints: /login, /register, /health, /docs, /openapi.yaml
+- **HTTP Headers**:
+  - `X-RateLimit-Limit`: 100
+  - `X-RateLimit-Remaining`: zbývající requests
+  - `X-RateLimit-Reset`: timestamp reset
+- **Benefit**: Ochrana proti DDoS a API abuse
+- **Čas**: ⏱️ ~1.5 hodiny
 - **Priority**: ⭐⭐ (Bezpečnost)
 
 ```bash
@@ -245,13 +254,13 @@ curl http://localhost:8000/health
 - [x] Total: 3 hodiny (HOTOVO!)
 ```
 
-### Týden 2-3 (BY MĚLO) - POKROK: 2.5/6 HODIN
+### Týden 2-3 (BY MĚLO) - POKROK: 4/6 HODIN ✅
 ```
 - [x] GitHub Actions (1.5h) ✅
 - [x] API Docs UI (1h) ✅
-- [ ] Rate limiting (1.5h) ← NEXT
-- [ ] Soft deletes (2h)
-- [ ] Total: 6 hodin (2.5h done, 3.5h remaining)
+- [x] Rate limiting (1.5h) ✅
+- [ ] Soft deletes (2h) ← NEXT
+- [ ] Total: 6 hodin (4h done, 2h remaining)
 ```
 
 ### Později (NICE TO HAVE)
@@ -328,5 +337,6 @@ Každý bod má:
 - ✅ Health check endpoint (GET /health, vrací JSON status)
 - ✅ CI/CD - GitHub Actions (auto-run testů na push/PR)
 - ✅ API Docs UI (GET /docs, GET /openapi.yaml)
-- ⏳ Advanced features: Rate limiting (zbývá - 1.5h)
-- ⏳ Advanced features: Soft deletes, RBAC, webhooks
+- ✅ Rate limiting (100 requests/min per IP, vrací 429)
+- ⏳ Soft deletes (zbývá - 2h)
+- ⏳ Advanced features: Change tracking, RBAC, webhooks, file uploads
