@@ -34,6 +34,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install MySQL Client
+        run: |
+          apt-get update
+          apt-get install -y mysql-client
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -60,7 +65,7 @@ jobs:
       - name: Wait for MySQL to be ready
         run: |
           for i in {1..30}; do
-            if mysqladmin ping -h"localhost" -u"root" -p"root" --silent; then
+            if mysql -h localhost -u root -proot -e "SELECT 1;" 2>/dev/null; then
               echo "MySQL is ready!"
               exit 0
             fi
