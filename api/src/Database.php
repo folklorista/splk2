@@ -47,10 +47,13 @@ class Database
             $columnsList = implode(', ', $columnNames);
 
             // Initialize whereClause with soft delete filter if column exists
-            $whereClause = '';
             $hasSoftDelete = in_array('is_deleted', $columnNames);
             if ($hasSoftDelete) {
-                $whereClause = '`is_deleted` = 0';
+                $softDeleteClause = '`is_deleted` = 0';
+                // Combine with existing whereClause if provided
+                $whereClause = !empty($whereClause)
+                    ? "({$whereClause}) AND {$softDeleteClause}"
+                    : $softDeleteClause;
             }
 
             if ($searchQuery !== null) {
@@ -187,8 +190,18 @@ class Database
     public function get(string $table, string | int $id, string $key = 'id')
     {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM `{$table}` WHERE {$key} = :id");
-            $stmt->execute(['id' => $id]); // line 43
+            // Check if table has is_deleted column (for soft delete support)
+            $columnCheck = $this->pdo->prepare("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME = 'is_deleted'");
+            $columnCheck->execute([$table]);
+            $hasSoftDelete = $columnCheck->rowCount() > 0;
+
+            $query = "SELECT * FROM `{$table}` WHERE {$key} = :id";
+            if ($hasSoftDelete) {
+                $query .= " AND `is_deleted` = 0";
+            }
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute(['id' => $id]);
             $result = $stmt->fetch();
 
             if (! $result) {
