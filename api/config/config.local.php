@@ -4,7 +4,7 @@ use App\LogLevel;
 
 return [
     'database' => [
-        'host' => 'localhost',
+        'host' => 'localhost:8997',
         'username' => 'splk',
         'password' => 'splk',
         'dbname' => 'splk',

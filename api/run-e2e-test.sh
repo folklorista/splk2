@@ -61,7 +61,7 @@ fi
 
 # Start API in background
 cd "$API_DIR"
-php -S localhost:8000 -t public > /tmp/api-test-server.log 2>&1 &
+php -S localhost:8000 -t public -r public/router.php > /tmp/api-test-server.log 2>&1 &
 API_PID=$!
 echo $API_PID > "$API_PROCESS_FILE"
 
