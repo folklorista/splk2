@@ -91,6 +91,19 @@ jobs:
           DB_NAME: splk
           APP_ENV: local
 
+      - name: Create test .env for API Server
+        run: |
+          cat > api/.env << EOF
+          APP_ENV=local
+          DB_HOST=127.0.0.1:3306
+          DB_USERNAME=root
+          DB_PASSWORD=root
+          DB_NAME=splk
+          JWT_SECRET=my_little_secret
+          LOG_PATH=../../log/api/app.log
+          LOG_LEVEL=DEBUG
+          EOF
+
       - name: Start API Server
         run: |
           cd api
