@@ -29,6 +29,46 @@ $validator  = new RuleValidator(rules: $tableRules, db: $db, logger: $logger);
 
 $endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger, validator: $validator);
 
+// Initialize rate limiter
+$rateLimiter = new RateLimiter(
+    logger: $logger,
+    storePath: __DIR__ . '/../../log/rate_limit',
+    maxRequests: 100,
+    windowSeconds: 60
+);
+
+// Apply rate limiting (excluding docs/health/login/register)
+$clientIp = RateLimiter::getClientIdentifier();
+$rateLimitExempt = ['login', 'register', 'health', 'docs', 'openapi.yaml'];
+
+// Perform rate limit check for non-exempt endpoints
+if (!isset($_GET['skipRateLimit']) && !in_array($tableName ?? '', $rateLimitExempt)) {
+    $limitCheck = $rateLimiter->checkLimit($clientIp);
+
+    if (!$limitCheck['allowed']) {
+        http_response_code(429);
+        header('Content-Type: application/json');
+        header('Retry-After: ' . max(1, $limitCheck['reset_at'] - time()));
+        echo json_encode([
+            'status' => 429,
+            'message' => 'Too Many Requests',
+            'data' => null,
+            'error' => 'Rate limit exceeded. Max ' . $limitCheck['limit'] . ' requests per ' . 60 . ' seconds.',
+            'meta' => [
+                'limit' => $limitCheck['limit'],
+                'remaining' => $limitCheck['remaining'],
+                'reset_at' => $limitCheck['reset_at'],
+            ],
+        ]);
+        exit;
+    }
+}
+
+// Add rate limit headers to responses
+header('X-RateLimit-Limit: 100');
+header('X-RateLimit-Remaining: ' . max(0, $limitCheck['remaining'] ?? 100));
+header('X-RateLimit-Reset: ' . ($limitCheck['reset_at'] ?? (time() + 60)));
+
 // Získání HTTP metody a endpointu
 $method = $_SERVER['REQUEST_METHOD'];
 
