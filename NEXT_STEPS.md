@@ -52,20 +52,22 @@ cp api/config/config.local.php api/.env.example
 
 ---
 
-#### 3. Implementovat Health Check Endpoint
-- **Co**: Přidat GET /health endpoint
-- **Soubor**: `api/index.php` (přidat route)
+#### 3. ✅ Implementovat Health Check Endpoint (HOTOVO)
+- **Co**: ✅ Přidat GET /health endpoint
+- **Status**: DOKONČENO
+- **Soubory**: `api/index.php` a `api/public/index.php`
 - **Vrátí**:
   ```json
   {
     "status": "operational",
     "database": "OK",
-    "uptime": "12345",
-    "timestamp": "2025-01-15T10:30:00Z"
+    "uptime": 1234,
+    "timestamp": "2026-06-29T11:02:37+00:00",
+    "version": "1.0.0"
   }
   ```
 - **Benefit**: Monitoring, load balancer health checks, alerting
-- **Čas**: 30 minut
+- **Čas**: ⏱️ ~30 minut
 - **Priority**: ⭐⭐⭐ (Production-ready)
 
 ```bash
@@ -226,12 +228,12 @@ curl http://localhost:8000/health
 
 ## 📊 Souhrn (Co je kdy dělat)
 
-### Týden 1 (MUSÍ SE DĚLAT)
+### Týden 1 (MUSÍ SE DĚLAT) ✅ DOKONČENO
 ```
 - [x] Unit testy (2h) ✅
 - [x] .env config (0.5h) ✅
-- [ ] Health check (0.5h)
-- [ ] Total: 3 hodiny (2.5h done, 0.5h remaining)
+- [x] Health check (0.5h) ✅
+- [x] Total: 3 hodiny (HOTOVO!)
 ```
 
 ### Týden 2-3 (BY MĚLO)
@@ -259,12 +261,12 @@ curl http://localhost:8000/health
 **Abys měl fully production-ready API:**
 
 1. ✅ **E2E test** - Hotovo!
-2. **Unit testy** - Doporučuju HNED (2h, dá ti confidence)
-3. **Environment config** - Bezpečnost (0.5h)
-4. **Health check** - Production-ready (0.5h)
-5. **GitHub Actions** - CI/CD (1.5h)
+2. ✅ **Unit testy** - HOTOVO! (40 testů, 75+ assertions)
+3. ✅ **Environment config** - HOTOVO! (.env, fallback defaults)
+4. ✅ **Health check** - HOTOVO! (GET /health endpoint)
+5. **GitHub Actions** - CI/CD (1.5h) ← NEXT!
 
-**Celkem 5.5 hodin → Máš production-ready API s testy, CI/CD a monitoring.**
+**Celkem ~3 hodiny HOTOVO! Zbývá CI/CD (1.5h) → Máš production-ready API s testy, monitoring a CI/CD.**
 
 Zbytek (rate limiting, soft deletes, RBAC) jsou "nice to have" podle potřeby.
 
@@ -314,5 +316,6 @@ Každý bod má:
 - ✅ E2E test (funguje)
 - ✅ Unit testy (40 testů, všechny prošly)
 - ✅ Environment config (.env, fallback defaults)
-- ⏳ Health check endpoint (zbývá)
-- ⏳ CI/CD (zbývá)
+- ✅ Health check endpoint (GET /health, vrací JSON status)
+- ⏳ CI/CD - GitHub Actions (zbývá - 1.5h)
+- ⏳ Advanced features (rate limiting, soft deletes, RBAC, webhooks)
