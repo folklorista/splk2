@@ -76,10 +76,11 @@ jobs:
           echo "✗ MySQL failed to start after 60 seconds"
           exit 1
 
-      - name: Create test database
+      - name: Import database schema
         run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -proot -e "CREATE DATABASE splk_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-        continue-on-error: true
+          mysql -h 127.0.0.1 -P 3306 -u root -proot splk < dev/db.sql
+          mysql -h 127.0.0.1 -P 3306 -u root -proot splk < api/migrations/add-soft-deletes.sql
+          mysql -h 127.0.0.1 -P 3306 -u root -proot splk < api/migrations/add-change-tracking.sql
 
       - name: Run Unit Tests
         run: ./vendor/bin/phpunit tests/Unit/
