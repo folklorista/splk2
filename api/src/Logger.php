@@ -13,6 +13,39 @@ class Logger
         self::$level = $config['level'];
     }
 
+    public function info($message, $context = [])
+    {
+        if (!is_string($message)) {
+            $message = json_encode($message);
+        }
+        if (!empty($context)) {
+            $message .= ' ' . json_encode($context);
+        }
+        self::log($message, LogLevel::INFO);
+    }
+
+    public function warning($message, $context = [])
+    {
+        if (!is_string($message)) {
+            $message = json_encode($message);
+        }
+        if (!empty($context)) {
+            $message .= ' ' . json_encode($context);
+        }
+        self::log($message, LogLevel::WARNING);
+    }
+
+    public function error($message, $context = [])
+    {
+        if (!is_string($message)) {
+            $message = json_encode($message);
+        }
+        if (!empty($context)) {
+            $message .= ' ' . json_encode($context);
+        }
+        self::log($message, LogLevel::ERROR);
+    }
+
     public static function log($message, $level = LogLevel::INFO)
     {
         // Získání informace o místě volání
