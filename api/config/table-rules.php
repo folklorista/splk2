@@ -489,4 +489,76 @@ return [
         ],
     ],
 
+    // ==================== WEBHOOKS TABLE ====================
+    'webhooks' => [
+        'validation' => [
+            'url' => [
+                'required' => true,
+                'type' => 'string',
+                'minLength' => 10,
+                'maxLength' => 2048,
+            ],
+            'events' => [
+                'required' => true,
+                'type' => 'array',
+            ],
+            'active' => [
+                'type' => 'boolean',
+                'required' => false,
+            ],
+            'retry_count' => [
+                'type' => 'integer',
+                'min' => 1,
+                'max' => 10,
+                'required' => false,
+            ],
+            'timeout_seconds' => [
+                'type' => 'integer',
+                'min' => 5,
+                'max' => 300,
+                'required' => false,
+            ],
+        ],
+        'hooks' => [
+            'beforeCreate' => function($data, $user, $logger, $db) {
+                // Only admin can create webhooks
+                $rbac = new \App\RoleBasedAccessControl($db, $logger);
+                if (!$rbac->hasRole($user, 'admin')) {
+                    throw new \App\RuleException(
+                        'Only administrators can create webhooks',
+                        403,
+                        'webhooks',
+                        'beforeCreate'
+                    );
+                }
+            },
+
+            'beforeUpdate' => function($id, $data, $user, $logger, $db) {
+                // Only admin can update webhooks
+                $rbac = new \App\RoleBasedAccessControl($db, $logger);
+                if (!$rbac->hasRole($user, 'admin')) {
+                    throw new \App\RuleException(
+                        'Only administrators can update webhooks',
+                        403,
+                        'webhooks',
+                        'beforeUpdate'
+                    );
+                }
+            },
+
+            'beforeDelete' => function($id, $user, $logger, $db) {
+                // Only admin can delete webhooks
+                $rbac = new \App\RoleBasedAccessControl($db, $logger);
+                if (!$rbac->hasRole($user, 'admin')) {
+                    throw new \App\RuleException(
+                        'Only administrators can delete webhooks',
+                        403,
+                        'webhooks',
+                        'beforeDelete'
+                    );
+                }
+            },
+        ],
+    ],
+
 ];

@@ -7,13 +7,15 @@ class Endpoints
     private Auth $auth;
     private Logger $logger;
     private RuleValidator $validator;
+    private WebhookManager $webhookManager;
 
-    public function __construct(Database $db, Auth $auth, Logger $logger, RuleValidator $validator = null)
+    public function __construct(Database $db, Auth $auth, Logger $logger, RuleValidator $validator = null, WebhookManager $webhookManager = null)
     {
         $this->db = $db;
         $this->auth = $auth;
         $this->logger = $logger;
         $this->validator = $validator;
+        $this->webhookManager = $webhookManager ?? new WebhookManager($db, $logger);
     }
 
     // Funkce pro logiku registrace
@@ -155,6 +157,24 @@ class Endpoints
             newValues: $data
         );
 
+        // Trigger webhook event
+        try {
+            $this->webhookManager->triggerEvent(
+                "{$table}.created",
+                $response['data']['id'],
+                [
+                    'table' => $table,
+                    'record_id' => $response['data']['id'],
+                    'data' => $data,
+                ]
+            );
+        } catch (\Exception $e) {
+            $this->logger->error("Webhook trigger failed for create", [
+                'table' => $table,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return $response;
     }
 
@@ -219,6 +239,25 @@ class Endpoints
             newValues: array_merge($oldValues, $data)
         );
 
+        // Trigger webhook event
+        try {
+            $this->webhookManager->triggerEvent(
+                "{$table}.updated",
+                $id,
+                [
+                    'table' => $table,
+                    'record_id' => $id,
+                    'old_values' => $oldValues,
+                    'new_values' => $data,
+                ]
+            );
+        } catch (\Exception $e) {
+            $this->logger->error("Webhook trigger failed for update", [
+                'table' => $table,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return $response;
     }
 
@@ -268,6 +307,24 @@ class Endpoints
             oldValues: $oldValues,
             newValues: null
         );
+
+        // Trigger webhook event
+        try {
+            $this->webhookManager->triggerEvent(
+                "{$table}.deleted",
+                $id,
+                [
+                    'table' => $table,
+                    'record_id' => $id,
+                    'old_values' => $oldValues,
+                ]
+            );
+        } catch (\Exception $e) {
+            $this->logger->error("Webhook trigger failed for delete", [
+                'table' => $table,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return $response;
     }
@@ -510,6 +567,139 @@ class Endpoints
                 'error' => $e->getMessage(),
             ]);
             return Response::prepare(500, "Error removing role");
+        }
+    }
+
+    /**
+     * Create webhook
+     */
+    public function createWebhookEndpoint(array $data, $user)
+    {
+        try {
+            $rbac = new RoleBasedAccessControl($this->db, $this->logger);
+
+            // Check if current user is admin
+            if (!$rbac->hasRole($user, 'admin')) {
+                return Response::prepare(403, "Only administrators can create webhooks");
+            }
+
+            $url = $data['url'] ?? null;
+            $events = $data['events'] ?? [];
+
+            if (!$url || !$events) {
+                return Response::prepare(400, "URL and events are required");
+            }
+
+            $result = $this->webhookManager->createWebhook($user->id, $url, $events);
+            return Response::prepare($result['status'], $result['message'], $result['data']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error creating webhook", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error creating webhook");
+        }
+    }
+
+    /**
+     * Get all webhooks for authenticated user
+     */
+    public function getWebhooksEndpoint($user)
+    {
+        try {
+            $rbac = new RoleBasedAccessControl($this->db, $this->logger);
+
+            // Check if current user is admin
+            if (!$rbac->hasRole($user, 'admin')) {
+                return Response::prepare(403, "Only administrators can view webhooks");
+            }
+
+            $result = $this->webhookManager->getUserWebhooks($user->id);
+            return Response::prepare($result['status'], $result['message'], $result['data']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error retrieving webhooks", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error retrieving webhooks");
+        }
+    }
+
+    /**
+     * Get single webhook details
+     */
+    public function getWebhookEndpoint(int $webhookId, $user)
+    {
+        try {
+            $rbac = new RoleBasedAccessControl($this->db, $this->logger);
+
+            // Check if current user is admin
+            if (!$rbac->hasRole($user, 'admin')) {
+                return Response::prepare(403, "Only administrators can view webhooks");
+            }
+
+            $result = $this->webhookManager->getWebhook($webhookId);
+            return Response::prepare($result['status'], $result['message'], $result['data']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error retrieving webhook", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error retrieving webhook");
+        }
+    }
+
+    /**
+     * Update webhook
+     */
+    public function updateWebhookEndpoint(int $webhookId, array $data, $user)
+    {
+        try {
+            $rbac = new RoleBasedAccessControl($this->db, $this->logger);
+
+            // Check if current user is admin
+            if (!$rbac->hasRole($user, 'admin')) {
+                return Response::prepare(403, "Only administrators can update webhooks");
+            }
+
+            $result = $this->webhookManager->updateWebhook($webhookId, $data);
+            return Response::prepare($result['status'], $result['message']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error updating webhook", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error updating webhook");
+        }
+    }
+
+    /**
+     * Delete webhook
+     */
+    public function deleteWebhookEndpoint(int $webhookId, $user)
+    {
+        try {
+            $rbac = new RoleBasedAccessControl($this->db, $this->logger);
+
+            // Check if current user is admin
+            if (!$rbac->hasRole($user, 'admin')) {
+                return Response::prepare(403, "Only administrators can delete webhooks");
+            }
+
+            $result = $this->webhookManager->deleteWebhook($webhookId);
+            return Response::prepare($result['status'], $result['message']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error deleting webhook", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error deleting webhook");
+        }
+    }
+
+    /**
+     * Test webhook
+     */
+    public function testWebhookEndpoint(int $webhookId, $user)
+    {
+        try {
+            $rbac = new RoleBasedAccessControl($this->db, $this->logger);
+
+            // Check if current user is admin
+            if (!$rbac->hasRole($user, 'admin')) {
+                return Response::prepare(403, "Only administrators can test webhooks");
+            }
+
+            $result = $this->webhookManager->testWebhook($webhookId);
+            return Response::prepare($result['status'], $result['message'], $result['data']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error testing webhook", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error testing webhook");
         }
     }
 

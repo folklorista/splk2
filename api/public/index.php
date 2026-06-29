@@ -224,6 +224,55 @@ if ($tableName === 'users' && $id && isset($path[$pathIndex['id'] + 1]) && $path
     }
 }
 
+// Webhook management routes (webhooks, webhooks/{id}, webhooks/{id}/test)
+if ($tableName === 'webhooks') {
+    switch ($method) {
+        case 'GET':
+            if ($id === 'test') {
+                Response::send(400, "Webhook ID is required for test");
+                exit;
+            }
+            if ($id) {
+                // GET /webhooks/{id} - get single webhook
+                Response::sendPrepared($endpoints->getWebhookEndpoint($id, $user['user']));
+            } else {
+                // GET /webhooks - get all webhooks
+                Response::sendPrepared($endpoints->getWebhooksEndpoint($user['user']));
+            }
+            exit;
+
+        case 'POST':
+            if ($id && isset($path[$pathIndex['id'] + 1]) && $path[$pathIndex['id'] + 1] === 'test') {
+                // POST /webhooks/{id}/test - test webhook
+                Response::sendPrepared($endpoints->testWebhookEndpoint($id, $user['user']));
+            } else {
+                // POST /webhooks - create new webhook
+                $data = json_decode(file_get_contents('php://input'), true);
+                Response::sendPrepared($endpoints->createWebhookEndpoint($data, $user['user']));
+            }
+            exit;
+
+        case 'PUT':
+            if ($id) {
+                // PUT /webhooks/{id} - update webhook
+                $data = json_decode(file_get_contents('php://input'), true);
+                Response::sendPrepared($endpoints->updateWebhookEndpoint($id, $data, $user['user']));
+            } else {
+                Response::send(400, "Webhook ID is required");
+            }
+            exit;
+
+        case 'DELETE':
+            if ($id) {
+                // DELETE /webhooks/{id} - delete webhook
+                Response::sendPrepared($endpoints->deleteWebhookEndpoint($id, $user['user']));
+            } else {
+                Response::send(400, "Webhook ID is required");
+            }
+            exit;
+    }
+}
+
 // Zpracování stránkování a řazení z HTTP hlaviček
 $limit         = isset($_SERVER['HTTP_X_PAGINATION_LIMIT']) ? (int) $_SERVER['HTTP_X_PAGINATION_LIMIT'] : null;
 $offset        = isset($_SERVER['HTTP_X_PAGINATION_OFFSET']) ? (int) $_SERVER['HTTP_X_PAGINATION_OFFSET'] : null;

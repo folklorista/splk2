@@ -236,17 +236,42 @@ curl http://localhost:8000/health
 
 ---
 
-#### 10. Webhook System
-- **Co**: POST notifications na external URLs
-- **Databáze**: Nová tabulka webhooks (url, events, active)
-- **Kód**: Volat webhook v afterCreate/afterUpdate/afterDelete hooks
-- **Benefit**: Real-time integraci se 3rd party systémy
-- **Čas**: 3 hodiny
+#### 10. ✅ Webhook System (HOTOVO)
+- **Co**: ✅ POST notifications na external URLs
+- **Status**: DOKONČENO
+- **Databáze**: 
+  - ✅ `webhooks` tabulka - ukládá webhook konfiguraci (url, events, active, retry_count, timeout_seconds)
+  - ✅ `webhook_logs` tabulka - audit trail všech doručeních s delivery status
+  - ✅ Migration: `migrations/create-webhooks-table.sql`
+- **Kód**: 
+  - ✅ `api/src/WebhookManager.php` - Webhook management (create, update, delete, trigger, test)
+  - ✅ `config/table-rules.php` - RBAC pro webhooks (admin-only operations)
+  - ✅ `api/src/Endpoints.php` - Webhook endpoints + triggering v afterCreate/afterUpdate/afterDelete
+  - ✅ `api/public/index.php` - Routes pro webhook management
+- **Triggering**:
+  - ✅ CREATE: `{table}.created` event s novými daty
+  - ✅ UPDATE: `{table}.updated` event s old_values a new_values
+  - ✅ DELETE: `{table}.deleted` event se starými daty
+- **Supported Events**: user.*, item.*, category.*, group.*, person.*, loan.*, place.*, event.*, * (all)
+- **Delivery**:
+  - ✅ Exponential backoff retry logic (default 3 retries)
+  - ✅ Configurable timeout (5-300 seconds, default 30)
+  - ✅ HTTP 2xx success, 4xx no-retry, 5xx retry
+  - ✅ Webhook logs pro audit trail
+- **Benefit**: Real-time integraci se 3rd party systémy (Slack, external audit, CRM, CI/CD)
+- **Čas**: ⏱️ ~3 hodiny (HOTOVO!)
 - **Priority**: ⭐ (Advanced)
 
+**Testování:**
 ```bash
-# Webhook event: user.created → POST https://example.com/webhooks/user-created
+# Unit testy: 10 testů
+./vendor/bin/phpunit tests/Unit/WebhookManagerTest.php
+
+# E2E testy: webhook event triggering
+# (Included v complex scenarios)
 ```
+
+**Dokumentace:** `api/docs/WEBHOOKS.md`
 
 ---
 
@@ -307,7 +332,7 @@ curl http://localhost:8000/health
 ```
 - [x] Change tracking (2h) ✅ HOTOVO!
 - [x] RBAC (3h) ✅ HOTOVO!
-- [ ] Webhooks (3h)
+- [x] Webhooks (3h) ✅ HOTOVO!
 - [ ] File uploads (2.5h)
 - [ ] GraphQL (4h+, architecture-only, no implementation)
 ```
@@ -316,7 +341,7 @@ curl http://localhost:8000/health
 
 ## 🎯 Co Bylo Dokončeno
 
-**✅ FULLY PRODUCTION-READY API! (14 hodin)**
+**✅ FULLY PRODUCTION-READY API! (17 hodin)**
 
 ### Týden 1 (3 hodiny) ✅
 1. ✅ **Unit testy** - 40 testů, 75+ assertions
@@ -341,8 +366,16 @@ curl http://localhost:8000/health
    - 12 unit testů + E2E testy
    - Dokumentace (RBAC.md)
 
+### Týden 5 (3 hodiny) ✅
+10. ✅ **Webhook System** - Real-time notifications na external URLs
+   - WebhookManager pro create/update/delete/trigger/test operace
+   - Triggering v afterCreate/afterUpdate/afterDelete hooks
+   - Exponential backoff retry logic (1-10 retries, configurable)
+   - Webhook audit logs s delivery status
+   - 10 unit testů
+   - Dokumentace (WEBHOOKS.md)
+
 **Zbývající features (nice to have):**
-- Webhooks (3h)
 - File uploads (2.5h)
 - GraphQL (4h+, architecture-only, skipped per strategy)
 
