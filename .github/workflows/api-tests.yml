@@ -142,7 +142,11 @@ jobs:
         continue-on-error: true
 
       - name: Run All Tests with Coverage
-        run: ./vendor/bin/phpunit --coverage-text
+        run: |
+          ./vendor/bin/phpunit \
+            --coverage-clover coverage.xml \
+            --display-deprecations \
+            --display-warnings
         working-directory: api
         env:
           DB_HOST: 127.0.0.1:3306
