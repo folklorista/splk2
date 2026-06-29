@@ -14,7 +14,7 @@
         </testsuite>
     </testsuites>
 
-    <source processUncoveredFiles="true">
+    <coverage processUncoveredFiles="true">
         <include>
             <directory suffix=".php">src</directory>
         </include>
@@ -22,9 +22,6 @@
             <directory>vendor</directory>
             <directory>tests</directory>
         </exclude>
-    </source>
-
-    <coverage>
         <report>
             <cobertura outputFile="coverage.xml"/>
         </report>
