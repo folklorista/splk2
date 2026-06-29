@@ -131,8 +131,7 @@ return [
             'beforeDelete' => function($id, $user, $logger, $db) {
                 // Cannot delete category that has items
                 try {
-                    $items = $db->getAll('items', "category_id = :id",
-                        whereParams: [':id' => $id]);
+                    $items = $db->getAllWhere('items', "category_id = ?", [$id]);
 
                     if ($items['status'] === 200 && !empty($items['data'])) {
                         throw new \App\RuleException(
@@ -238,8 +237,7 @@ return [
             'beforeDelete' => function($id, $user, $logger, $db) {
                 // Cannot delete group with members
                 try {
-                    $members = $db->getAll('users_groups', "group_id = :id",
-                        whereParams: [':id' => $id]);
+                    $members = $db->getAllWhere('users_groups', "group_id = ?", [$id]);
 
                     if ($members['status'] === 200 && !empty($members['data'])) {
                         throw new \App\RuleException(

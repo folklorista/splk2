@@ -151,7 +151,7 @@ class E2EWorkflowTest extends TestCase
 
         // Business rule: Cannot delete category with items
         $this->assertEquals(409, $response['status']);
-        $this->assertStringContainsString('Cannot delete category', $response['error']);
+        $this->assertStringContainsString('Cannot delete category', $response['message']);
 
         echo "✓ Correctly prevented deletion (business rule enforced)\n";
         echo "  Error: {$response['error']}\n";
