@@ -692,17 +692,21 @@ class Database
         ?string $tableName = null,
         ?int $recordId = null,
         ?string $details = null,
-        ?array $data = null
+        ?array $data = null,
+        ?array $oldValues = null,
+        ?array $newValues = null
     ): void {
         $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
         $jsonData  = $data ? json_encode($data) : null;
+        $jsonOldValues = $oldValues ? json_encode($oldValues) : null;
+        $jsonNewValues = $newValues ? json_encode($newValues) : null;
 
         $stmt = $this->pdo->prepare("
         INSERT INTO audit_logs
-            (action_id, user_id, table_name, record_id, details, data, ip_address, user_agent)
+            (action_id, user_id, table_name, record_id, details, data, old_values, new_values, ip_address, user_agent)
         VALUES
-            (:action_id, :user_id, :table_name, :record_id, :details, :data, :ip_address, :user_agent)
+            (:action_id, :user_id, :table_name, :record_id, :details, :data, :old_values, :new_values, :ip_address, :user_agent)
     ");
         $stmt->execute([
             'action_id'  => $actionType->value,
@@ -711,6 +715,8 @@ class Database
             'record_id'  => $recordId,
             'details'    => $details,
             'data'       => $jsonData,
+            'old_values' => $jsonOldValues,
+            'new_values' => $jsonNewValues,
             'ip_address' => $ipAddress,
             'user_agent' => $userAgent,
         ]);

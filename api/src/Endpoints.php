@@ -143,9 +143,17 @@ class Endpoints
             }
         }
 
-        // Audit log
-        $this->db->logAction(AuditAction::DATA_INSERT, $user->id, $table,
-            $response['data']['id'], $response['message'], $data);
+        // Audit log (CREATE: new_values = data)
+        $this->db->logAction(
+            AuditAction::DATA_INSERT,
+            $user->id,
+            $table,
+            $response['data']['id'],
+            $response['message'],
+            $data,
+            oldValues: null,
+            newValues: $data
+        );
 
         return $response;
     }
@@ -153,6 +161,10 @@ class Endpoints
     // Funkce pro PUT operaci - aktualizace záznamu
     public function updateRecordEndpoint($table, $id, $data, $user)
     {
+        // Fetch old values before update (for change tracking)
+        $oldRecordResponse = $this->db->get($table, $id);
+        $oldValues = ($oldRecordResponse['status'] === 200) ? $oldRecordResponse['data'] : [];
+
         // Validation
         if ($this->validator) {
             $validation = $this->validator->validateUpdate($table, $data);
@@ -195,9 +207,17 @@ class Endpoints
             }
         }
 
-        // Audit log
-        $this->db->logAction(AuditAction::DATA_UPDATE, $user->id, $table, $id,
-            $response['message'], $data);
+        // Audit log (UPDATE: old_values + new_values)
+        $this->db->logAction(
+            AuditAction::DATA_UPDATE,
+            $user->id,
+            $table,
+            $id,
+            $response['message'],
+            $data,
+            oldValues: $oldValues,
+            newValues: array_merge($oldValues, $data)
+        );
 
         return $response;
     }
@@ -205,6 +225,10 @@ class Endpoints
     // Funkce pro DELETE operaci - smazání záznamu
     public function deleteRecordEndpoint($table, $id, $user)
     {
+        // Fetch old values before delete (for change tracking)
+        $oldRecordResponse = $this->db->get($table, $id);
+        $oldValues = ($oldRecordResponse['status'] === 200) ? $oldRecordResponse['data'] : [];
+
         // Hook: beforeDelete
         if ($this->validator) {
             try {
@@ -233,9 +257,17 @@ class Endpoints
             }
         }
 
-        // Audit log
-        $this->db->logAction(AuditAction::DATA_DELETE, $user->id, $table, $id,
-            $response['message']);
+        // Audit log (DELETE: old_values)
+        $this->db->logAction(
+            AuditAction::DATA_DELETE,
+            $user->id,
+            $table,
+            $id,
+            $response['message'],
+            data: null,
+            oldValues: $oldValues,
+            newValues: null
+        );
 
         return $response;
     }

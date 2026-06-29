@@ -167,16 +167,25 @@ curl http://localhost:8000/health
 
 ### 🔵 NÍZKÁ PRIORITA (Bonusové features)
 
-#### 8. Change Tracking (Audit Detail)
-- **Co**: Ukládat before/after values v audit_logs
-- **Databáze**: Přidat JSONB sloupec old_values a new_values v audit_logs
-- **Benefit**: "Kdo co změnil a z čeho na co"
-- **Čas**: 2 hodiny
+#### 8. ✅ Change Tracking (Audit Detail) (HOTOVO)
+- **Co**: ✅ Ukládat before/after values v audit_logs
+- **Status**: DOKONČENO
+- **Databáze**: 
+  - ✅ Migration: `migrations/add-change-tracking.sql`
+  - Přidá `old_values JSON` a `new_values JSON` sloupce
+- **Kód**:
+  - ✅ Database.php: `logAction()` rozšířena o `oldValues` a `newValues`
+  - ✅ Endpoints.php: CREATE/UPDATE/DELETE zaznamenávají změny
+    - CREATE: new_values = data
+    - UPDATE: old_values = stará data, new_values = nová data  
+    - DELETE: old_values = data (new_values NULL)
+- **Benefit**: "Kdo co změnil a z čeho na co" - kompletní audit trail
+- **Čas**: ⏱️ ~2 hodiny (HOTOVO!)
 - **Priority**: ⭐ (Nice to have)
 
 ```bash
-# ALTER TABLE audit_logs ADD old_values JSON, ADD new_values JSON;
-# Test: Změnit položku, zkontrolovat audit_logs - vidět before/after
+# Test: Change Tracking E2E
+./api/run-change-tracking-test.sh
 ```
 
 ---
