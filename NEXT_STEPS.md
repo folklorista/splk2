@@ -102,20 +102,19 @@ curl http://localhost:8000/health
 
 ---
 
-#### 5. Přidat API Documentation Web UI
-- **Co**: Swagger UI nebo ReDoc pro openapi.yaml
-- **Soubor**: Nová route GET /docs
-- **Vrátí**: Interactive API browser
+#### 5. ✅ Přidat API Documentation Web UI (HOTOVO)
+- **Co**: ✅ ReDoc UI pro openapi.yaml
+- **Status**: DOKONČENO
+- **Soubory**: 
+  - `api/public/index.php` - GET /docs route
+  - `api/public/openapi.yaml` - Schema file
+- **Vrátí**: ✅ Interactive API browser s ReDoc
+- **Endpointy**:
+  - `GET /docs` → ReDoc UI (HTML + CDN)
+  - `GET /openapi.yaml` → OpenAPI 3.1 spec
 - **Benefit**: Users vidí API live, testují endpointy z UI
-- **Čas**: 1 hodina
+- **Čas**: ⏱️ ~1 hodina
 - **Priority**: ⭐⭐ (Marketing/UX)
-
-```bash
-# Možnosti:
-# 1. Swagger UI - npm install swagger-ui-express
-# 2. ReDoc - npm install redoc
-# 3. nebo statická HTML stránka s ReDoc CDN (jednodušší)
-```
 
 ---
 
@@ -246,13 +245,13 @@ curl http://localhost:8000/health
 - [x] Total: 3 hodiny (HOTOVO!)
 ```
 
-### Týden 2-3 (BY MĚLO)
+### Týden 2-3 (BY MĚLO) - POKROK: 2.5/6 HODIN
 ```
 - [x] GitHub Actions (1.5h) ✅
-- [ ] API Docs UI (1h) ← NEXT
-- [ ] Rate limiting (1.5h)
+- [x] API Docs UI (1h) ✅
+- [ ] Rate limiting (1.5h) ← NEXT
 - [ ] Soft deletes (2h)
-- [ ] Total: 6 hodin (1.5h done, 4.5h remaining)
+- [ ] Total: 6 hodin (2.5h done, 3.5h remaining)
 ```
 
 ### Později (NICE TO HAVE)
@@ -322,11 +321,12 @@ Každý bod má:
 
 **Status**: 
 - ✅ Architektura (RuleValidator, table-rules)
-- ✅ Dokumentace (OpenAPI, API.md, příklady)
+- ✅ Dokumentace (OpenAPI, API.md, příklady, ReDoc UI)
 - ✅ E2E test (funguje)
 - ✅ Unit testy (40 testů, všechny prošly)
 - ✅ Environment config (.env, fallback defaults)
 - ✅ Health check endpoint (GET /health, vrací JSON status)
 - ✅ CI/CD - GitHub Actions (auto-run testů na push/PR)
-- ⏳ API Docs UI (zbývá - 1h)
-- ⏳ Advanced features (rate limiting, soft deletes, RBAC, webhooks)
+- ✅ API Docs UI (GET /docs, GET /openapi.yaml)
+- ⏳ Advanced features: Rate limiting (zbývá - 1.5h)
+- ⏳ Advanced features: Soft deletes, RBAC, webhooks
