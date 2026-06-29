@@ -281,7 +281,11 @@ class Database
             $columnCheck->execute([$table]);
             $hasSoftDelete = $columnCheck->rowCount() > 0;
 
-            if ($hasSoftDelete) {
+            // Items are hard-deleted to avoid foreign key constraint issues
+            // Other tables with soft delete support are soft-deleted for audit trail
+            $isItemsTable = $table === 'items';
+
+            if ($hasSoftDelete && !$isItemsTable) {
                 // Soft delete: mark as deleted instead of removing
                 $stmt = $this->pdo->prepare("UPDATE `{$table}` SET is_deleted = 1, updated_at = NOW() WHERE id = :id");
             } else {

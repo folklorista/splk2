@@ -210,6 +210,26 @@ switch ($method) {
             } else {
                 Response::send(404, "Table not found");
             }
+        } elseif ($tableName === 'audit_logs' && !isset($id)) {
+            // Special handling for audit_logs with filtering by table_name and record_id
+            $whereClause = '';
+            $filterTable = $_GET['table_name'] ?? null;
+            $filterId = $_GET['record_id'] ?? null;
+
+            if ($filterTable || $filterId) {
+                $conditions = [];
+                if ($filterTable) {
+                    $conditions[] = "`table_name` = '{$filterTable}'";
+                }
+                if ($filterId) {
+                    $conditions[] = "`record_id` = {$filterId}";
+                }
+                $whereClause = implode(' AND ', $conditions);
+            }
+
+            Response::sendPrepared(
+                $endpoints->getAllRecords($tableName, $whereClause, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns)
+            );
         } elseif (in_array($tableName, ['categories', 'groups']) && ! isset($id)) {
             Response::sendPrepared($endpoints->loadTreeEndpoint($tableName));
 
