@@ -22,7 +22,12 @@ $config = require __DIR__ . '/config/config.' . ($env === 'production' ? 'produc
 $logger    = new Logger($config['log']);
 $db        = new Database(config: $config['database'], logger: $logger);
 $auth      = new Auth(config: $config['auth'], db: $db, logger: $logger);
-$endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger);
+
+// Load table rules
+$tableRules = require __DIR__ . '/config/table-rules.php';
+$validator  = new RuleValidator(rules: $tableRules, db: $db, logger: $logger);
+
+$endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger, validator: $validator);
 
 // Získání HTTP metody a endpointu
 $method = $_SERVER['REQUEST_METHOD'];
