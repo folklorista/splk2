@@ -213,15 +213,21 @@ curl http://localhost:8000/health
 
 ---
 
-#### 12. GraphQL Layer (Optional)
-- **Co**: Vrstva nad REST API
-- **Benefit**: Query builder, efficient data fetching
-- **Čas**: 4+ hodiny
-- **Priority**: ⭐ (Overkill pro malý projekt)
+#### 12. ⏸️ GraphQL Layer (PŘESKOČIT PRO TEĎKA)
+- **Status**: Architektonicky otevřeno, prakticky ne
+- **Strategie**:
+  - 🚫 **Teď**: Neimplementovat
+  - 🏗️ **Architektonicky**: Nezavírat cestu (keep services clean)
+  - ⚙️ **Prakticky**: Držet Angular services, čisté modely, REST endpointy
+  - 🔮 **Později**: Zvážit pokud REST začne bolet
+- **Benefit**: Query builder, efficient data fetching (pokud bude potřeba)
+- **Čas**: 4+ hodiny (zatím přeskočeno)
+- **Priority**: ⭐ (Možné budoucně, ale ne teď)
 
 ```bash
-# Knihovna: graphql-core + webonyx/graphql-php
-# Alternativa: Přeskočit, REST je dost
+# Poznámka: REST je dost pro MVP
+# Pokud se bude potřeba: webonyx/graphql-php
+# Klientská strana: Apollo, Relay, nebo vlastní resolver
 ```
 
 ---
