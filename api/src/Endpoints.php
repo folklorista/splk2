@@ -6,12 +6,14 @@ class Endpoints
     private Database $db;
     private Auth $auth;
     private Logger $logger;
+    private RuleValidator $validator;
 
-    public function __construct(Database $db, Auth $auth, Logger $logger)
+    public function __construct(Database $db, Auth $auth, Logger $logger, RuleValidator $validator = null)
     {
         $this->db = $db;
         $this->auth = $auth;
         $this->logger = $logger;
+        $this->validator = $validator;
     }
 
     // Funkce pro logiku registrace
@@ -100,12 +102,50 @@ class Endpoints
     // Funkce pro POST operaci - vytvoření nového záznamu
     public function createRecordEndpoint($table, $data, $user)
     {
+        // Validation
+        if ($this->validator) {
+            $validation = $this->validator->validateCreate($table, $data);
+            if (!$validation['valid']) {
+                return Response::prepare(400, "Validation failed", null,
+                    implode('; ', $validation['errors']));
+            }
+        }
+
+        // Hook: beforeCreate
+        if ($this->validator) {
+            try {
+                $this->validator->executeHook($table, 'beforeCreate', $data, $user, $this->logger);
+            } catch (RuleException $e) {
+                return Response::prepare($e->getCode(), $e->getMessage());
+            } catch (\Exception $e) {
+                return Response::prepare(400, $e->getMessage());
+            }
+        }
+
+        // Hash passwords
         if (isset($data['password'])) {
             $data['password'] = $this->auth->hashPassword($data['password']);
         }
 
+        // Insert
         $response = $this->db->insert($table, $data);
-        $this->db->logAction(AuditAction::DATA_INSERT, $user->id, $table, $response['data']['id'], $response['message'], $data);
+        if ($response['status'] !== 201) {
+            return $response;
+        }
+
+        // Hook: afterCreate
+        if ($this->validator) {
+            try {
+                $this->validator->executeHook($table, 'afterCreate', $response['data']['id'],
+                    $user, $this->logger, $this->db);
+            } catch (\Exception $e) {
+                $this->logger->error("AfterCreate hook failed", ['error' => $e->getMessage()]);
+            }
+        }
+
+        // Audit log
+        $this->db->logAction(AuditAction::DATA_INSERT, $user->id, $table,
+            $response['data']['id'], $response['message'], $data);
 
         return $response;
     }
@@ -113,29 +153,106 @@ class Endpoints
     // Funkce pro PUT operaci - aktualizace záznamu
     public function updateRecordEndpoint($table, $id, $data, $user)
     {
+        // Validation
+        if ($this->validator) {
+            $validation = $this->validator->validateUpdate($table, $data);
+            if (!$validation['valid']) {
+                return Response::prepare(400, "Validation failed", null,
+                    implode('; ', $validation['errors']));
+            }
+        }
+
+        // Hook: beforeUpdate
+        if ($this->validator) {
+            try {
+                $this->validator->executeHook($table, 'beforeUpdate', $id, $data,
+                    $user, $this->logger, $this->db);
+            } catch (RuleException $e) {
+                return Response::prepare($e->getCode(), $e->getMessage());
+            } catch (\Exception $e) {
+                return Response::prepare(400, $e->getMessage());
+            }
+        }
+
+        // Hash passwords
         if (isset($data['password'])) {
             $data['password'] = $this->auth->hashPassword($data['password']);
         }
+
+        // Update
         $response = $this->db->update($table, $id, $data);
-        $this->db->logAction(AuditAction::DATA_UPDATE, $user->id, $table, $id, $response['message'], $data);
+        if ($response['status'] !== 200) {
+            return $response;
+        }
+
+        // Hook: afterUpdate
+        if ($this->validator) {
+            try {
+                $this->validator->executeHook($table, 'afterUpdate', $id,
+                    $user, $this->logger, $this->db);
+            } catch (\Exception $e) {
+                $this->logger->error("AfterUpdate hook failed", ['error' => $e->getMessage()]);
+            }
+        }
+
+        // Audit log
+        $this->db->logAction(AuditAction::DATA_UPDATE, $user->id, $table, $id,
+            $response['message'], $data);
+
         return $response;
     }
 
     // Funkce pro DELETE operaci - smazání záznamu
     public function deleteRecordEndpoint($table, $id, $user)
     {
+        // Hook: beforeDelete
+        if ($this->validator) {
+            try {
+                $this->validator->executeHook($table, 'beforeDelete', $id,
+                    $user, $this->logger, $this->db);
+            } catch (RuleException $e) {
+                return Response::prepare($e->getCode(), $e->getMessage());
+            } catch (\Exception $e) {
+                return Response::prepare(400, $e->getMessage());
+            }
+        }
+
+        // Delete
         $response = $this->db->delete($table, $id);
-        $this->db->logAction(AuditAction::DATA_DELETE, $user->id, $table, $id, $response['message']);
+        if ($response['status'] !== 200) {
+            return $response;
+        }
+
+        // Hook: afterDelete
+        if ($this->validator) {
+            try {
+                $this->validator->executeHook($table, 'afterDelete', $id,
+                    $user, $this->logger, $this->db);
+            } catch (\Exception $e) {
+                $this->logger->error("AfterDelete hook failed", ['error' => $e->getMessage()]);
+            }
+        }
+
+        // Audit log
+        $this->db->logAction(AuditAction::DATA_DELETE, $user->id, $table, $id,
+            $response['message']);
+
         return $response;
     }
 
     public function handleForeignKeys($table, $queryParams)
     {
-        // Sestavení podmínek WHERE na základě queryParams
+        // Sanitize and validate foreign keys to prevent SQL injection
         $conditions = [];
+        $params = [];
+        $paramIndex = 0;
+
         foreach ($queryParams as $key => $value) {
             if ($this->db->isForeignKey($table, $key)) {
-                $conditions[] = "`$key` = '$value'";
+                // Use prepared statement parameters instead of direct interpolation
+                $paramName = ':fk_' . $paramIndex++;
+                $conditions[] = "`{$key}` = {$paramName}";
+                $params[$paramName] = $value;
             }
         }
 
@@ -146,13 +263,13 @@ class Endpoints
 
         $whereClause = implode(' AND ', $conditions);
 
-        // Volání funkce getAll s generovaným WHERE
-        $result = $this->db->getAll($table, $whereClause);
+        // Volání funkce getAll s bezpečnými parametry
+        $result = $this->db->getAllWhere($table, $whereClause, $params);
 
         // Zpracování výsledku z getAll
-        if ($result['statusCode'] === 200) {
-            Response::send(200, 'Records found', $result['data']);
-        } elseif ($result['statusCode'] === 204) {
+        if ($result['status'] === 200) {
+            Response::sendPrepared(Response::prepare(200, 'Records found', $result['data']));
+        } elseif ($result['status'] === 204) {
             Response::send(204, 'No records found');
         } else {
             Response::send(500, 'Error retrieving records', null, $result['error'] ?? 'Unknown error');
