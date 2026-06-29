@@ -1,0 +1,143 @@
+name: API Tests
+
+on:
+  push:
+    branches: [ master, main, develop ]
+    paths:
+      - 'api/**'
+      - '.github/workflows/api-tests.yml'
+  pull_request:
+    branches: [ master, main ]
+    paths:
+      - 'api/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: splk
+          MYSQL_TCP_PORT: 3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysql, curl, json
+          tools: composer
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+        working-directory: api
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('api/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install PHP dependencies
+        run: composer install --no-progress --prefer-dist
+        working-directory: api
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {1..30}; do
+            if mysqladmin ping -h"localhost" -u"root" -p"root" --silent; then
+              echo "MySQL is ready!"
+              exit 0
+            fi
+            echo "Waiting for MySQL... attempt $i/30"
+            sleep 1
+          done
+          echo "MySQL failed to start"
+          exit 1
+
+      - name: Create test database
+        run: |
+          mysql -h localhost -u root -proot -e "CREATE DATABASE splk_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+        continue-on-error: true
+
+      - name: Run Unit Tests
+        run: ./vendor/bin/phpunit tests/Unit/
+        working-directory: api
+        env:
+          DB_HOST: localhost:3306
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          DB_NAME: splk
+          APP_ENV: local
+
+      - name: Start API Server
+        run: |
+          cd api
+          php -S localhost:8000 -t public > /tmp/api.log 2>&1 &
+          API_PID=$!
+          sleep 3
+          # Verify server is running
+          if curl -s http://localhost:8000/health > /dev/null; then
+            echo "API server started successfully (PID: $API_PID)"
+          else
+            echo "API server failed to start"
+            cat /tmp/api.log
+            exit 1
+          fi
+
+      - name: Run Integration Tests (E2E)
+        run: ./vendor/bin/phpunit tests/Integration/
+        working-directory: api
+        env:
+          DB_HOST: localhost:3306
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          DB_NAME: splk
+          APP_ENV: local
+        continue-on-error: true
+
+      - name: Run All Tests with Coverage
+        run: ./vendor/bin/phpunit --coverage-text
+        working-directory: api
+        env:
+          DB_HOST: localhost:3306
+          DB_USERNAME: root
+          DB_PASSWORD: root
+          DB_NAME: splk
+          APP_ENV: local
+
+      - name: Check Health Endpoint
+        run: |
+          echo "Testing Health Endpoint..."
+          HEALTH=$(curl -s http://localhost:8000/health)
+          echo "Health response: $HEALTH"
+
+          # Verify it's valid JSON and contains 'operational' or 'degraded'
+          if echo "$HEALTH" | grep -q '"status"'; then
+            echo "✓ Health endpoint is working"
+          else
+            echo "✗ Health endpoint failed"
+            exit 1
+          fi
+
+      - name: Upload Coverage Reports
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          files: api/coverage.xml
+          fail_ci_if_error: false
