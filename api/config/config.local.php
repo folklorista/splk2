@@ -2,6 +2,16 @@
 
 use App\LogLevel;
 
+// Validate required JWT_SECRET
+if (empty($_ENV['JWT_SECRET'])) {
+    throw new \Exception(
+        "Critical Configuration Error: JWT_SECRET environment variable is not set.\n" .
+        "This is required for API security.\n" .
+        "Please add JWT_SECRET to your .env file.\n" .
+        "Example: JWT_SECRET=your-very-long-random-secret-at-least-32-chars"
+    );
+}
+
 return [
     'database' => [
         'host' => $_ENV['DB_HOST'] ?? 'localhost:8997',
@@ -10,7 +20,7 @@ return [
         'dbname' => $_ENV['DB_NAME'] ?? 'splk',
     ],
     'auth' => [
-        'jwt_secret' => $_ENV['JWT_SECRET'] ?? 'my_little_secret',
+        'jwt_secret' => $_ENV['JWT_SECRET'],
     ],
     'pathIndex' => [
         'table' => 0,
