@@ -5,18 +5,30 @@ use Dotenv\Dotenv;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Nastavení HTTP hlaviček
-Cors::setHeaders();
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
-header(header: 'Content-Type: application/json');
-
-// Načtení konfigurace
+// Load environment variables BEFORE setting headers (CORS needs env config)
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 $env    = $_ENV['APP_ENV'] ?? 'local';
 $config = require __DIR__ . '/../config/config.' . ($env === 'production' ? 'production' : 'local') . '.php';
+
+// Now set CORS headers (after env is loaded)
+try {
+    Cors::setHeaders();
+} catch (\Exception $e) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status' => 500,
+        'message' => 'Server configuration error',
+        'error' => $e->getMessage(),
+    ]);
+    exit(1);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+header(header: 'Content-Type: application/json');
 
 // Inicializace
 $logger    = new Logger($config['log']);
