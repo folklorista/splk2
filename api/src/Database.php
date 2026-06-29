@@ -38,7 +38,13 @@ class Database
             $columns     = array_filter($columns, fn($column) => $column['Field'] !== 'password');
             $columnNames = array_map(fn($column) => $column['Field'], $columns);
             $columnsList = implode(', ', $columnNames);
+
+            // Initialize whereClause with soft delete filter if column exists
             $whereClause = '';
+            $hasSoftDelete = in_array('is_deleted', $columnNames);
+            if ($hasSoftDelete) {
+                $whereClause = '`is_deleted` = 0';
+            }
 
             if ($searchQuery !== null) {
                 $schema = $this->getSchema($table);
@@ -263,7 +269,19 @@ class Database
     public function delete(string $table, int $id)
     {
         try {
-            $stmt = $this->pdo->prepare("DELETE FROM `{$table}` WHERE id = :id");
+            // Check if table has is_deleted column (for soft delete support)
+            $columnCheck = $this->pdo->prepare("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME = 'is_deleted'");
+            $columnCheck->execute([$table]);
+            $hasSoftDelete = $columnCheck->rowCount() > 0;
+
+            if ($hasSoftDelete) {
+                // Soft delete: mark as deleted instead of removing
+                $stmt = $this->pdo->prepare("UPDATE `{$table}` SET is_deleted = 1, updated_at = NOW() WHERE id = :id");
+            } else {
+                // Hard delete: remove record completely
+                $stmt = $this->pdo->prepare("DELETE FROM `{$table}` WHERE id = :id");
+            }
+
             if (! $stmt->execute(['id' => $id])) {
                 return Response::prepare(400, "Record not deleted");
             } elseif ($stmt->rowCount() === 0) {
@@ -782,6 +800,53 @@ class Database
             }
         } catch (PDOException $e) {
             return Response::prepare(400, "Database error", null, $e->getMessage());
+        }
+    }
+
+    /**
+     * Restore a soft-deleted record
+     */
+    public function restore(string $table, int $id)
+    {
+        try {
+            $stmt = $this->pdo->prepare("UPDATE `{$table}` SET is_deleted = 0, updated_at = NOW() WHERE id = :id AND is_deleted = 1");
+            if (! $stmt->execute(['id' => $id])) {
+                return Response::prepare(400, "Record not restored");
+            } elseif ($stmt->rowCount() === 0) {
+                return Response::prepare(404, "Record not found or not deleted");
+            } else {
+                return Response::prepare(200, "Record restored");
+            }
+        } catch (PDOException $e) {
+            if ($e->getCode() === '42S02') {
+                return Response::prepare(404, "Table not found");
+            } else {
+                return Response::prepare(400, "Record not restored", null, $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Get soft-deleted records for a table
+     */
+    public function getDeleted(string $table)
+    {
+        try {
+            $stmt = $this->pdo->prepare("SELECT * FROM `{$table}` WHERE is_deleted = 1 ORDER BY updated_at DESC");
+            $stmt->execute();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($result) {
+                return Response::prepare(200, "Deleted records found", $result);
+            } else {
+                return Response::prepare(204, "No deleted records");
+            }
+        } catch (PDOException $e) {
+            if ($e->getCode() === '42S02') {
+                return Response::prepare(404, "Table not found");
+            } else {
+                return Response::prepare(400, "Database error", null, $e->getMessage());
+            }
         }
     }
 }
