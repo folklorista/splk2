@@ -21,7 +21,18 @@ class E2EWorkflowTest extends TestCase
     private string $token = '';
     private int $categoryId = 0;
     private int $itemId = 0;
-    private string $testEmail = 'e2e-test-' . PHP_VERSION_ID . '@example.com';
+    private static ?string $testEmail = null;
+    private string $email;
+
+    public function __construct(?string $name = null)
+    {
+        parent::__construct($name);
+        // Initialize test email only once for all tests
+        if (self::$testEmail === null) {
+            self::$testEmail = 'e2e-test-' . time() . '-' . random_int(100000, 999999) . '@example.com';
+        }
+        $this->email = self::$testEmail;
+    }
 
     /**
      * Step 1: Register new user
@@ -31,14 +42,14 @@ class E2EWorkflowTest extends TestCase
         echo "\n=== STEP 1: Register New User ===\n";
 
         $response = $this->post('/register', [
-            'email' => $this->testEmail,
+            'email' => $this->email,
             'password' => 'TestPassword123',
             'first_name' => 'E2E',
             'last_name' => 'Tester',
         ]);
 
         echo "Request: POST /register\n";
-        echo "Email: {$this->testEmail}\n";
+        echo "Email: {$this->email}\n";
         echo "Response Status: {$response['status']}\n";
         echo "Response: " . json_encode($response, JSON_PRETTY_PRINT) . "\n";
 
@@ -62,7 +73,7 @@ class E2EWorkflowTest extends TestCase
         ]);
 
         echo "Request: POST /login\n";
-        echo "Email: {$this->testEmail}\n";
+        echo "Email: {$this->email}\n";
         echo "Response Status: {$response['status']}\n";
 
         $this->assertEquals(200, $response['status']);

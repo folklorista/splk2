@@ -66,15 +66,22 @@ class Auth
 // Ověření hlavičky Authorization
 public function authenticate()
 {
-    $headers = apache_request_headers();
-
-    // Kontrola obou variant hlavičky
     $authorizationHeader = null;
-    foreach ($headers as $key => $value) {
-        if (strtolower($key) === 'authorization') {
-            $authorizationHeader = $value;
-            break;
+
+    // Try Apache headers first
+    if (function_exists('apache_request_headers')) {
+        $headers = apache_request_headers();
+        foreach ($headers as $key => $value) {
+            if (strtolower($key) === 'authorization') {
+                $authorizationHeader = $value;
+                break;
+            }
         }
+    }
+
+    // Fallback to $_SERVER (works with PHP development server)
+    if (!$authorizationHeader && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
+        $authorizationHeader = $_SERVER['HTTP_AUTHORIZATION'];
     }
 
     if (!$authorizationHeader) {

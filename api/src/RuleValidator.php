@@ -94,7 +94,7 @@ class RuleValidator
         $required = $constraints['required'] ?? false;
 
         // Required check
-        if ($isRequired && ($required || isset($constraints['required'])) && ($value === null || $value === '')) {
+        if ($required && ($value === null || $value === '')) {
             $errors[] = "$field is required";
             return $errors;  // Skip other validations if required but missing
         }
