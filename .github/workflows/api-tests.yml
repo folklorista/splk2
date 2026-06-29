@@ -82,6 +82,16 @@ jobs:
           mysql -h 127.0.0.1 -P 3306 -u root -proot splk < api/migrations/add-soft-deletes.sql
           mysql -h 127.0.0.1 -P 3306 -u root -proot splk < api/migrations/add-change-tracking.sql
 
+      - name: Seed audit actions
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root -proot splk -e "
+          INSERT INTO audit_actions (id, name, description) VALUES
+          (1, 'USER_LOGIN', 'Přihlášení uživatele'),
+          (2, 'DATA_INSERT', 'Vložení nových dat'),
+          (3, 'DATA_UPDATE', 'Aktualizace dat'),
+          (4, 'DATA_DELETE', 'Smazání dat'),
+          (5, 'TREE_UPDATE', 'Aktualizace stromové struktury');"
+
       - name: Run Unit Tests
         run: ./vendor/bin/phpunit tests/Unit/
         working-directory: api
