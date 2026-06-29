@@ -8,14 +8,16 @@ class Endpoints
     private Logger $logger;
     private RuleValidator $validator;
     private WebhookManager $webhookManager;
+    private FileUploadManager $fileUploadManager;
 
-    public function __construct(Database $db, Auth $auth, Logger $logger, RuleValidator $validator = null, WebhookManager $webhookManager = null)
+    public function __construct(Database $db, Auth $auth, Logger $logger, RuleValidator $validator = null, WebhookManager $webhookManager = null, FileUploadManager $fileUploadManager = null)
     {
         $this->db = $db;
         $this->auth = $auth;
         $this->logger = $logger;
         $this->validator = $validator;
         $this->webhookManager = $webhookManager ?? new WebhookManager($db, $logger);
+        $this->fileUploadManager = $fileUploadManager ?? new FileUploadManager($db, $logger);
     }
 
     // Funkce pro logiku registrace
@@ -700,6 +702,143 @@ class Endpoints
         } catch (\Exception $e) {
             $this->logger->error("Error testing webhook", ['error' => $e->getMessage()]);
             return Response::prepare(500, "Error testing webhook");
+        }
+    }
+
+    /**
+     * Upload file
+     */
+    public function uploadFileEndpoint(array $fileArray, $user)
+    {
+        try {
+            $fileName = $_POST['name'] ?? null;
+
+            $result = $this->fileUploadManager->handleUpload($fileArray, $user->id, $fileName);
+
+            if ($result['status'] === 200) {
+                // Log file upload
+                $this->db->logAction(
+                    AuditAction::CREATE,
+                    $user->id,
+                    'files',
+                    $result['data']['file_id'],
+                    "File uploaded: " . $result['data']['name'],
+                    $result['data']
+                );
+            }
+
+            return Response::prepare($result['status'], $result['message'], $result['data']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error uploading file", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error uploading file");
+        }
+    }
+
+    /**
+     * Get file details
+     */
+    public function getFileEndpoint(int $fileId, $user)
+    {
+        try {
+            $result = $this->fileUploadManager->getFile($fileId);
+            return Response::prepare($result['status'], $result['message'], $result['data']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error retrieving file", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error retrieving file");
+        }
+    }
+
+    /**
+     * Download file
+     */
+    public function downloadFileEndpoint(int $fileId, $user)
+    {
+        try {
+            $result = $this->fileUploadManager->getFile($fileId);
+
+            if ($result['status'] !== 200) {
+                return Response::prepare($result['status'], $result['message']);
+            }
+
+            $file = $result['data'];
+            $filepath = $file['filepath'];
+
+            // Check if file exists
+            if (!file_exists($filepath)) {
+                return Response::prepare(404, "File not found");
+            }
+
+            // Log download
+            $this->db->logAction(
+                AuditAction::READ,
+                $user->id,
+                'files',
+                $fileId,
+                "File downloaded: " . $file['name'],
+                null
+            );
+
+            // Send file
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . basename($file['filename']) . '"');
+            header('Content-Length: ' . filesize($filepath));
+            header('Cache-Control: no-cache, no-store, must-revalidate');
+
+            readfile($filepath);
+            exit;
+        } catch (\Exception $e) {
+            $this->logger->error("Error downloading file", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error downloading file");
+        }
+    }
+
+    /**
+     * Get user's files
+     */
+    public function getUserFilesEndpoint($user)
+    {
+        try {
+            $result = $this->fileUploadManager->getUserFiles($user->id);
+            return Response::prepare($result['status'], $result['message'], $result['data']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error retrieving files", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error retrieving files");
+        }
+    }
+
+    /**
+     * Delete file
+     */
+    public function deleteFileEndpoint(int $fileId, $user)
+    {
+        try {
+            // Check rule validation first
+            if ($this->validator) {
+                try {
+                    $this->validator->executeHook('files', 'beforeDelete', $fileId, $user, $this->logger, $this->db);
+                } catch (RuleException $e) {
+                    return Response::prepare($e->getCode(), $e->getMessage());
+                }
+            }
+
+            $result = $this->fileUploadManager->deleteFile($fileId, $user->id);
+
+            if ($result['status'] === 200) {
+                // Log deletion
+                $this->db->logAction(
+                    AuditAction::DELETE,
+                    $user->id,
+                    'files',
+                    $fileId,
+                    "File deleted",
+                    null
+                );
+            }
+
+            return Response::prepare($result['status'], $result['message']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error deleting file", ['error' => $e->getMessage()]);
+            return Response::prepare(500, "Error deleting file");
         }
     }
 

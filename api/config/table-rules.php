@@ -561,4 +561,49 @@ return [
         ],
     ],
 
+    // ==================== FILES TABLE ====================
+    'files' => [
+        'validation' => [
+            'name' => [
+                'minLength' => 1,
+                'maxLength' => 256,
+                'required' => true,
+            ],
+            'filename' => [
+                'minLength' => 1,
+                'maxLength' => 256,
+                'required' => true,
+            ],
+            'filepath' => [
+                'minLength' => 1,
+                'maxLength' => 512,
+                'required' => true,
+            ],
+            'size' => [
+                'type' => 'integer',
+                'min' => 1,
+                'required' => true,
+            ],
+        ],
+        'hooks' => [
+            'beforeDelete' => function($id, $user, $logger, $db) {
+                // Users can only delete their own files, admins can delete any
+                $rbac = new \App\RoleBasedAccessControl($db, $logger);
+                $isAdmin = $rbac->hasRole($user, 'admin');
+
+                if (!$isAdmin) {
+                    $file = $db->get('files', $id);
+                    if ($file['status'] === 200 && $file['data']['uploaded_by'] != $user->id) {
+                        throw new \App\RuleException(
+                            'You can only delete your own files',
+                            403,
+                            'files',
+                            'beforeDelete'
+                        );
+                    }
+                }
+            },
+        ],
+    ],
+
 ];

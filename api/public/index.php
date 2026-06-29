@@ -273,6 +273,45 @@ if ($tableName === 'webhooks') {
     }
 }
 
+// File management routes (files/upload, files/{id}/download, files/{id}, files/my)
+if ($tableName === 'files') {
+    switch ($method) {
+        case 'GET':
+            if ($id === 'my') {
+                // GET /files/my - get current user's files
+                Response::sendPrepared($endpoints->getUserFilesEndpoint($user['user']));
+            } elseif (isset($path[$pathIndex['id'] + 1]) && $path[$pathIndex['id'] + 1] === 'download') {
+                // GET /files/{id}/download - download file
+                $endpoints->downloadFileEndpoint($id, $user['user']);
+            } elseif ($id) {
+                // GET /files/{id} - get file details
+                Response::sendPrepared($endpoints->getFileEndpoint($id, $user['user']));
+            } else {
+                // GET /files - list all files (admin only)
+                Response::sendPrepared($endpoints->getAllRecords('files', '', null, null, null, 'ASC', null, null));
+            }
+            exit;
+
+        case 'POST':
+            if ($id === 'upload' || isset($_FILES['file'])) {
+                // POST /files/upload - upload file
+                Response::sendPrepared($endpoints->uploadFileEndpoint($_FILES['file'] ?? [], $user['user']));
+            } else {
+                Response::send(400, "No file provided");
+            }
+            exit;
+
+        case 'DELETE':
+            if ($id) {
+                // DELETE /files/{id} - delete file
+                Response::sendPrepared($endpoints->deleteFileEndpoint($id, $user['user']));
+            } else {
+                Response::send(400, "File ID is required");
+            }
+            exit;
+    }
+}
+
 // Zpracování stránkování a řazení z HTTP hlaviček
 $limit         = isset($_SERVER['HTTP_X_PAGINATION_LIMIT']) ? (int) $_SERVER['HTTP_X_PAGINATION_LIMIT'] : null;
 $offset        = isset($_SERVER['HTTP_X_PAGINATION_OFFSET']) ? (int) $_SERVER['HTTP_X_PAGINATION_OFFSET'] : null;

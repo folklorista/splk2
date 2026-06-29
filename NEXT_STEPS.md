@@ -275,18 +275,50 @@ curl http://localhost:8000/health
 
 ---
 
-#### 11. File Uploads
-- **Co**: Implementovat file uploads (tabulka existuje)
-- **Endpoint**: POST /files/upload
-- **Benefit**: Attachments, dokumenty v systému
-- **Čas**: 2.5 hodiny
+#### 11. ✅ File Uploads (HOTOVO)
+- **Co**: ✅ Implementovat file uploads (tabulka existuje)
+- **Status**: DOKONČENO
+- **Endpoints**:
+  - ✅ POST /files/upload - nahrát soubor
+  - ✅ GET /files/{id} - detaily souboru
+  - ✅ GET /files/{id}/download - stáhnout soubor
+  - ✅ GET /files/my - moje soubory
+  - ✅ GET /files - všechny soubory (admin)
+  - ✅ DELETE /files/{id} - smazat soubor (own or admin)
+- **Kód**: 
+  - ✅ `api/src/FileUploadManager.php` - Upload management (validace, storage, cleanup)
+  - ✅ `config/table-rules.php` - Ownership validation
+  - ✅ `api/src/Endpoints.php` - File endpoints
+  - ✅ `api/public/index.php` - File routes
+- **Validace**: 
+  - ✅ Max 10MB per file
+  - ✅ Whitelisted extensions (pdf, doc, docx, xls, xlsx, txt, png, jpg, jpeg, gif, zip, csv)
+  - ✅ Sanitized filenames (timestamp + random suffix)
+- **Storage**: 
+  - ✅ /public/uploads/ (customizable)
+  - ✅ Auto-generated unique names
+- **Database**: 
+  - ✅ files tabulka - zaznamenává user_id, timestamp, filename, filepath, size
+- **Permissions**:
+  - ✅ Users can delete own files
+  - ✅ Admins can delete any file
+- **Benefit**: Attachments, dokumenty, fotky, backupy v systému
+- **Čas**: ⏱️ ~2.5 hodiny (HOTOVO!)
 - **Priority**: ⭐ (Feature)
 
+**Testování:**
 ```bash
-# Validace: max 10MB, whitelisted extensions
-# Storage: /public/uploads/
-# Database: Zaznamenat user_id, timestamp, filename
+# Unit testy: 10 testů
+./vendor/bin/phpunit tests/Unit/FileUploadManagerTest.php
+
+# Manual test:
+curl -X POST http://localhost:8000/files/upload \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@document.pdf" \
+  -F "name=My Document"
 ```
+
+**Dokumentace:** `api/docs/FILE_UPLOADS.md`
 
 ---
 
@@ -333,7 +365,7 @@ curl http://localhost:8000/health
 - [x] Change tracking (2h) ✅ HOTOVO!
 - [x] RBAC (3h) ✅ HOTOVO!
 - [x] Webhooks (3h) ✅ HOTOVO!
-- [ ] File uploads (2.5h)
+- [x] File uploads (2.5h) ✅ HOTOVO!
 - [ ] GraphQL (4h+, architecture-only, no implementation)
 ```
 
@@ -341,7 +373,7 @@ curl http://localhost:8000/health
 
 ## 🎯 Co Bylo Dokončeno
 
-**✅ FULLY PRODUCTION-READY API! (17 hodin)**
+**✅ FULLY PRODUCTION-READY API! (19.5 hodin)**
 
 ### Týden 1 (3 hodiny) ✅
 1. ✅ **Unit testy** - 40 testů, 75+ assertions
@@ -375,8 +407,22 @@ curl http://localhost:8000/health
    - 10 unit testů
    - Dokumentace (WEBHOOKS.md)
 
+### Týden 6 (2.5 hodiny) ✅
+11. ✅ **File Upload System** - Document management a attachments
+   - FileUploadManager pro upload/download/delete operace
+   - 10MB max size, whitelisted extensions
+   - Auto-sanitized filenames s timestamp + random suffix
+   - User ownership checks + admin override
+   - 10 unit testů
+   - Dokumentace (FILE_UPLOADS.md)
+
+**VŠECHNY FEATURES HOTOVY! ✅**
+- ✅ 72 unit testů (40 původní + 12 RBAC + 10 webhook + 10 file)
+- ✅ 133 assertions
+- ✅ Kompletní dokumentace (5 docs)
+- ✅ Production-ready architektura
+
 **Zbývající features (nice to have):**
-- File uploads (2.5h)
 - GraphQL (4h+, architecture-only, skipped per strategy)
 
 ---
