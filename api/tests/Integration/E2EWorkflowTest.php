@@ -18,9 +18,9 @@ use PHPUnit\Framework\TestCase;
 class E2EWorkflowTest extends TestCase
 {
     private const API_URL = 'http://localhost:8000';
-    private string $token = '';
-    private int $categoryId = 0;
-    private int $itemId = 0;
+    private static string $token = '';
+    private static int $categoryId = 0;
+    private static int $itemId = 0;
     private static ?string $testEmail = null;
     private string $email;
 
@@ -68,7 +68,7 @@ class E2EWorkflowTest extends TestCase
         echo "\n=== STEP 2: Login User ===\n";
 
         $response = $this->post('/login', [
-            'email' => $this->testEmail,
+            'email' => $this->email,
             'password' => 'TestPassword123',
         ]);
 
@@ -79,9 +79,9 @@ class E2EWorkflowTest extends TestCase
         $this->assertEquals(200, $response['status']);
         $this->assertArrayHasKey('token', $response['data']);
 
-        $this->token = $response['data']['token'];
+        self::$token = $response['data']['token'];
         echo "✓ Login successful\n";
-        echo "Token: " . substr($this->token, 0, 50) . "...\n";
+        echo "Token: " . substr(self::$token, 0, 50) . "...\n";
     }
 
     /**
@@ -90,7 +90,7 @@ class E2EWorkflowTest extends TestCase
     public function test_03_CreateCategory(): void
     {
         echo "\n=== STEP 3: Create Category ===\n";
-        echo "Authorization: Bearer " . substr($this->token, 0, 30) . "...\n";
+        echo "Authorization: Bearer " . substr(self::$token, 0, 30) . "...\n";
 
         $response = $this->post('/categories', [
             'name' => 'E2E Test Category',
@@ -104,8 +104,8 @@ class E2EWorkflowTest extends TestCase
         $this->assertArrayHasKey('id', $response['data']);
         $this->assertGreaterThan(0, $response['data']['id']);
 
-        $this->categoryId = $response['data']['id'];
-        echo "✓ Category created successfully (ID: {$this->categoryId})\n";
+        self::$categoryId = $response['data']['id'];
+        echo "✓ Category created successfully (ID: {self::$categoryId})\n";
     }
 
     /**
@@ -114,10 +114,10 @@ class E2EWorkflowTest extends TestCase
     public function test_04_CreateItem(): void
     {
         echo "\n=== STEP 4: Create Item ===\n";
-        echo "Category ID: {$this->categoryId}\n";
+        echo "Category ID: {self::$categoryId}\n";
 
         $response = $this->post('/items', [
-            'category_id' => $this->categoryId,
+            'category_id' => self::$categoryId,
             'inventory_number' => 'E2E-TEST-001',
             'status' => 'active',
         ]);
@@ -130,8 +130,8 @@ class E2EWorkflowTest extends TestCase
         $this->assertArrayHasKey('id', $response['data']);
         $this->assertGreaterThan(0, $response['data']['id']);
 
-        $this->itemId = $response['data']['id'];
-        echo "✓ Item created successfully (ID: {$this->itemId})\n";
+        self::$itemId = $response['data']['id'];
+        echo "✓ Item created successfully (ID: {self::$itemId})\n";
     }
 
     /**
@@ -140,12 +140,12 @@ class E2EWorkflowTest extends TestCase
     public function test_05_TryDeleteCategoryWithItems(): void
     {
         echo "\n=== STEP 5: Try Delete Category (Should Fail) ===\n";
-        echo "Category ID: {$this->categoryId}\n";
-        echo "Category has {$this->itemId} item(s)\n";
+        echo "Category ID: {self::$categoryId}\n";
+        echo "Category has {self::$itemId} item(s)\n";
 
-        $response = $this->delete("/categories/{$this->categoryId}");
+        $response = $this->delete("/categories/{self::$categoryId}");
 
-        echo "Request: DELETE /categories/{$this->categoryId}\n";
+        echo "Request: DELETE /categories/{self::$categoryId}\n";
         echo "Response Status: {$response['status']}\n";
         echo "Response: " . json_encode($response, JSON_PRETTY_PRINT) . "\n";
 
@@ -163,11 +163,11 @@ class E2EWorkflowTest extends TestCase
     public function test_06_DeleteItem(): void
     {
         echo "\n=== STEP 6: Delete Item ===\n";
-        echo "Item ID: {$this->itemId}\n";
+        echo "Item ID: {self::$itemId}\n";
 
-        $response = $this->delete("/items/{$this->itemId}");
+        $response = $this->delete("/items/{self::$itemId}");
 
-        echo "Request: DELETE /items/{$this->itemId}\n";
+        echo "Request: DELETE /items/{self::$itemId}\n";
         echo "Response Status: {$response['status']}\n";
         echo "Response: " . json_encode($response, JSON_PRETTY_PRINT) . "\n";
 
@@ -181,12 +181,12 @@ class E2EWorkflowTest extends TestCase
     public function test_07_DeleteCategory(): void
     {
         echo "\n=== STEP 7: Delete Category (Now Succeeds) ===\n";
-        echo "Category ID: {$this->categoryId}\n";
+        echo "Category ID: {self::$categoryId}\n";
         echo "Category is now empty\n";
 
-        $response = $this->delete("/categories/{$this->categoryId}");
+        $response = $this->delete("/categories/{self::$categoryId}");
 
-        echo "Request: DELETE /categories/{$this->categoryId}\n";
+        echo "Request: DELETE /categories/{self::$categoryId}\n";
         echo "Response Status: {$response['status']}\n";
         echo "Response: " . json_encode($response, JSON_PRETTY_PRINT) . "\n";
 
@@ -202,18 +202,18 @@ class E2EWorkflowTest extends TestCase
         echo "\n=== STEP 8: Verify Cleanup ===\n";
 
         // Try to get deleted category (should return 404)
-        $response = $this->get("/categories/{$this->categoryId}");
+        $response = $this->get("/categories/{self::$categoryId}");
 
-        echo "Request: GET /categories/{$this->categoryId}\n";
+        echo "Request: GET /categories/{self::$categoryId}\n";
         echo "Response Status: {$response['status']}\n";
 
         $this->assertEquals(404, $response['status']);
         echo "✓ Category properly deleted (not found)\n";
 
         // Try to get deleted item (should return 404)
-        $response = $this->get("/items/{$this->itemId}");
+        $response = $this->get("/items/{self::$itemId}");
 
-        echo "Request: GET /items/{$this->itemId}\n";
+        echo "Request: GET /items/{self::$itemId}\n";
         echo "Response Status: {$response['status']}\n";
 
         $this->assertEquals(404, $response['status']);
@@ -248,8 +248,8 @@ class E2EWorkflowTest extends TestCase
             'Content-Type: application/json',
         ];
 
-        if (!empty($this->token)) {
-            $headers[] = "Authorization: Bearer {$this->token}";
+        if (!empty(self::$token)) {
+            $headers[] = "Authorization: Bearer {self::$token}";
         }
 
         curl_setopt_array($ch, [
