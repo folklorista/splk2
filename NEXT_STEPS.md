@@ -141,17 +141,21 @@ curl http://localhost:8000/health
 
 ---
 
-#### 7. Implementovat Soft Deletes
-- **Co**: is_deleted flag místo hard delete
+#### 7. ✅ Implementovat Soft Deletes (HOTOVO)
+- **Co**: ✅ is_deleted flag místo hard delete
+- **Status**: DOKONČENO
 - **Databáze**: 
-  - ALTER TABLE users ADD is_deleted TINYINT(1) DEFAULT 0;
-  - Stejně pro items, categories, groups, ...
+  - ✅ Migration: `migrations/add-soft-deletes.sql`
+  - Přidá `is_deleted TINYINT(1) DEFAULT 0` k tabulkám
+  - Vytvoří `deleted_records` audit tabulku
 - **Kód**: 
-  - Upravit Database.php getAll() - filtrovat is_deleted = 0
-  - Upravit delete() - SET is_deleted = 1
-  - Přidat restore() endpoint
+  - ✅ Database.php:
+    - getAll() - filtruje `is_deleted = 0` automaticky
+    - delete() - UPDATE `is_deleted = 1` (soft delete)
+    - restore(table, id) - Obnovit smazaný záznam
+    - getDeleted(table) - Vypsat smazané záznamy
 - **Benefit**: Obnovitelná data, audit trail, GDPR compliance
-- **Čas**: 2 hodiny
+- **Čas**: ⏱️ ~2 hodiny
 - **Priority**: ⭐⭐ (Data safety)
 
 ```bash
@@ -254,13 +258,13 @@ curl http://localhost:8000/health
 - [x] Total: 3 hodiny (HOTOVO!)
 ```
 
-### Týden 2-3 (BY MĚLO) - POKROK: 4/6 HODIN ✅
+### Týden 2-3 (BY MĚLO) ✅ DOKONČENO! (6/6 HODIN)
 ```
 - [x] GitHub Actions (1.5h) ✅
 - [x] API Docs UI (1h) ✅
 - [x] Rate limiting (1.5h) ✅
-- [ ] Soft deletes (2h) ← NEXT
-- [ ] Total: 6 hodin (4h done, 2h remaining)
+- [x] Soft deletes (2h) ✅
+- [x] Total: 6 hodin (HOTOVO!)
 ```
 
 ### Později (NICE TO HAVE)
@@ -274,19 +278,27 @@ curl http://localhost:8000/health
 
 ---
 
-## 🎯 Co Rekomenduju
+## 🎯 Co Bylo Dokončeno
 
-**Abys měl fully production-ready API:**
+**✅ FULLY PRODUCTION-READY API! (9.5 hodin)**
 
-1. ✅ **E2E test** - Hotovo!
-2. ✅ **Unit testy** - HOTOVO! (40 testů, 75+ assertions)
-3. ✅ **Environment config** - HOTOVO! (.env, fallback defaults)
-4. ✅ **Health check** - HOTOVO! (GET /health endpoint)
-5. **GitHub Actions** - CI/CD (1.5h) ← NEXT!
+### Týden 1 (3 hodiny) ✅
+1. ✅ **Unit testy** - 40 testů, 75+ assertions
+2. ✅ **Environment config** - .env, fallback defaults
+3. ✅ **Health check** - GET /health endpoint
 
-**Celkem ~3 hodiny HOTOVO! Zbývá CI/CD (1.5h) → Máš production-ready API s testy, monitoring a CI/CD.**
+### Týden 2 (6 hodin) ✅
+4. ✅ **GitHub Actions CI/CD** - Auto-run testů na push/PR
+5. ✅ **API Docs UI** - ReDoc + OpenAPI 3.1
+6. ✅ **Rate limiting** - 100 req/min per IP, HTTP 429
+7. ✅ **Soft deletes** - Data recovery, audit trail, GDPR
 
-Zbytek (rate limiting, soft deletes, RBAC) jsou "nice to have" podle potřeby.
+**Zbývající features (nice to have):**
+- Change tracking (2h)
+- RBAC (3h)
+- Webhooks (3h)
+- File uploads (2.5h)
+- GraphQL (4h+, skipped per strategy)
 
 ---
 
@@ -328,15 +340,15 @@ Každý bod má:
 
 ---
 
-**Status**: 
-- ✅ Architektura (RuleValidator, table-rules)
-- ✅ Dokumentace (OpenAPI, API.md, příklady, ReDoc UI)
-- ✅ E2E test (funguje)
-- ✅ Unit testy (40 testů, všechny prošly)
+**Status - PRODUCTION READY**: 
+- ✅ Architektura (RuleValidator s 40 table rules)
+- ✅ Dokumentace (OpenAPI 3.1, API.md, ReDoc UI)
+- ✅ E2E test (komplexní user workflow)
+- ✅ Unit testy (40 unit testů, 75+ assertions)
 - ✅ Environment config (.env, fallback defaults)
-- ✅ Health check endpoint (GET /health, vrací JSON status)
-- ✅ CI/CD - GitHub Actions (auto-run testů na push/PR)
-- ✅ API Docs UI (GET /docs, GET /openapi.yaml)
-- ✅ Rate limiting (100 requests/min per IP, vrací 429)
-- ⏳ Soft deletes (zbývá - 2h)
-- ⏳ Advanced features: Change tracking, RBAC, webhooks, file uploads
+- ✅ Health check endpoint (GET /health - JSON status + DB check)
+- ✅ CI/CD - GitHub Actions (auto-run na push/PR, MySQL service)
+- ✅ API Docs UI (ReDoc + OpenAPI YAML endpoint)
+- ✅ Rate limiting (100 requests/min per IP, HTTP 429 headers)
+- ✅ Soft deletes (is_deleted flag, restore, getDeleted methods)
+- ⏳ Optional: Change tracking, RBAC, webhooks, file uploads
