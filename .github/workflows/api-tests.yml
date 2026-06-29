@@ -146,9 +146,7 @@ jobs:
           ./vendor/bin/phpunit \
             --coverage-clover coverage.xml \
             --display-deprecations \
-            --display-warnings \
-            --fail-on-warning=0 \
-            --fail-on-deprecation=0
+            --display-warnings
         working-directory: api
         env:
           DB_HOST: 127.0.0.1:3306
