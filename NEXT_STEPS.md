@@ -278,18 +278,18 @@ curl http://localhost:8000/health
 
 ### Později (NICE TO HAVE)
 ```
-- [ ] Change tracking (2h)
+- [x] Change tracking (2h) ✅ HOTOVO!
 - [ ] RBAC (3h)
 - [ ] Webhooks (3h)
 - [ ] File uploads (2.5h)
-- [ ] GraphQL (4h+)
+- [ ] GraphQL (4h+, architecture-only, no implementation)
 ```
 
 ---
 
 ## 🎯 Co Bylo Dokončeno
 
-**✅ FULLY PRODUCTION-READY API! (9.5 hodin)**
+**✅ FULLY PRODUCTION-READY API! (11 hodin)**
 
 ### Týden 1 (3 hodiny) ✅
 1. ✅ **Unit testy** - 40 testů, 75+ assertions
@@ -302,12 +302,16 @@ curl http://localhost:8000/health
 6. ✅ **Rate limiting** - 100 req/min per IP, HTTP 429
 7. ✅ **Soft deletes** - Data recovery, audit trail, GDPR
 
+### Týden 3 (2 hodiny) ✅
+8. ✅ **Change tracking** - old_values + new_values v audit logs
+   - Kompletní before/after audit trail
+   - E2E test pro ověření funkčnosti
+
 **Zbývající features (nice to have):**
-- Change tracking (2h)
 - RBAC (3h)
 - Webhooks (3h)
 - File uploads (2.5h)
-- GraphQL (4h+, skipped per strategy)
+- GraphQL (4h+, architecture-only, skipped per strategy)
 
 ---
 
@@ -360,4 +364,5 @@ Každý bod má:
 - ✅ API Docs UI (ReDoc + OpenAPI YAML endpoint)
 - ✅ Rate limiting (100 requests/min per IP, HTTP 429 headers)
 - ✅ Soft deletes (is_deleted flag, restore, getDeleted methods)
-- ⏳ Optional: Change tracking, RBAC, webhooks, file uploads
+- ✅ Change tracking (old_values + new_values in audit logs - 11 hodin celkem!)
+- ⏳ Optional: RBAC, webhooks, file uploads
