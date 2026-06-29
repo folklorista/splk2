@@ -190,22 +190,49 @@ curl http://localhost:8000/health
 
 ---
 
-#### 9. Role-Based Access Control (RBAC)
-- **Co**: Vynutit roles na operace
-- **Databáze**: users_roles tabulka existuje, jen ji používat
+#### 9. ✅ Role-Based Access Control (RBAC) (HOTOVO)
+- **Co**: ✅ Vynutit roles na operace
+- **Status**: DOKONČENO
+- **Databáze**: 
+  - ✅ users_roles tabulka existuje a používá se
+  - ✅ Migration: `migrations/init-built-in-roles.sql` - inicializace built-in rolí (admin, user, guest)
 - **Kód**: 
-  - Middleware pro check role
-  - Table rules pro RBAC (custom validateRole method)
-- **Benefit**: Admin/user/guest role enforcement
-- **Čas**: 3 hodiny
+  - ✅ `api/src/RoleBasedAccessControl.php` - Middleware pro check role
+  - ✅ `config/table-rules.php` - RBAC integrace do hooks (beforeCreate, beforeUpdate, beforeDelete)
+  - ✅ `api/public/index.php` - Nové routes pro správu rolí (/users/{id}/roles/{roleId})
+  - ✅ `api/src/Endpoints.php` - Nové metody (getUserRoles, assignRole, removeRole)
+- **Benefit**: Admin/user/guest role enforcement - bezpečné oddělení práv
+- **Čas**: ⏱️ ~3 hodiny (HOTOVO!)
 - **Priority**: ⭐ (Security)
 
+**Implementované politiky:**
 ```bash
-# Endpoint security:
-# POST /users - jen admin
-# PUT /users/{id} - jen admin nebo sám sobě
-# DELETE /users/{id} - jen admin
+# User Management (POST /users) - jen admin
+# POST /users - jen admin (403 jinak)
+# PUT /users/{id} - jen admin nebo sám sobě (403 jinak)
+# DELETE /users/{id} - jen admin (403 jinak)
+
+# Role Management - jen admin
+# POST /roles - jen admin
+# PUT /roles/{id} - jen admin
+# DELETE /roles/{id} - jen admin (nelze smazat built-in role)
+
+# Role Assignment
+# GET /users/{id}/roles - všichni (vidí role uživatele)
+# POST /users/{id}/roles/{roleId} - jen admin (přiřazuje roli)
+# DELETE /users/{id}/roles/{roleId} - jen admin (odebírá roli)
 ```
+
+**Testování:**
+```bash
+# Unit testy: 12 testů
+./vendor/bin/phpunit tests/Unit/RoleBasedAccessControlTest.php
+
+# E2E testy: komplexní user workflows
+./vendor/bin/phpunit tests/E2E/RBACTest.php
+```
+
+**Dokumentace:** `api/docs/RBAC.md`
 
 ---
 
@@ -279,7 +306,7 @@ curl http://localhost:8000/health
 ### Později (NICE TO HAVE)
 ```
 - [x] Change tracking (2h) ✅ HOTOVO!
-- [ ] RBAC (3h)
+- [x] RBAC (3h) ✅ HOTOVO!
 - [ ] Webhooks (3h)
 - [ ] File uploads (2.5h)
 - [ ] GraphQL (4h+, architecture-only, no implementation)
@@ -289,7 +316,7 @@ curl http://localhost:8000/health
 
 ## 🎯 Co Bylo Dokončeno
 
-**✅ FULLY PRODUCTION-READY API! (11 hodin)**
+**✅ FULLY PRODUCTION-READY API! (14 hodin)**
 
 ### Týden 1 (3 hodiny) ✅
 1. ✅ **Unit testy** - 40 testů, 75+ assertions
@@ -307,8 +334,14 @@ curl http://localhost:8000/health
    - Kompletní before/after audit trail
    - E2E test pro ověření funkčnosti
 
+### Týden 4 (3 hodiny) ✅
+9. ✅ **Role-Based Access Control (RBAC)** - Admin/user/guest role enforcement
+   - RoleBasedAccessControl middleware + table rules integrace
+   - Nové routes /users/{id}/roles/{roleId} pro správu rolí
+   - 12 unit testů + E2E testy
+   - Dokumentace (RBAC.md)
+
 **Zbývající features (nice to have):**
-- RBAC (3h)
 - Webhooks (3h)
 - File uploads (2.5h)
 - GraphQL (4h+, architecture-only, skipped per strategy)

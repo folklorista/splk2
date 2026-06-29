@@ -1,0 +1,50 @@
+{
+  "name": "splk-api",
+  "version": "1.0.0",
+  "description": "REST API backend for SPLK application - PHP-based API with JWT authentication",
+  "author": "Stanislav Škubal <stana@folklorista.cz>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/folklorista/splk2.git",
+    "directory": "api"
+  },
+  "homepage": "https://github.com/folklorista/splk2#readme",
+  "bugs": {
+    "url": "https://github.com/folklorista/splk2/issues"
+  },
+  "keywords": [
+    "rest-api",
+    "php",
+    "jwt-auth",
+    "angular",
+    "full-stack"
+  ],
+  "engines": {
+    "php": "^8.1"
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit",
+    "test:coverage": "vendor/bin/phpunit --coverage-html coverage",
+    "serve": "php -S localhost:8000 -t public",
+    "migrate": "php apply-migrations.php",
+    "check-schema": "php check-schema.php",
+    "docs": "php generate-docs.php"
+  },
+  "devDependencies": {
+    "phpunit": "^11.0"
+  },
+  "dependencies": {
+    "firebase/php-jwt": "^6.10",
+    "vlucas/phpdotenv": "^5.6",
+    "zircote/swagger-php": "^4.11"
+  },
+  "type": "standard",
+  "main": "index.php",
+  "directories": {
+    "src": "src",
+    "config": "config",
+    "migrations": "migrations",
+    "tests": "tests"
+  }
+}

@@ -56,7 +56,47 @@ return [
             ],
         ],
         'hooks' => [
+            'beforeCreate' => function($data, $user, $logger, $db) {
+                // Only admin can create users
+                $rbac = new \App\RoleBasedAccessControl($db, $logger);
+                if (!$rbac->hasRole($user, 'admin')) {
+                    throw new \App\RuleException(
+                        'Only administrators can create users',
+                        403,
+                        'users',
+                        'beforeCreate'
+                    );
+                }
+            },
+
+            'beforeUpdate' => function($id, $data, $user, $logger, $db) {
+                // Admin can update anyone, users can update themselves only
+                $rbac = new \App\RoleBasedAccessControl($db, $logger);
+                $isAdmin = $rbac->hasRole($user, 'admin');
+                $isOwner = $rbac->isOwner($user->id, 'users', $id);
+
+                if (!$isAdmin && !$isOwner) {
+                    throw new \App\RuleException(
+                        'You can only update your own account',
+                        403,
+                        'users',
+                        'beforeUpdate'
+                    );
+                }
+            },
+
             'beforeDelete' => function($id, $user, $logger, $db) {
+                // Only admin can delete users
+                $rbac = new \App\RoleBasedAccessControl($db, $logger);
+                if (!$rbac->hasRole($user, 'admin')) {
+                    throw new \App\RuleException(
+                        'Only administrators can delete users',
+                        403,
+                        'users',
+                        'beforeDelete'
+                    );
+                }
+
                 // Admin cannot delete themselves
                 if ($user->id === $id) {
                     throw new \App\RuleException(
@@ -69,7 +109,6 @@ return [
 
                 // Check if this is the last admin
                 try {
-                    // This is a placeholder - would need proper role checking
                     $userRecord = $db->get('users', $id);
                     if (!$userRecord || $userRecord['status'] !== 200) {
                         throw new \App\RuleException(
@@ -328,7 +367,44 @@ return [
             ],
         ],
         'hooks' => [
+            'beforeCreate' => function($data, $user, $logger, $db) {
+                // Only admin can create roles
+                $rbac = new \App\RoleBasedAccessControl($db, $logger);
+                if (!$rbac->hasRole($user, 'admin')) {
+                    throw new \App\RuleException(
+                        'Only administrators can create roles',
+                        403,
+                        'roles',
+                        'beforeCreate'
+                    );
+                }
+            },
+
+            'beforeUpdate' => function($id, $data, $user, $logger, $db) {
+                // Only admin can update roles
+                $rbac = new \App\RoleBasedAccessControl($db, $logger);
+                if (!$rbac->hasRole($user, 'admin')) {
+                    throw new \App\RuleException(
+                        'Only administrators can update roles',
+                        403,
+                        'roles',
+                        'beforeUpdate'
+                    );
+                }
+            },
+
             'beforeDelete' => function($id, $user, $logger, $db) {
+                // Only admin can delete roles
+                $rbac = new \App\RoleBasedAccessControl($db, $logger);
+                if (!$rbac->hasRole($user, 'admin')) {
+                    throw new \App\RuleException(
+                        'Only administrators can delete roles',
+                        403,
+                        'roles',
+                        'beforeDelete'
+                    );
+                }
+
                 // Prevent deletion of built-in roles
                 try {
                     $role = $db->get('roles', $id);

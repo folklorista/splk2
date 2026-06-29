@@ -426,4 +426,91 @@ class Endpoints
         Response::send(200, $message, $data);
     }
 
+    /**
+     * Get all roles for a user
+     */
+    public function getUserRolesEndpoint(int $userId)
+    {
+        try {
+            $userResult = $this->db->get('users', $userId);
+            if ($userResult['status'] !== 200) {
+                return Response::prepare(404, "User not found");
+            }
+
+            $rolesResult = $this->db->getAllWhere('users_roles', 'user_id = ?', [$userId]);
+            if ($rolesResult['status'] !== 200) {
+                return Response::prepare(200, "No roles assigned", []);
+            }
+
+            $roles = [];
+            foreach ($rolesResult['data'] as $userRole) {
+                $roleResult = $this->db->get('roles', $userRole['role_id']);
+                if ($roleResult['status'] === 200) {
+                    $roles[] = $roleResult['data'];
+                }
+            }
+
+            $this->logger->info("User roles retrieved", ['user_id' => $userId]);
+            return Response::prepare(200, "User roles retrieved", $roles);
+        } catch (\Exception $e) {
+            $this->logger->error("Error retrieving user roles", [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
+            return Response::prepare(500, "Error retrieving user roles");
+        }
+    }
+
+    /**
+     * Assign role to user
+     */
+    public function assignRoleToUserEndpoint(int $userId, int $roleId, $user)
+    {
+        try {
+            $rbac = new RoleBasedAccessControl($this->db, $this->logger);
+
+            // Check if current user is admin
+            if (!$rbac->hasRole($user, 'admin')) {
+                return Response::prepare(403, "Only administrators can assign roles");
+            }
+
+            $result = $rbac->assignRole($userId, $roleId);
+            $this->db->logAction(AuditAction::CREATE, $user->id, 'users_roles', null, "Role assigned to user", ['user_id' => $userId, 'role_id' => $roleId]);
+            return Response::prepare($result['status'], $result['message']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error assigning role", [
+                'user_id' => $userId,
+                'role_id' => $roleId,
+                'error' => $e->getMessage(),
+            ]);
+            return Response::prepare(500, "Error assigning role");
+        }
+    }
+
+    /**
+     * Remove role from user
+     */
+    public function removeRoleFromUserEndpoint(int $userId, int $roleId, $user)
+    {
+        try {
+            $rbac = new RoleBasedAccessControl($this->db, $this->logger);
+
+            // Check if current user is admin
+            if (!$rbac->hasRole($user, 'admin')) {
+                return Response::prepare(403, "Only administrators can remove roles");
+            }
+
+            $result = $rbac->removeRole($userId, $roleId);
+            $this->db->logAction(AuditAction::DELETE, $user->id, 'users_roles', null, "Role removed from user", ['user_id' => $userId, 'role_id' => $roleId]);
+            return Response::prepare($result['status'], $result['message']);
+        } catch (\Exception $e) {
+            $this->logger->error("Error removing role", [
+                'user_id' => $userId,
+                'role_id' => $roleId,
+                'error' => $e->getMessage(),
+            ]);
+            return Response::prepare(500, "Error removing role");
+        }
+    }
+
 }

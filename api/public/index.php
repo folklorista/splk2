@@ -26,6 +26,7 @@ $auth      = new Auth(config: $config['auth'], db: $db, logger: $logger);
 // Load table rules
 $tableRules = require __DIR__ . '/../config/table-rules.php';
 $validator  = new RuleValidator(rules: $tableRules, db: $db, logger: $logger);
+$rbac       = new RoleBasedAccessControl(db: $db, logger: $logger);
 
 $endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger, validator: $validator);
 
@@ -187,6 +188,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['foreignKeys'])) {
 
     $endpoints->handleForeignKeys($table, $queryParams);
     return;
+}
+
+// Role management routes (users/{id}/roles/{roleId})
+if ($tableName === 'users' && $id && isset($path[$pathIndex['id'] + 1]) && $path[$pathIndex['id'] + 1] === 'roles') {
+    $roleId = $path[$pathIndex['id'] + 2] ?? null;
+
+    switch ($method) {
+        case 'GET':
+            // GET /users/{id}/roles - get all roles for user
+            Response::sendPrepared($endpoints->getUserRolesEndpoint($id));
+            exit;
+
+        case 'POST':
+            // POST /users/{id}/roles/{roleId} - assign role to user
+            if (!$roleId) {
+                $data = json_decode(file_get_contents('php://input'), true);
+                $roleId = $data['role_id'] ?? null;
+            }
+            if (!$roleId) {
+                Response::send(400, "Role ID is required");
+                exit;
+            }
+            Response::sendPrepared($endpoints->assignRoleToUserEndpoint($id, $roleId, $user['user']));
+            exit;
+
+        case 'DELETE':
+            // DELETE /users/{id}/roles/{roleId} - remove role from user
+            if (!$roleId) {
+                Response::send(400, "Role ID is required");
+                exit;
+            }
+            Response::sendPrepared($endpoints->removeRoleFromUserEndpoint($id, $roleId, $user['user']));
+            exit;
+    }
 }
 
 // Zpracování stránkování a řazení z HTTP hlaviček
