@@ -28,22 +28,19 @@ cd api && ./vendor/bin/phpunit tests/Unit/
 
 ---
 
-#### 2. Nastavit Environment Variables (.env)
-- **Co**: Nahradit hardcoded hodnoty v config/config.local.php
+#### 2. ✅ Nastavit Environment Variables (.env) (HOTOVO)
+- **Co**: ✅ Nahradit hardcoded hodnoty v config/config.local.php
+- **Status**: DOKONČENO
 - **Soubory**:
-  - `api/config/config.local.php` - Upravit na env vars
-  - `api/.env.example` - Vytvořit template
-  - `.env` - Lokální (gitignore)
-- **Očekávaný výstup**: 
-  ```php
-  // Místo:
-  'host' => 'localhost',
-  
-  // Mělo by být:
-  'host' => $_ENV['DB_HOST'] ?? 'localhost',
-  ```
+  - ✅ `api/config/config.local.php` - Čte z env proměnných s fallback defaults
+  - ✅ `api/.env.example` - Template se všemi parametry
+  - ✅ `.env` - Lokální config (přidáno do .gitignore)
+- **Konfigurovatelné parametry**:
+  - `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`
+  - `JWT_SECRET`
+  - `LOG_PATH`, `LOG_LEVEL`
 - **Benefit**: Dev/prod switch bez změny kódu, bezpečnost (secrets nejsou v gitu)
-- **Čas**: 30 minut
+- **Čas**: ⏱️ ~30 minut
 - **Priority**: ⭐⭐⭐ (Bezpečnost)
 
 ```bash
@@ -231,10 +228,10 @@ curl http://localhost:8000/health
 
 ### Týden 1 (MUSÍ SE DĚLAT)
 ```
-- [ ] Unit testy (2h)
-- [ ] .env config (0.5h)
+- [x] Unit testy (2h) ✅
+- [x] .env config (0.5h) ✅
 - [ ] Health check (0.5h)
-- [ ] Total: 3 hodiny
+- [ ] Total: 3 hodiny (2.5h done, 0.5h remaining)
 ```
 
 ### Týden 2-3 (BY MĚLO)
@@ -316,5 +313,6 @@ Každý bod má:
 - ✅ Dokumentace (OpenAPI, API.md, příklady)
 - ✅ E2E test (funguje)
 - ✅ Unit testy (40 testů, všechny prošly)
-- ⏳ Production config (zbývá)
+- ✅ Environment config (.env, fallback defaults)
+- ⏳ Health check endpoint (zbývá)
 - ⏳ CI/CD (zbývá)
