@@ -26,7 +26,25 @@ class Database
         $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
     }
 
-    // Získání všech záznamů z tabulky se stránkováním a řazením
+    /**
+     * Get all records with pagination and sorting
+     *
+     * @deprecated Use getAllWithParams() instead for SQL injection protection
+     *
+     * WARNING: The $whereClause parameter is inserted directly into the query.
+     * Only use this method with internally-generated WHERE clauses that do not depend on user input.
+     * For user-supplied conditions, use getAllWithParams() with WhereClauseBuilder.
+     *
+     * @param string $table
+     * @param string $whereClause WHERE condition as raw SQL (not user input!)
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param string|null $orderBy
+     * @param string $orderDir
+     * @param string|null $searchQuery
+     * @param array|null $searchColumns
+     * @return array
+     */
     public function getAll(
         string $table,
         string $whereClause = "",
@@ -150,6 +168,189 @@ class Database
             }
 
             // Přidání meta informací
+            $meta = [];
+            if ($limit !== null) {
+                $meta['pagination'] = [
+                    'limit'         => $limit,
+                    'offset'        => $offset ?? 0,
+                    'total_records' => $totalRecords,
+                    'total_pages'   => ceil($totalRecords / $limit),
+                ];
+            }
+            if ($orderBy !== null) {
+                $meta['sorting'] = [
+                    'order_by'  => $orderBy,
+                    'direction' => $orderDir,
+                ];
+            }
+            if ($searchQuery !== null) {
+                $meta['search'] = [
+                    'query'    => $searchQuery,
+                    'columns'  => $searchColumns,
+                    'fulltext' => $fulltextAvailable,
+                ];
+            }
+
+            return Response::prepare(
+                statusCode: ! empty($result) ? 200 : 204,
+                message: ! empty($result) ? "Records found" : "No records found",
+                data: $result,
+                error: null,
+                meta: $meta
+            );
+
+        } catch (PDOException $e) {
+            return Response::prepare(500, "Database error", null, $e->getMessage());
+        }
+    }
+
+    /**
+     * Get all records with parameterized WHERE clause (SAFE from SQL injection)
+     *
+     * @param string $table
+     * @param string $whereClause WHERE clause without WHERE keyword (e.g., "`id` = :id AND `name` LIKE :name")
+     * @param array $params Parameters to bind (e.g., [':id' => 1, ':name' => '%test%'])
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param string|null $orderBy
+     * @param string $orderDir
+     * @param string|null $searchQuery
+     * @param array|null $searchColumns
+     * @return array
+     */
+    public function getAllWithParams(
+        string $table,
+        string $whereClause = "",
+        array $params = [],
+        int $limit = null,
+        int $offset = null,
+        string $orderBy = null,
+        string $orderDir = 'ASC',
+        string $searchQuery = null,
+        array $searchColumns = null
+    ) {
+        try {
+            // Načtení sloupců tabulky (bez sloupce 'password')
+            $stmt    = $this->pdo->query("DESCRIBE `{$table}`");
+            $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $columns     = array_filter($columns, fn($column) => $column['Field'] !== 'password');
+            $columnNames = array_map(fn($column) => $column['Field'], $columns);
+            $columnsList = implode(', ', $columnNames);
+
+            // Initialize whereClause with soft delete filter if column exists
+            $hasSoftDelete = in_array('is_deleted', $columnNames);
+            if ($hasSoftDelete) {
+                $softDeleteClause = '`is_deleted` = 0';
+                // Combine with existing whereClause if provided
+                $whereClause = !empty($whereClause)
+                    ? "({$whereClause}) AND {$softDeleteClause}"
+                    : $softDeleteClause;
+            }
+
+            // Handle search query with parameters
+            if ($searchQuery !== null) {
+                $schema = $this->getSchema($table);
+                $searchableSolumns = $this->getSearchableColumns($schema);
+
+                // Filter selected columns
+                if ($searchColumns !== null) {
+                    $searchColumns = array_filter($searchColumns, fn($col) => in_array($col, $columnNames) && in_array($col, $searchableSolumns));
+                } else {
+                    $searchColumns = array_filter($columnNames, fn($col) => in_array($col, $searchableSolumns));
+                }
+
+                // Check for FULLTEXT index
+                $fulltextAvailable = false;
+                $indexStmt         = $this->pdo->query("SHOW INDEX FROM `{$table}` WHERE Index_type = 'FULLTEXT'");
+                $indexes           = $indexStmt->fetchAll(PDO::FETCH_ASSOC);
+                if (! empty($indexes)) {
+                    $fulltextAvailable = true;
+                }
+
+                // Decode search query
+                if ($searchQuery !== null) {
+                    $searchQuery = urldecode($searchQuery);
+                }
+
+                // Build search clause
+                if ($fulltextAvailable) {
+                    $searchClause = "MATCH(" . implode(',', $searchColumns) . ") AGAINST (:searchQuery IN BOOLEAN MODE)";
+                } else {
+                    $searchParts  = array_map(fn($col) => "`$col` LIKE :searchQuery", $searchColumns);
+                    $searchClause = implode(' OR ', $searchParts);
+                }
+                $whereClause = ! empty($whereClause) ? "({$whereClause}) AND ({$searchClause})" : $searchClause;
+            }
+
+            // Build query
+            $query = "SELECT {$columnsList} FROM `{$table}`";
+            if (! empty($whereClause)) {
+                $query .= " WHERE {$whereClause}";
+            }
+
+            // Add sorting
+            if ($orderBy !== null && in_array($orderBy, $columnNames)) {
+                $query .= " ORDER BY `{$orderBy}` " . ($orderDir === 'DESC' ? 'DESC' : 'ASC');
+            }
+
+            // Add pagination
+            if ($limit !== null) {
+                $query .= " LIMIT {$limit} OFFSET " . ($offset ?? 0);
+            }
+
+            $stmt = $this->pdo->prepare($query);
+
+            // Bind all parameters
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+
+            // Bind search parameter if needed
+            if ($searchQuery !== null) {
+                $searchParam = $fulltextAvailable ? $searchQuery : "%$searchQuery%";
+                $stmt->bindValue(':searchQuery', $searchParam, PDO::PARAM_STR);
+            }
+
+            $stmt->execute();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Calculate total record count
+            $countQuery = "SELECT COUNT(*) as total FROM `{$table}`";
+            if (! empty($whereClause)) {
+                $countQuery .= " WHERE {$whereClause}";
+            }
+            $countStmt = $this->pdo->prepare($countQuery);
+
+            // Bind parameters to count statement
+            foreach ($params as $key => $value) {
+                $countStmt->bindValue($key, $value);
+            }
+
+            if ($searchQuery !== null) {
+                $countStmt->bindValue(':searchQuery', $searchParam, PDO::PARAM_STR);
+            }
+
+            $countStmt->execute();
+            $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+            // Convert tinyint(1) to boolean
+            if ($result) {
+                foreach ($result as &$row) {
+                    foreach ($columns as $column) {
+                        if ($column['Type'] === 'tinyint(1)' && array_key_exists($column['Field'], $row)) {
+                            $value = $row[$column['Field']];
+                            if (is_null($value)) {
+                                $row[$column['Field']] = null;
+                            } else {
+                                $row[$column['Field']] = $value == 0 ? false : true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Add metadata
             $meta = [];
             if ($limit !== null) {
                 $meta['pagination'] = [

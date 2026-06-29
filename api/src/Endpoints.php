@@ -91,18 +91,47 @@ class Endpoints
     }
 
     public function getAllRecords(
-        string $table, 
-        string $whereClause = "", 
-        int $limit = null, 
-        int $offset = null, 
-        string $orderBy = null, 
+        string $table,
+        string $whereClause = "",
+        int $limit = null,
+        int $offset = null,
+        string $orderBy = null,
         string $orderDir = 'ASC',
         string $searchQuery = null,
         array $searchColumns = null
     ) {
         return $this->db->getAll($table, $whereClause, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns);
     }
-    
+
+    /**
+     * Get all records with parameterized WHERE clause
+     * Safer version that accepts separate WHERE clause and parameters
+     *
+     * @param string $table
+     * @param string $whereClause WHERE clause (should not include WHERE keyword)
+     * @param array $whereParams Parameters to bind (keys match clause placeholders)
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param string|null $orderBy
+     * @param string $orderDir
+     * @param string|null $searchQuery
+     * @param array|null $searchColumns
+     * @return array
+     */
+    public function getAllRecordsWithParams(
+        string $table,
+        string $whereClause = "",
+        array $whereParams = [],
+        int $limit = null,
+        int $offset = null,
+        string $orderBy = null,
+        string $orderDir = 'ASC',
+        string $searchQuery = null,
+        array $searchColumns = null
+    ) {
+        return $this->db->getAllWithParams($table, $whereClause, $whereParams, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns);
+    }
+
     // Funkce pro POST operaci - vytvoření nového záznamu
     public function createRecordEndpoint($table, $data, $user)
     {

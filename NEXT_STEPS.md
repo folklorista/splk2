@@ -1,480 +1,455 @@
-# SPLK2 API - Zbývající Kroky (Roadmap)
+# SPLK2 API - Security & Enhancement Roadmap
 
-**Status**: E2E test funguje ✅
-
----
-
-## 📋 Co Zbývá (12 Bodů)
-
-### 🔴 VYSOKÁ PRIORITA (Doporučuju hned)
-
-#### 1. ✅ Implementovat Unit Testy (HOTOVO)
-- **Co**: ✅ Napsat 10-15 unit testů na RuleValidator
-- **Status**: DOKONČENO - 40 unit testů
-- **Kde**: `api/tests/Unit/RuleValidatorTest.php`
-- **Pokryto**:
-  - ✅ Validation constraints (required, type, length, unique, enum, min/max)
-  - ✅ Hook execution (beforeCreate, beforeDelete)
-  - ✅ Error handling
-  - ✅ Database mocking
-  - ✅ UPDATE partial validation
-- **Čas**: ⏱️ ~2 hodiny
-- **Priority**: ⭐⭐⭐
-
-```bash
-# Spustit:
-cd api && ./vendor/bin/phpunit tests/Unit/
-```
+**Status**: Based on comprehensive security audit
+**Last Updated**: 2026-06-29
+**Total Tasks**: 27 tasks across 4 phases
+**Estimated Effort**: 95-125 hours
+**Audit Report**: Available in audit visualization
 
 ---
 
-#### 2. ✅ Nastavit Environment Variables (.env) (HOTOVO)
-- **Co**: ✅ Nahradit hardcoded hodnoty v config/config.local.php
-- **Status**: DOKONČENO
-- **Soubory**:
-  - ✅ `api/config/config.local.php` - Čte z env proměnných s fallback defaults
-  - ✅ `api/.env.example` - Template se všemi parametry
-  - ✅ `.env` - Lokální config (přidáno do .gitignore)
-- **Konfigurovatelné parametry**:
-  - `DB_HOST`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`
-  - `JWT_SECRET`
-  - `LOG_PATH`, `LOG_LEVEL`
-- **Benefit**: Dev/prod switch bez změny kódu, bezpečnost (secrets nejsou v gitu)
-- **Čas**: ⏱️ ~30 minut
-- **Priority**: ⭐⭐⭐ (Bezpečnost)
+## 🔴 Phase 1: Security Critical (MUST FIX BEFORE PRODUCTION)
 
-```bash
-# Template:
-cp api/config/config.local.php api/.env.example
-# Upravit .env.example, vytvořit .env (gitignore)
-# Ověřit že .env není v .gitignore - PŘIDAT!
-```
+These 8 tasks MUST be completed before any production deployment. They address critical vulnerabilities.
 
----
+### 1.1 Fix CORS Configuration ⚠️ CRITICAL
+- **File:** `api/src/Cors.php`
+- **Issue:** `Access-Control-Allow-Origin: *` allows ALL domains
+- **Task:**
+  - Add `CORS_ALLOWED_ORIGINS` env variable (comma-separated list)
+  - Parse and validate origin on each request
+  - Return 403 Forbidden for disallowed origins
+  - Update `.env.example`
+- **Acceptance Criteria:**
+  - ✓ Requests from allowed origins work
+  - ✓ Requests from disallowed origins return 403
+  - ✓ Works with multiple origins in env
+- **Estimated Time:** 30 minutes
+- **Files to Change:**
+  - api/src/Cors.php
+  - api/.env.example (add CORS_ALLOWED_ORIGINS)
 
-#### 3. ✅ Implementovat Health Check Endpoint (HOTOVO)
-- **Co**: ✅ Přidat GET /health endpoint
-- **Status**: DOKONČENO
-- **Soubory**: `api/index.php` a `api/public/index.php`
-- **Vrátí**:
-  ```json
-  {
-    "status": "operational",
-    "database": "OK",
-    "uptime": 1234,
-    "timestamp": "2026-06-29T11:02:37+00:00",
-    "version": "1.0.0"
-  }
+### 1.2 Fix JWT Token Expiration ⚠️ CRITICAL  
+- **File:** `api/src/Auth.php` (line 45)
+- **Issue:** Tokens valid for 365 days (should be 15 minutes)
+- **Task:**
+  - Change expiration from `365 * 24 * 60 * 60` to `15 * 60` (900 seconds)
+  - Create `refresh_tokens` table (token_hash, user_id, expires_at, created_at, revoked)
+  - Implement `POST /auth/refresh` endpoint with refresh token
+  - Return new access token + new refresh token
+  - Support token rotation (invalidate old refresh token)
+  - Add `JWT_EXPIRATION` env variable (default 900 seconds)
+- **Acceptance Criteria:**
+  - ✓ New tokens expire in 15 minutes
+  - ✓ Refresh endpoint returns new tokens
+  - ✓ Old refresh tokens are invalidated after use
+  - ✓ Expired tokens return 401
+- **Estimated Time:** 2-3 hours
+- **Files to Change:**
+  - api/src/Auth.php
+  - api/migrations/ (new migration for refresh_tokens table)
+  - api/public/index.php (new route /auth/refresh)
+  - api/.env.example
+
+### 1.3 Fix Hardcoded JWT Secret ⚠️ CRITICAL
+- **File:** `api/config/config.local.php` (line 13)
+- **Issue:** Default secret `'my_little_secret'` is weak and publicly visible
+- **Task:**
+  - Remove hardcoded default value from config
+  - Make `JWT_SECRET` REQUIRED environment variable (throw error if missing)
+  - Generate 32-character random secret for local development guide
+  - Update `.env.example` with placeholder
+  - Document secure secret generation
+- **Acceptance Criteria:**
+  - ✓ No default value in code
+  - ✓ Missing JWT_SECRET throws clear error
+  - ✓ Documentation shows how to generate secure secret
+  - ✓ API won't start without JWT_SECRET in .env
+- **Estimated Time:** 30 minutes
+- **Files to Change:**
+  - api/config/config.local.php
+  - api/.env.example
+  - api/README.md or docs/SETUP.md
+
+### 1.4 Fix SQL Injection Vulnerabilities ⚠️ CRITICAL
+- **File:** `api/src/Database.php` (multiple locations)
+- **Issue:** WHERE clauses use string interpolation, not parameterized queries
+- **Affected Areas:**
+  - Line 98: getAll() WHERE clause
+  - Line 125: COUNT query WHERE clause
+  - public/index.php line 346: audit_logs filtering
+  - Multiple other where clause constructions
+- **Task:**
+  - Create helper method `buildSafeWhereClause()` that accepts array of conditions and binds parameters
+  - Refactor all WHERE clause construction to use prepared statements
+  - Use PDO placeholder binding (`:param` syntax)
+  - Test with SQL injection payloads
+  - Update audit_logs endpoint to use parameterized queries
+- **Acceptance Criteria:**
+  - ✓ All WHERE clauses use prepared statements
+  - ✓ No string interpolation in SQL
+  - ✓ SQL injection payloads are safely escaped
+  - ✓ Tests verify security
+- **Estimated Time:** 4-5 hours
+- **Files to Change:**
+  - api/src/Database.php
+  - api/public/index.php (audit_logs endpoint)
+  - api/tests/ (add SQL injection test cases)
+
+### 1.5 Secure File Upload Validation ⚠️ CRITICAL
+- **File:** `api/src/FileUploadManager.php`
+- **Issue:** Missing MIME type, size, and content validation
+- **Task:**
+  - Add MIME type whitelist (MIME + extension matching)
+  - Enforce maximum file size (10MB default, configurable)
+  - Validate actual file content (magic bytes) vs extension
+  - Prevent executable content detection
+  - Store files outside web root (not in /public/)
+  - Generate random filenames (UUID + extension)
+  - Add virus scanning stub (ready for ClamAV integration)
+  - Log upload attempts and validation failures
+- **Configuration:**
+  - MAX_UPLOAD_SIZE_MB env var (default 10)
+  - UPLOAD_ALLOWED_EXTENSIONS env var
+- **Acceptance Criteria:**
+  - ✓ .exe, .php, .sh files rejected
+  - ✓ Files larger than limit rejected
+  - ✓ MIME type mismatch detected
+  - ✓ Filenames are randomized, not user input
+  - ✓ Files stored outside webroot
+- **Estimated Time:** 3-4 hours
+- **Files to Change:**
+  - api/src/FileUploadManager.php
+  - api/.env.example
+  - api/tests/ (upload security tests)
+
+### 1.6 Implement Authorization on CRUD Endpoints ⚠️ CRITICAL
+- **File:** `api/public/index.php` (lines 327-426), `api/src/Endpoints.php`
+- **Issue:** No fine-grained permission checks - any authenticated user can access any data
+- **Task:**
+  - Define resource permissions matrix per role and table
+  - Create authorization middleware that checks:
+    - Does user have role with permission?
+    - Is user the owner of the record (for personal data)?
+  - Implement row-level security (users can only access own records by default)
+  - Add table-level access control config
+  - Create permission checking helper methods
+  - Enforce on all CRUD operations
+- **Permission Matrix Example:**
   ```
-- **Benefit**: Monitoring, load balancer health checks, alerting
-- **Čas**: ⏱️ ~30 minut
-- **Priority**: ⭐⭐⭐ (Production-ready)
+  users table:
+    - admin: can read/write all, delete all
+    - user: can read own, write own, cannot delete
+    - guest: can read own only (no write/delete)
+  
+  items table:
+    - admin: full access
+    - user: can read/write/delete own items
+    - guest: can read all, cannot write/delete
+  ```
+- **Acceptance Criteria:**
+  - ✓ User can only access their own data (by default)
+  - ✓ Admin can access all data
+  - ✓ Non-authorized requests return 403 Forbidden
+  - ✓ Audit logs track permission checks
+- **Estimated Time:** 5-6 hours
+- **Files to Change:**
+  - api/src/Endpoints.php (add authorization checks)
+  - api/public/index.php (add middleware)
+  - api/config/table-rules.php (or new config file for permissions)
+  - api/tests/ (authorization tests)
 
-```bash
-# Test:
-curl http://localhost:8000/health
-```
+### 1.7 Implement Password Reset Mechanism ⚠️ CRITICAL
+- **Files:** New: `api/src/PasswordReset.php`, Updated: `api/public/index.php`
+- **Issue:** No way to recover lost passwords
+- **Task:**
+  - Create `password_reset_tokens` table (token_hash, user_id, expires_at, used_at, created_at)
+  - Implement `POST /auth/password-reset` endpoint:
+    - Accept email
+    - Generate secure random token (32 chars)
+    - Store token_hash in database with 1 hour expiry
+    - Send token via email
+    - Rate limit to 3 per hour per email
+  - Implement `POST /auth/password-reset/{token}` endpoint:
+    - Accept new password
+    - Verify token exists and hasn't expired
+    - Verify token hasn't been used
+    - Update password, mark token as used
+    - Return 400 if token expired/invalid/used
+  - Add audit logging for password resets
+  - Send confirmation email on successful reset
+- **Acceptance Criteria:**
+  - ✓ User receives reset email with token
+  - ✓ Token expires in 1 hour
+  - ✓ Token can only be used once
+  - ✓ New password works after reset
+  - ✓ Used tokens are invalidated
+- **Estimated Time:** 3-4 hours
+- **Files to Change:**
+  - api/migrations/ (new migration for password_reset_tokens)
+  - api/src/PasswordReset.php (new class)
+  - api/public/index.php (new routes)
+  - api/tests/ (password reset tests)
 
----
-
-### 🟡 STŘEDNÍ PRIORITA (Dělat později)
-
-#### 4. ✅ Nastavit GitHub Actions CI/CD (HOTOVO)
-- **Co**: ✅ Auto-run testy na každý push a PR
-- **Status**: DOKONČENO
-- **Soubor**: `.github/workflows/api-tests.yml`
-- **Dělá**:
-  - ✅ Nainstaluje PHP 8.3 + Composer dependencies
-  - ✅ Setup MySQL 8.0 service
-  - ✅ Spustí unit testy (RuleValidator, constraints, hooks)
-  - ✅ Spustí API server na pozadí
-  - ✅ Spustí E2E testy (CRUD, auth, tree operations)
-  - ✅ Ověří health check endpoint
-  - ✅ Vykáže code coverage
-- **Triggers**: Push na master/develop, PRs na master
-- **Čas**: ⏱️ ~1.5 hodiny
-- **Priority**: ⭐⭐ (Nice to have)
-
-```yaml
-# Template je v api/tests/README.md
-# Kopírovat do .github/workflows/api-tests.yml
-```
-
----
-
-#### 5. ✅ Přidat API Documentation Web UI (HOTOVO)
-- **Co**: ✅ ReDoc UI pro openapi.yaml
-- **Status**: DOKONČENO
-- **Soubory**: 
-  - `api/public/index.php` - GET /docs route
-  - `api/public/openapi.yaml` - Schema file
-- **Vrátí**: ✅ Interactive API browser s ReDoc
-- **Endpointy**:
-  - `GET /docs` → ReDoc UI (HTML + CDN)
-  - `GET /openapi.yaml` → OpenAPI 3.1 spec
-- **Benefit**: Users vidí API live, testují endpointy z UI
-- **Čas**: ⏱️ ~1 hodina
-- **Priority**: ⭐⭐ (Marketing/UX)
-
----
-
-#### 6. ✅ Implementovat Rate Limiting (HOTOVO)
-- **Co**: ✅ Max 100 requests/min per IP
-- **Status**: DOKONČENO
-- **Soubor**: `api/src/RateLimiter.php` + middleware v index.php (public/index.php)
-- **Omezení**:
-  - 100 requests/minute per IP address
-  - Vrátí HTTP 429 Too Many Requests když překročeno
-  - Exempt endpoints: /login, /register, /health, /docs, /openapi.yaml
-- **HTTP Headers**:
-  - `X-RateLimit-Limit`: 100
-  - `X-RateLimit-Remaining`: zbývající requests
-  - `X-RateLimit-Reset`: timestamp reset
-- **Benefit**: Ochrana proti DDoS a API abuse
-- **Čas**: ⏱️ ~1.5 hodiny
-- **Priority**: ⭐⭐ (Bezpečnost)
-
-```bash
-# Soubor: api/src/RateLimiter.php
-# Test: Spustit 101 requestů, 101. dostane 429 (Too Many Requests)
-```
-
----
-
-#### 7. ✅ Implementovat Soft Deletes (HOTOVO)
-- **Co**: ✅ is_deleted flag místo hard delete
-- **Status**: DOKONČENO
-- **Databáze**: 
-  - ✅ Migration: `migrations/add-soft-deletes.sql`
-  - Přidá `is_deleted TINYINT(1) DEFAULT 0` k tabulkám
-  - Vytvoří `deleted_records` audit tabulku
-- **Kód**: 
-  - ✅ Database.php:
-    - getAll() - filtruje `is_deleted = 0` automaticky
-    - delete() - UPDATE `is_deleted = 1` (soft delete)
-    - restore(table, id) - Obnovit smazaný záznam
-    - getDeleted(table) - Vypsat smazané záznamy
-- **Benefit**: Obnovitelná data, audit trail, GDPR compliance
-- **Čas**: ⏱️ ~2 hodiny
-- **Priority**: ⭐⭐ (Data safety)
-
-```bash
-# Migration script v api/migrations/add-soft-deletes.sql
-# Test: DELETE /users/1 → user existuje ale je "deleted"
-```
+### 1.8 Fix Rate Limiting Issues ⚠️ HIGH
+- **File:** `api/public/index.php`, `api/src/RateLimiter.php`
+- **Issues:**
+  - Can bypass with `?skipRateLimit=1` query parameter (no auth check)
+  - Login endpoint exempt from rate limiting (brute force vector)
+  - Rate limiting based on IP only (easy to spoof)
+- **Task:**
+  - Remove `skipRateLimit` bypass entirely
+  - Apply rate limiting to login/register endpoints
+  - Implement role-based rate limiting:
+    - guest: 10 requests/minute
+    - user: 100 requests/minute
+    - admin: 1000 requests/minute
+  - Use user ID for authenticated requests instead of IP
+  - Add DDoS detection (sudden spike in requests from IP/user)
+  - Add X-RateLimit-* headers to all responses
+- **Acceptance Criteria:**
+  - ✓ Login endpoint rate limited
+  - ✓ `?skipRateLimit` doesn't work
+  - ✓ Admins can make more requests
+  - ✓ Proper headers returned
+- **Estimated Time:** 2-3 hours
+- **Files to Change:**
+  - api/src/RateLimiter.php
+  - api/public/index.php
+  - api/.env.example (role-based rate limits)
 
 ---
 
-### 🔵 NÍZKÁ PRIORITA (Bonusové features)
+## 🟠 Phase 2: High Priority Design Issues
 
-#### 8. ✅ Change Tracking (Audit Detail) (HOTOVO)
-- **Co**: ✅ Ukládat before/after values v audit_logs
-- **Status**: DOKONČENO
-- **Databáze**: 
-  - ✅ Migration: `migrations/add-change-tracking.sql`
-  - Přidá `old_values JSON` a `new_values JSON` sloupce
-- **Kód**:
-  - ✅ Database.php: `logAction()` rozšířena o `oldValues` a `newValues`
-  - ✅ Endpoints.php: CREATE/UPDATE/DELETE zaznamenávají změny
-    - CREATE: new_values = data
-    - UPDATE: old_values = stará data, new_values = nová data  
-    - DELETE: old_values = data (new_values NULL)
-- **Benefit**: "Kdo co změnil a z čeho na co" - kompletní audit trail
-- **Čas**: ⏱️ ~2 hodiny (HOTOVO!)
-- **Priority**: ⭐ (Nice to have)
+These improve API usability, maintainability, and performance.
 
-```bash
-# Test: Change Tracking E2E
-./api/run-change-tracking-test.sh
-```
+### 2.1 API Versioning
+- **Estimated Time:** 4-5 hours
+- **Description:** Implement `/api/v1/`, `/api/v2/` endpoint versioning strategy
+- **Details in NEXT_STEPS.md section 2.1**
 
----
+### 2.2 Response Caching & ETag Support  
+- **Estimated Time:** 3-4 hours
+- **Description:** Add Cache-Control, ETag, Last-Modified headers
 
-#### 9. ✅ Role-Based Access Control (RBAC) (HOTOVO)
-- **Co**: ✅ Vynutit roles na operace
-- **Status**: DOKONČENO
-- **Databáze**: 
-  - ✅ users_roles tabulka existuje a používá se
-  - ✅ Migration: `migrations/init-built-in-roles.sql` - inicializace built-in rolí (admin, user, guest)
-- **Kód**: 
-  - ✅ `api/src/RoleBasedAccessControl.php` - Middleware pro check role
-  - ✅ `config/table-rules.php` - RBAC integrace do hooks (beforeCreate, beforeUpdate, beforeDelete)
-  - ✅ `api/public/index.php` - Nové routes pro správu rolí (/users/{id}/roles/{roleId})
-  - ✅ `api/src/Endpoints.php` - Nové metody (getUserRoles, assignRole, removeRole)
-- **Benefit**: Admin/user/guest role enforcement - bezpečné oddělení práv
-- **Čas**: ⏱️ ~3 hodiny (HOTOVO!)
-- **Priority**: ⭐ (Security)
+### 2.3 Enforce Pagination Defaults & Limits
+- **Estimated Time:** 2 hours
+- **Description:** Default limit 100, max 1000 records
 
-**Implementované politiky:**
-```bash
-# User Management (POST /users) - jen admin
-# POST /users - jen admin (403 jinak)
-# PUT /users/{id} - jen admin nebo sám sobě (403 jinak)
-# DELETE /users/{id} - jen admin (403 jinak)
+### 2.4 Field Selection / Sparse Fieldsets
+- **Estimated Time:** 3 hours
+- **Description:** Support `?fields=id,name,email` parameter
 
-# Role Management - jen admin
-# POST /roles - jen admin
-# PUT /roles/{id} - jen admin
-# DELETE /roles/{id} - jen admin (nelze smazat built-in role)
+### 2.5 Request Correlation IDs
+- **Estimated Time:** 1-2 hours
+- **Description:** Add X-Request-ID header for request tracing
 
-# Role Assignment
-# GET /users/{id}/roles - všichni (vidí role uživatele)
-# POST /users/{id}/roles/{roleId} - jen admin (přiřazuje roli)
-# DELETE /users/{id}/roles/{roleId} - jen admin (odebírá roli)
-```
+### 2.6 Webhook Payload Signing with HMAC
+- **Estimated Time:** 2-3 hours
+- **Description:** Sign webhooks with X-Webhook-Signature header
 
-**Testování:**
-```bash
-# Unit testy: 12 testů
-./vendor/bin/phpunit tests/Unit/RoleBasedAccessControlTest.php
-
-# E2E testy: komplexní user workflows
-./vendor/bin/phpunit tests/E2E/RBACTest.php
-```
-
-**Dokumentace:** `api/docs/RBAC.md`
+### 2.7 Relationship Expansion (`?include`)
+- **Estimated Time:** 4-5 hours
+- **Description:** Support `?include=roles,permissions` for nested data
 
 ---
 
-#### 10. ✅ Webhook System (HOTOVO)
-- **Co**: ✅ POST notifications na external URLs
-- **Status**: DOKONČENO
-- **Databáze**: 
-  - ✅ `webhooks` tabulka - ukládá webhook konfiguraci (url, events, active, retry_count, timeout_seconds)
-  - ✅ `webhook_logs` tabulka - audit trail všech doručeních s delivery status
-  - ✅ Migration: `migrations/create-webhooks-table.sql`
-- **Kód**: 
-  - ✅ `api/src/WebhookManager.php` - Webhook management (create, update, delete, trigger, test)
-  - ✅ `config/table-rules.php` - RBAC pro webhooks (admin-only operations)
-  - ✅ `api/src/Endpoints.php` - Webhook endpoints + triggering v afterCreate/afterUpdate/afterDelete
-  - ✅ `api/public/index.php` - Routes pro webhook management
-- **Triggering**:
-  - ✅ CREATE: `{table}.created` event s novými daty
-  - ✅ UPDATE: `{table}.updated` event s old_values a new_values
-  - ✅ DELETE: `{table}.deleted` event se starými daty
-- **Supported Events**: user.*, item.*, category.*, group.*, person.*, loan.*, place.*, event.*, * (all)
-- **Delivery**:
-  - ✅ Exponential backoff retry logic (default 3 retries)
-  - ✅ Configurable timeout (5-300 seconds, default 30)
-  - ✅ HTTP 2xx success, 4xx no-retry, 5xx retry
-  - ✅ Webhook logs pro audit trail
-- **Benefit**: Real-time integraci se 3rd party systémy (Slack, external audit, CRM, CI/CD)
-- **Čas**: ⏱️ ~3 hodiny (HOTOVO!)
-- **Priority**: ⭐ (Advanced)
+## 🟡 Phase 3: Medium Priority Enhancements
 
-**Testování:**
-```bash
-# Unit testy: 10 testů
-./vendor/bin/phpunit tests/Unit/WebhookManagerTest.php
+### 3.1 WebSocket / Real-Time Support
+- **Option A - Server-Sent Events (SSE):** 3-4 hours
+- **Option B - WebSocket (Ratchet):** 8-10 hours
+- **Recommendation:** Start with SSE (simpler, client-side compatible)
 
-# E2E testy: webhook event triggering
-# (Included v complex scenarios)
-```
+### 3.2 Bulk Operations
+- **Estimated Time:** 3-4 hours
+- **Description:** `POST /users/bulk`, `PATCH /users/bulk`, `DELETE /users/bulk`
 
-**Dokumentace:** `api/docs/WEBHOOKS.md`
+### 3.3 Multiple Column Sorting
+- **Estimated Time:** 1-2 hours
+- **Description:** Support `?sort=last_name,-first_name`
+
+### 3.4 Enhanced Search Functionality
+- **Estimated Time:** 5-6 hours
+- **Description:** Fuzzy matching, boolean operators, faceted search
+
+### 3.5 API Key Authentication
+- **Estimated Time:** 4-5 hours
+- **Description:** Support `Authorization: Bearer <api-key>` for service-to-service
+
+### 3.6 Refresh Token Management
+- **Estimated Time:** 2-3 hours
+- **Description:** Token rotation, revocation, expiration tracking
+
+### 3.7 Auto-Generate OpenAPI Documentation
+- **Estimated Time:** 6-8 hours
+- **Description:** Parse PHP annotations, auto-generate spec
+
+### 3.8 Export / Batch Download
+- **Estimated Time:** 2-3 hours
+- **Description:** CSV/JSON export with filters and field selection
 
 ---
 
-#### 11. ✅ File Uploads (HOTOVO)
-- **Co**: ✅ Implementovat file uploads (tabulka existuje)
-- **Status**: DOKONČENO
-- **Endpoints**:
-  - ✅ POST /files/upload - nahrát soubor
-  - ✅ GET /files/{id} - detaily souboru
-  - ✅ GET /files/{id}/download - stáhnout soubor
-  - ✅ GET /files/my - moje soubory
-  - ✅ GET /files - všechny soubory (admin)
-  - ✅ DELETE /files/{id} - smazat soubor (own or admin)
-- **Kód**: 
-  - ✅ `api/src/FileUploadManager.php` - Upload management (validace, storage, cleanup)
-  - ✅ `config/table-rules.php` - Ownership validation
-  - ✅ `api/src/Endpoints.php` - File endpoints
-  - ✅ `api/public/index.php` - File routes
-- **Validace**: 
-  - ✅ Max 10MB per file
-  - ✅ Whitelisted extensions (pdf, doc, docx, xls, xlsx, txt, png, jpg, jpeg, gif, zip, csv)
-  - ✅ Sanitized filenames (timestamp + random suffix)
-- **Storage**: 
-  - ✅ /public/uploads/ (customizable)
-  - ✅ Auto-generated unique names
-- **Database**: 
-  - ✅ files tabulka - zaznamenává user_id, timestamp, filename, filepath, size
-- **Permissions**:
-  - ✅ Users can delete own files
-  - ✅ Admins can delete any file
-- **Benefit**: Attachments, dokumenty, fotky, backupy v systému
-- **Čas**: ⏱️ ~2.5 hodiny (HOTOVO!)
-- **Priority**: ⭐ (Feature)
+## 📊 Phase 4: Testing & Documentation
 
-**Testování:**
-```bash
-# Unit testy: 10 testů
-./vendor/bin/phpunit tests/Unit/FileUploadManagerTest.php
+### 4.1 Comprehensive Test Suite
+- **Estimated Time:** 10-15 hours
+- **Target:** 80%+ code coverage
+- **Includes:** Unit tests, integration tests, security tests, performance tests
 
-# Manual test:
-curl -X POST http://localhost:8000/files/upload \
-  -H "Authorization: Bearer <token>" \
-  -F "file=@document.pdf" \
-  -F "name=My Document"
-```
+### 4.2 Security Tests
+- **Estimated Time:** 5-6 hours
+- **Includes:** SQL injection, CORS, authorization, rate limiting tests
 
-**Dokumentace:** `api/docs/FILE_UPLOADS.md`
+### 4.3 API Documentation
+- **Estimated Time:** 8-10 hours
+- **Includes:** Usage examples, auth guide, error reference, security guide
+
+### 4.4 Deployment Guide
+- **Estimated Time:** 4-5 hours
+- **Includes:** Environment setup, database migrations, SSL/TLS config
 
 ---
 
-#### 12. ⏸️ GraphQL Layer (PŘESKOČIT PRO TEĎKA)
-- **Status**: Architektonicky otevřeno, prakticky ne
-- **Strategie**:
-  - 🚫 **Teď**: Neimplementovat
-  - 🏗️ **Architektonicky**: Nezavírat cestu (keep services clean)
-  - ⚙️ **Prakticky**: Držet Angular services, čisté modely, REST endpointy
-  - 🔮 **Později**: Zvážit pokud REST začne bolet
-- **Benefit**: Query builder, efficient data fetching (pokud bude potřeba)
-- **Čas**: 4+ hodiny (zatím přeskočeno)
-- **Priority**: ⭐ (Možné budoucně, ale ne teď)
+## 📈 Summary & Effort Breakdown
 
-```bash
-# Poznámka: REST je dost pro MVP
-# Pokud se bude potřeba: webonyx/graphql-php
-# Klientská strana: Apollo, Relay, nebo vlastní resolver
-```
+| Phase | Category | Tasks | Estimated Hours | Critical |
+|-------|----------|-------|-----------------|----------|
+| 1 | Security | 8 tasks | 20-25 hrs | ✅ YES |
+| 2 | Design | 7 tasks | 20-25 hrs | ✅ YES |
+| 3 | Enhancement | 8 tasks | 30-40 hrs | ❌ NO |
+| 4 | Testing | 4 tasks | 25-35 hrs | ❌ NO |
+| **TOTAL** | | **27 tasks** | **95-125 hrs** | |
 
 ---
 
-## 📊 Souhrn (Co je kdy dělat)
+## 🎯 Recommended Phasing Strategy
 
-### Týden 1 (MUSÍ SE DĚLAT) ✅ DOKONČENO
-```
-- [x] Unit testy (2h) ✅
-- [x] .env config (0.5h) ✅
-- [x] Health check (0.5h) ✅
-- [x] Total: 3 hodiny (HOTOVO!)
-```
+### Sprint 1 (Week 1-2): Security Critical
+- **Goal:** Fix all security vulnerabilities
+- **Tasks:** Phase 1 (all 8 tasks)
+- **Effort:** 20-25 hours
+- **Outcome:** API safe for production
+- **Deliverables:**
+  - Secure CORS
+  - Fixed JWT expiration + refresh tokens
+  - Removed hardcoded secrets
+  - SQL injection patches
+  - File upload validation
+  - Authorization checks
+  - Password reset flow
+  - Rate limiting improvements
 
-### Týden 2-3 (BY MĚLO) ✅ DOKONČENO! (6/6 HODIN)
-```
-- [x] GitHub Actions (1.5h) ✅
-- [x] API Docs UI (1h) ✅
-- [x] Rate limiting (1.5h) ✅
-- [x] Soft deletes (2h) ✅
-- [x] Total: 6 hodin (HOTOVO!)
-```
+### Sprint 2 (Week 3-4): Design & Usability
+- **Goal:** Improve API design and developer experience
+- **Tasks:** Phase 2 (7 tasks)
+- **Effort:** 20-25 hours
+- **Outcome:** Professional, well-designed API
+- **Deliverables:**
+  - API versioning strategy
+  - Caching headers
+  - Pagination enforcement
+  - Field selection
+  - Request tracing
+  - Webhook signing
+  - Relationship expansion
 
-### Později (NICE TO HAVE)
-```
-- [x] Change tracking (2h) ✅ HOTOVO!
-- [x] RBAC (3h) ✅ HOTOVO!
-- [x] Webhooks (3h) ✅ HOTOVO!
-- [x] File uploads (2.5h) ✅ HOTOVO!
-- [ ] GraphQL (4h+, architecture-only, no implementation)
-```
+### Sprint 3 (Week 5-8): Enhancements
+- **Goal:** Add advanced features
+- **Tasks:** Phase 3 (8 tasks, prioritize by need)
+- **Effort:** 30-40 hours
+- **Outcome:** Feature-rich API
+- **Priorities:**
+  1. Real-time (SSE)
+  2. API keys
+  3. Bulk operations
+  4. Enhanced search
 
----
-
-## 🎯 Co Bylo Dokončeno
-
-**✅ FULLY PRODUCTION-READY API! (19.5 hodin)**
-
-### Týden 1 (3 hodiny) ✅
-1. ✅ **Unit testy** - 40 testů, 75+ assertions
-2. ✅ **Environment config** - .env, fallback defaults
-3. ✅ **Health check** - GET /health endpoint
-
-### Týden 2 (6 hodin) ✅
-4. ✅ **GitHub Actions CI/CD** - Auto-run testů na push/PR
-5. ✅ **API Docs UI** - ReDoc + OpenAPI 3.1
-6. ✅ **Rate limiting** - 100 req/min per IP, HTTP 429
-7. ✅ **Soft deletes** - Data recovery, audit trail, GDPR
-
-### Týden 3 (2 hodiny) ✅
-8. ✅ **Change tracking** - old_values + new_values v audit logs
-   - Kompletní before/after audit trail
-   - E2E test pro ověření funkčnosti
-
-### Týden 4 (3 hodiny) ✅
-9. ✅ **Role-Based Access Control (RBAC)** - Admin/user/guest role enforcement
-   - RoleBasedAccessControl middleware + table rules integrace
-   - Nové routes /users/{id}/roles/{roleId} pro správu rolí
-   - 12 unit testů + E2E testy
-   - Dokumentace (RBAC.md)
-
-### Týden 5 (3 hodiny) ✅
-10. ✅ **Webhook System** - Real-time notifications na external URLs
-   - WebhookManager pro create/update/delete/trigger/test operace
-   - Triggering v afterCreate/afterUpdate/afterDelete hooks
-   - Exponential backoff retry logic (1-10 retries, configurable)
-   - Webhook audit logs s delivery status
-   - 10 unit testů
-   - Dokumentace (WEBHOOKS.md)
-
-### Týden 6 (2.5 hodiny) ✅
-11. ✅ **File Upload System** - Document management a attachments
-   - FileUploadManager pro upload/download/delete operace
-   - 10MB max size, whitelisted extensions
-   - Auto-sanitized filenames s timestamp + random suffix
-   - User ownership checks + admin override
-   - 10 unit testů
-   - Dokumentace (FILE_UPLOADS.md)
-
-**VŠECHNY FEATURES HOTOVY! ✅**
-- ✅ 72 unit testů (40 původní + 12 RBAC + 10 webhook + 10 file)
-- ✅ 133 assertions
-- ✅ Kompletní dokumentace (5 docs)
-- ✅ Production-ready architektura
-
-**Zbývající features (nice to have):**
-- GraphQL (4h+, architecture-only, skipped per strategy)
+### Sprint 4 (Parallel): Testing & Documentation
+- **Goal:** Ensure quality and maintainability
+- **Tasks:** Phase 4 (4 tasks)
+- **Effort:** 25-35 hours
+- **Outcome:** Production-ready with full documentation
+- **Run in parallel** with Sprint 3
 
 ---
 
-## 📝 Jak Použít Tento Dokument
+## 🚀 Starting Now: Phase 1 Execution
 
-V každé session si vezmi **jeden bod** (nebo více pokud jsou malé):
+### Next Immediate Steps
 
-```bash
-# Session 1:
-# Pracuj na: Unit testy
+1. **Read the audit report** (in visualization)
+2. **Start with Task 1.4 (SQL Injection)** - affects many components
+   - High impact
+   - Foundation for other security work
+   - Takes 4-5 hours but unlocks cleanup of related issues
 
-# Session 2:
-# Pracuj na: Environment config + Health check
+3. **Then tackle in this order:**
+   - 1.1 CORS (30 min, quick win)
+   - 1.3 JWT Secret (30 min, quick security fix)
+   - 1.2 JWT Expiration + Refresh (2-3 hours, foundational)
+   - 1.5 File Upload (3-4 hours, critical protection)
+   - 1.6 Authorization (5-6 hours, important for multi-user)
+   - 1.7 Password Reset (3-4 hours, user feature)
+   - 1.8 Rate Limiting (2-3 hours, cleanup)
 
-# Session 3:
-# Pracuj na: GitHub Actions
-```
-
-Každý bod má:
-- ✅ Co se má dělat
-- ✅ Očekávaný výstup
-- ✅ Čas odhadu
-- ✅ Benefit
-- ✅ Testovací příkaz
-
----
-
-## 🚀 Quick Links
-
-- E2E test: `api/RUN_E2E_TEST.md`
-- Test framework: `api/tests/README.md`
-- API docs: `api/docs/API.md`
-- Reusability: `api/REUSABLE.md`
-- Table rules: `api/config/table-rules.php`
+### For Each Task
+- Create feature branch: `git checkout -b security/task-name`
+- Implement changes
+- Write tests for new functionality
+- Update documentation
+- Create PR with description of changes
+- Get code review
+- Merge when tests pass
 
 ---
 
-**Tip**: Pokud si chceš tento soupis aktualizovat (přidat body, změnit priority), řekni mi a upravím. Vede to v repo jako NEXT_STEPS.md pro budoucí reference.
+## 📝 Progress Tracking
+
+As you complete each task, mark it here:
+
+### Phase 1: Security Critical
+- [ ] 1.1 Fix CORS Configuration
+- [ ] 1.2 Fix JWT Token Expiration
+- [ ] 1.3 Fix Hardcoded JWT Secret
+- [x] 1.4 Fix SQL Injection Vulnerabilities ✅ COMPLETE
+- [ ] 1.5 Secure File Upload Validation
+- [ ] 1.6 Implement Authorization on CRUD
+- [ ] 1.7 Implement Password Reset
+- [ ] 1.8 Fix Rate Limiting Issues
+
+### Phase 2: High Priority Design (Next sprint)
+- [ ] 2.1 API Versioning
+- [ ] 2.2 Response Caching & ETag
+- [ ] 2.3 Enforce Pagination
+- [ ] 2.4 Field Selection
+- [ ] 2.5 Request Correlation IDs
+- [ ] 2.6 Webhook Signing
+- [ ] 2.7 Relationship Expansion
+
+### Phase 3: Enhancements (As needed)
+- [ ] 3.1 Real-Time Support
+- [ ] 3.2 Bulk Operations
+- [ ] 3.3 Multiple Column Sorting
+- [ ] 3.4 Enhanced Search
+- [ ] 3.5 API Keys
+- [ ] 3.6 Refresh Token Management
+- [ ] 3.7 Auto-Generate OpenAPI
+- [ ] 3.8 Export / Batch Download
+
+### Phase 4: Testing & Documentation (Parallel)
+- [ ] 4.1 Comprehensive Tests
+- [ ] 4.2 Security Tests
+- [ ] 4.3 API Documentation
+- [ ] 4.4 Deployment Guide
 
 ---
 
-**Status - PRODUCTION READY**: 
-- ✅ Architektura (RuleValidator s 40 table rules)
-- ✅ Dokumentace (OpenAPI 3.1, API.md, ReDoc UI)
-- ✅ E2E test (komplexní user workflow)
-- ✅ Unit testy (40 unit testů, 75+ assertions)
-- ✅ Environment config (.env, fallback defaults)
-- ✅ Health check endpoint (GET /health - JSON status + DB check)
-- ✅ CI/CD - GitHub Actions (auto-run na push/PR, MySQL service)
-- ✅ API Docs UI (ReDoc + OpenAPI YAML endpoint)
-- ✅ Rate limiting (100 requests/min per IP, HTTP 429 headers)
-- ✅ Soft deletes (is_deleted flag, restore, getDeleted methods)
-- ✅ Change tracking (old_values + new_values in audit logs - 11 hodin celkem!)
-- ⏳ Optional: RBAC, webhooks, file uploads
+## 📞 Questions?
+
+For detailed implementation guidance on any task, check the corresponding section above or ask during implementation sessions.
+
+**Status:** Ready to begin Phase 1 - Security Critical
+**Starting Task:** 1.4 - Fix SQL Injection (or 1.1 if you prefer quick wins first)

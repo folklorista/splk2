@@ -335,27 +335,28 @@ switch ($method) {
             }
         } elseif ($tableName === 'audit_logs' && !isset($id)) {
             // Special handling for audit_logs with filtering by table_name, record_id, and action_id
-            $whereClause = '';
+            // Use WhereClauseBuilder for safe parameterized queries
+            $builder = new WhereClauseBuilder();
+
             $filterTable = $queryParams['table_name'] ?? null;
             $filterId = $queryParams['record_id'] ?? null;
             $filterActionId = $queryParams['action_id'] ?? null;
 
-            if ($filterTable || $filterId || $filterActionId) {
-                $conditions = [];
-                if ($filterTable && preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $filterTable)) {
-                    $conditions[] = "`table_name` = '" . addslashes($filterTable) . "'";
-                }
-                if ($filterId && is_numeric($filterId)) {
-                    $conditions[] = "`record_id` = " . intval($filterId);
-                }
-                if ($filterActionId && is_numeric($filterActionId)) {
-                    $conditions[] = "`action_id` = " . intval($filterActionId);
-                }
-                $whereClause = implode(' AND ', $conditions);
+            if ($filterTable && preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $filterTable)) {
+                $builder->eq('table_name', $filterTable);
+            }
+            if ($filterId && is_numeric($filterId)) {
+                $builder->eq('record_id', intval($filterId));
+            }
+            if ($filterActionId && is_numeric($filterActionId)) {
+                $builder->eq('action_id', intval($filterActionId));
             }
 
+            $whereClause = $builder->build();
+            $whereParams = $builder->getParams();
+
             Response::sendPrepared(
-                $endpoints->getAllRecords($tableName, $whereClause, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns)
+                $endpoints->getAllRecordsWithParams($tableName, $whereClause, $whereParams, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns)
             );
         } elseif (in_array($tableName, ['categories', 'groups']) && ! isset($id)) {
             Response::sendPrepared($endpoints->loadTreeEndpoint($tableName));
