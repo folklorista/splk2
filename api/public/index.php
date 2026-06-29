@@ -79,6 +79,46 @@ if ($tableName === 'health' && $method === 'GET') {
     exit;
 }
 
+// API Documentation UI (no authentication required)
+if ($tableName === 'docs' && $method === 'GET') {
+    http_response_code(200);
+    header('Content-Type: text/html; charset=utf-8');
+    ?>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>SPLK2 API Documentation</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: 'Roboto', sans-serif;
+            }
+        </style>
+    </head>
+    <body>
+        <redoc spec-url='/openapi.yaml'></redoc>
+        <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
+// OpenAPI schema endpoint (no authentication required)
+if ($tableName === 'openapi.yaml' && $method === 'GET') {
+    $openapiPath = __DIR__ . '/openapi.yaml';
+    if (file_exists($openapiPath)) {
+        http_response_code(200);
+        header('Content-Type: application/x-yaml; charset=utf-8');
+        echo file_get_contents($openapiPath);
+        exit;
+    }
+}
+
 // Logika pro login a registraci
 if ($tableName == 'login' && $method == 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);

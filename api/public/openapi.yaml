@@ -1,0 +1,934 @@
+openapi: 3.1.0
+info:
+  title: SPLK2 REST API
+  version: 1.0.0
+  description: |
+    Generic database REST API with dynamic CRUD operations, JWT authentication, and table-specific rules/validation.
+
+    ## Key Features
+    - Dynamic CRUD endpoints for any MySQL table
+    - JWT Bearer token authentication
+    - Pagination, sorting, and full-text search
+    - Table-specific validation and business rules
+    - Audit logging of all operations
+    - Tree structure support (hierarchical categories/groups)
+    - Foreign key relationship handling
+    - Comprehensive schema introspection
+
+    ## Authorization
+    All endpoints except `/login` and `/register` require JWT Bearer token in Authorization header.
+
+    ## Response Format
+    All responses follow a consistent JSON structure with status, message, data, and optional error/meta fields.
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Bearer token. Get token from /login endpoint.
+
+  schemas:
+    # ==================== RESPONSE SCHEMAS ====================
+
+    ApiResponse:
+      type: object
+      required: [status, message]
+      properties:
+        status:
+          type: integer
+          description: HTTP status code (200, 201, 400, 401, 404, 500)
+          example: 200
+        message:
+          type: string
+          description: Human-readable message
+          example: "Records found"
+        data:
+          description: Response data (varies by endpoint)
+          oneOf:
+            - type: array
+            - type: object
+            - type: string
+            - type: "null"
+        error:
+          type: string
+          nullable: true
+          description: Error message (if status >= 400)
+          example: null
+        meta:
+          type: object
+          nullable: true
+          description: Metadata (pagination, sorting, search info)
+          properties:
+            pagination:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  example: 10
+                offset:
+                  type: integer
+                  example: 0
+                total_records:
+                  type: integer
+                  example: 150
+                total_pages:
+                  type: integer
+                  example: 15
+            sorting:
+              type: object
+              properties:
+                order_by:
+                  type: string
+                  example: "created_at"
+                direction:
+                  type: string
+                  enum: [ASC, DESC]
+                  example: "DESC"
+            search:
+              type: object
+              properties:
+                query:
+                  type: string
+                columns:
+                  type: array
+                  items:
+                    type: string
+                fulltext:
+                  type: boolean
+                  description: Whether FULLTEXT index was used
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          example: "securePassword123"
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT Bearer token (valid for 365 days)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    RegisterRequest:
+      type: object
+      required: [email, password, first_name, last_name]
+      properties:
+        email:
+          type: string
+          format: email
+          example: "newuser@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "securePassword123"
+        first_name:
+          type: string
+          minLength: 2
+          maxLength: 64
+          example: "John"
+        last_name:
+          type: string
+          minLength: 2
+          maxLength: 64
+          example: "Doe"
+
+    TreeNode:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Node ID (converted to string in tree format)
+          example: "1"
+        name:
+          type: string
+          example: "Electronics"
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+
+    TableSchema:
+      type: object
+      properties:
+        name:
+          type: array
+          description: Table name
+          items:
+            type: string
+        comment:
+          type: array
+          description: Table comment/description
+          items:
+            type: string
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              type:
+                type: string
+              nullable:
+                type: boolean
+              default:
+                type: string
+                nullable: true
+              comment:
+                type: string
+                nullable: true
+        foreign_keys:
+          type: array
+          items:
+            type: object
+            properties:
+              column:
+                type: string
+              referenced_table:
+                type: string
+              referenced_column:
+                type: string
+
+    ValidationError:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Validation failed"
+        error:
+          type: string
+          example: "email must be valid email; password must be at least 8 characters"
+
+    # ==================== REQUEST BODIES ====================
+
+  requestBodies:
+    CreateRecord:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            description: Table-specific data. Fields and validation rules depend on table-rules.php configuration.
+            additionalProperties: true
+          example:
+            email: "user@example.com"
+            first_name: "John"
+            last_name: "Doe"
+
+    UpdateRecord:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            description: Partial update. Only provided fields are updated. System columns (id, created_at, updated_at) are ignored.
+            additionalProperties: true
+          example:
+            first_name: "Jane"
+
+    TreeData:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/TreeNode'
+
+# ==================== PATHS / ENDPOINTS ====================
+
+paths:
+  # Authentication Endpoints
+  /login:
+    post:
+      summary: User login
+      description: Authenticate user and get JWT token
+      tags: [Authentication]
+      security: []
+      requestBody:
+        $ref: '#/components/requestBodies/CreateRecord'
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LoginResponse'
+              example:
+                status: 200
+                message: "User logged in"
+                data:
+                  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                error: null
+                meta: null
+        401:
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                status: 401
+                message: "Invalid credentials"
+                data: null
+                error: "Unauthorized access"
+
+  /register:
+    post:
+      summary: User registration
+      description: Register new user account
+      tags: [Authentication]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+        400:
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  # Dynamic CRUD Endpoints
+  /{tableName}:
+    get:
+      summary: List records from table
+      description: |
+        Get all records from a table with optional pagination, sorting, and search.
+
+        Query parameters are passed via HTTP headers for complex queries:
+        - Pagination: X-Pagination-Limit, X-Pagination-Offset
+        - Sorting: X-Sort-By, X-Sort-Direction
+        - Search: X-Search-Query, X-Search-Columns
+
+        Response includes pagination metadata if limit is specified.
+      tags: [CRUD]
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: users
+          description: Name of the table to query
+        - name: X-Pagination-Limit
+          in: header
+          schema:
+            type: integer
+            example: 10
+          description: Number of records per page
+        - name: X-Pagination-Offset
+          in: header
+          schema:
+            type: integer
+            example: 0
+          description: Number of records to skip
+        - name: X-Sort-By
+          in: header
+          schema:
+            type: string
+            example: created_at
+          description: Column name to sort by
+        - name: X-Sort-Direction
+          in: header
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            example: DESC
+          description: Sort direction
+        - name: X-Search-Query
+          in: header
+          schema:
+            type: string
+            example: "john"
+          description: Search query (URL-encoded)
+        - name: X-Search-Columns
+          in: header
+          schema:
+            type: string
+            example: "first_name,last_name"
+          description: Comma-separated list of columns to search in
+      responses:
+        200:
+          description: Records found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          additionalProperties: true
+              example:
+                status: 200
+                message: "Records found"
+                data:
+                  - id: 1
+                    email: "user@example.com"
+                    first_name: "John"
+                    last_name: "Doe"
+                    created_at: "2025-01-15T10:00:00Z"
+                    updated_at: null
+                error: null
+                meta:
+                  pagination:
+                    limit: 10
+                    offset: 0
+                    total_records: 150
+                    total_pages: 15
+                  sorting:
+                    order_by: "created_at"
+                    direction: "DESC"
+        204:
+          description: No records found
+        401:
+          description: Unauthorized
+        404:
+          description: Table not found
+
+    post:
+      summary: Create new record
+      description: |
+        Insert a new record into the table.
+
+        Validation and business rules from table-rules.php are applied.
+        System columns (id, created_at, updated_at) are automatically handled.
+
+        Password fields are automatically hashed (for 'users' table and similar).
+      tags: [CRUD]
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: users
+      requestBody:
+        $ref: '#/components/requestBodies/CreateRecord'
+      responses:
+        201:
+          description: Record created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+              example:
+                status: 201
+                message: "Record created"
+                data:
+                  id: 42
+                error: null
+        400:
+          description: Validation error or invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                status: 400
+                message: "Validation failed"
+                data: null
+                error: "email already exists; password must be at least 8 characters"
+        401:
+          description: Unauthorized
+        403:
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                status: 403
+                message: "Business rule violation"
+                data: null
+                error: "Cannot delete the last admin"
+
+  /{tableName}/{id}:
+    get:
+      summary: Get single record by ID
+      description: Retrieve a specific record by its primary key.
+      tags: [CRUD]
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: users
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        200:
+          description: Record found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        additionalProperties: true
+        404:
+          description: Record not found
+        401:
+          description: Unauthorized
+
+    put:
+      summary: Update record
+      description: |
+        Update an existing record by ID.
+
+        Only provided fields are updated. System columns are protected.
+        Table-specific validation rules apply.
+        Audit log entry is created automatically.
+      tags: [CRUD]
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: users
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateRecord'
+      responses:
+        200:
+          description: Record updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                status: 200
+                message: "Record updated"
+                data: null
+                error: null
+        400:
+          description: Validation error or no changes detected
+        401:
+          description: Unauthorized
+        403:
+          description: Business rule violation
+        404:
+          description: Record not found
+
+    delete:
+      summary: Delete record
+      description: |
+        Delete a record by ID.
+
+        Foreign key constraints and business rules are enforced.
+        Audit log entry is created automatically.
+
+        Related records may be cascade deleted depending on database constraints.
+      tags: [CRUD]
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: users
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        200:
+          description: Record deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                status: 200
+                message: "Record deleted"
+                data: null
+                error: null
+        401:
+          description: Unauthorized
+        403:
+          description: Business rule violation
+        404:
+          description: Record not found
+
+  # Schema Introspection
+  /schema/{tableName}:
+    get:
+      summary: Get table schema
+      description: |
+        Retrieve the schema (structure) of a table.
+
+        Includes:
+        - Column names and types
+        - Nullable constraints
+        - Default values
+        - Comments/descriptions
+        - Foreign key relationships
+        - Table-specific validation rules
+
+        Useful for dynamically building forms and validating data.
+      tags: [Schema]
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: users
+      responses:
+        200:
+          description: Schema retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableSchema'
+        404:
+          description: Table not found
+        401:
+          description: Unauthorized
+
+  # Search Endpoint
+  /{tableName}/search:
+    get:
+      summary: Search records (legacy)
+      description: |
+        Search records using full-text search.
+
+        Note: This is a convenience endpoint. For more control, use the main GET endpoint
+        with X-Search-Query and X-Search-Columns headers instead.
+      tags: [Search]
+      deprecated: true
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: users
+        - name: search
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "john"
+      responses:
+        200:
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        404:
+          description: No results found
+        401:
+          description: Unauthorized
+
+  # Foreign Key Options
+  /{tableName}/options:
+    get:
+      summary: Get foreign key options
+      description: |
+        Get available options for a referenced table (for dropdowns/selects).
+
+        Intelligently handles:
+        - Simple tables with 'name' column
+        - Hierarchical tables (with parent_id) - returns full path
+        - FULLTEXT searchable columns
+      tags: [References]
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: categories
+      responses:
+        200:
+          description: Options retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+              example:
+                - id: 1
+                  name: "Electronics"
+                - id: 2
+                  name: "Electronics > Computers"
+        404:
+          description: No options found
+        401:
+          description: Unauthorized
+
+  # Tree Endpoints (for hierarchical data)
+  /categories:
+    get:
+      summary: Get category tree
+      description: |
+        Retrieve the complete category hierarchy as a tree structure.
+
+        Useful for nested dropdowns, tree views, and hierarchical navigation.
+      tags: [Tree]
+      responses:
+        200:
+          description: Tree retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TreeNode'
+        401:
+          description: Unauthorized
+
+    put:
+      summary: Save/update category tree
+      description: |
+        Update the entire category hierarchy in one operation.
+
+        Atomically updates positions, parent relationships, and creates/updates nodes.
+      tags: [Tree]
+      requestBody:
+        $ref: '#/components/requestBodies/TreeData'
+      responses:
+        200:
+          description: Tree saved successfully
+        400:
+          description: Invalid tree structure
+        401:
+          description: Unauthorized
+
+  /groups:
+    get:
+      summary: Get groups tree
+      description: Retrieve the complete groups hierarchy as a tree structure.
+      tags: [Tree]
+      responses:
+        200:
+          description: Tree retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TreeNode'
+        401:
+          description: Unauthorized
+
+    put:
+      summary: Save/update groups tree
+      description: Update the entire groups hierarchy in one operation.
+      tags: [Tree]
+      requestBody:
+        $ref: '#/components/requestBodies/TreeData'
+      responses:
+        200:
+          description: Tree saved successfully
+        400:
+          description: Invalid tree structure
+        401:
+          description: Unauthorized
+
+  # Foreign Key Lookup
+  /{tableName}:
+    get:
+      summary: Get records by foreign key
+      description: |
+        Get records filtered by foreign key values.
+
+        Query parameters:
+        - foreignKeys=true (enable foreign key filtering)
+        - table={foreignKeyTable} (target table)
+        - Additional params are treated as column=value filters
+      tags: [References]
+      parameters:
+        - name: foreignKeys
+          in: query
+          schema:
+            type: boolean
+          example: true
+        - name: table
+          in: query
+          required: true
+          schema:
+            type: string
+          example: items
+        - name: category_id
+          in: query
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Records found
+        400:
+          description: Invalid parameters
+        401:
+          description: Unauthorized
+
+# ==================== SECURITY & COMMON INFO ====================
+
+tags:
+  - name: Authentication
+    description: Login, registration, token management
+  - name: CRUD
+    description: Create, Read, Update, Delete operations on any table
+  - name: Schema
+    description: Table structure introspection
+  - name: Search
+    description: Full-text search capabilities
+  - name: References
+    description: Foreign key and relationship handling
+  - name: Tree
+    description: Hierarchical data (categories, groups)
+
+x-custom:
+  table-rules:
+    description: Table-specific validation and business rules are configured in /api/config/table-rules.php
+    examples:
+      - table: users
+        rule: Admin accounts cannot be deleted by anyone
+      - table: categories
+        rule: Categories with items cannot be deleted
+      - table: items
+        rule: inventory_number must be unique within category
+
+  validation:
+    description: |
+      Validation is configurable per table in table-rules.php
+      Common constraints:
+      - required: field must be present
+      - type: email, integer, string, etc.
+      - minLength / maxLength
+      - enum: predefined values
+      - unique: value must be unique in table
+      - unique_with: unique combination of fields
+
+  audit-logging:
+    description: All CRUD operations are logged with user info, timestamp, and changed data
+    logged-operations:
+      - USER_LOGIN
+      - USER_REGISTER
+      - DATA_INSERT
+      - DATA_UPDATE
+      - DATA_DELETE
+      - TREE_UPDATE
