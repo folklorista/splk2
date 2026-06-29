@@ -3,11 +3,19 @@
 # E2E Test Runner Script
 # Simple one-command way to run the E2E workflow test
 
-set -e
-
 API_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 API_URL="http://localhost:8000"
 API_PROCESS_FILE="/tmp/api-test-server.pid"
+
+# Cleanup function to ensure server is killed even on error
+cleanup() {
+    if [ -f "$API_PROCESS_FILE" ]; then
+        API_PID=$(cat "$API_PROCESS_FILE")
+        kill $API_PID 2>/dev/null || true
+        rm "$API_PROCESS_FILE"
+    fi
+}
+trap cleanup EXIT
 
 # Colors for output
 RED='\033[0;31m'
@@ -30,10 +38,14 @@ echo -e "${GREEN}✓${NC} PHP found: $PHP_VERSION"
 
 # Step 2: Check Composer
 echo -e "\n${YELLOW}[2/4]${NC} Checking Composer dependencies..."
-if [ ! -d "$API_DIR/vendor" ]; then
+cd "$API_DIR"
+if [ ! -d "$API_DIR/vendor" ] || [ ! -f "$API_DIR/vendor/bin/phpunit" ]; then
     echo -e "${YELLOW}Installing dependencies...${NC}"
-    cd "$API_DIR"
-    composer install --quiet
+    composer install
+    if [ ! -f "$API_DIR/vendor/bin/phpunit" ]; then
+        echo -e "${RED}ERROR: phpunit installation failed${NC}"
+        exit 1
+    fi
 fi
 echo -e "${GREEN}✓${NC} Composer dependencies ready"
 
@@ -83,18 +95,12 @@ cd "$API_DIR"
 
 # Run the test with colorized output
 ./vendor/bin/phpunit tests/Integration/E2EWorkflowTest.php --testdox
-
 TEST_EXIT_CODE=$?
 
 echo -e "\n${YELLOW}=================================================${NC}"
 
-# Cleanup
+# Cleanup is handled by trap
 echo -e "\n${YELLOW}Cleaning up...${NC}"
-if [ -f "$API_PROCESS_FILE" ]; then
-    API_PID=$(cat "$API_PROCESS_FILE")
-    kill $API_PID 2>/dev/null || true
-    rm "$API_PROCESS_FILE"
-fi
 
 # Results
 if [ $TEST_EXIT_CODE -eq 0 ]; then

@@ -1,3 +1,4 @@
 /config/config.production.php
 /vendor/
 composer.phar
+*.cache
