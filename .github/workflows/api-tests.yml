@@ -85,7 +85,7 @@ jobs:
         run: ./vendor/bin/phpunit tests/Unit/
         working-directory: api
         env:
-          DB_HOST: localhost:3306
+          DB_HOST: 127.0.0.1:3306
           DB_USERNAME: root
           DB_PASSWORD: root
           DB_NAME: splk
@@ -94,11 +94,11 @@ jobs:
       - name: Start API Server
         run: |
           cd api
-          php -S localhost:8000 -t public > /tmp/api.log 2>&1 &
+          php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
           API_PID=$!
           sleep 3
           # Verify server is running
-          if curl -s http://localhost:8000/health > /dev/null; then
+          if curl -s http://127.0.0.1:8000/health > /dev/null; then
             echo "API server started successfully (PID: $API_PID)"
           else
             echo "API server failed to start"
@@ -110,7 +110,7 @@ jobs:
         run: ./vendor/bin/phpunit tests/Integration/
         working-directory: api
         env:
-          DB_HOST: localhost:3306
+          DB_HOST: 127.0.0.1:3306
           DB_USERNAME: root
           DB_PASSWORD: root
           DB_NAME: splk
@@ -121,7 +121,7 @@ jobs:
         run: ./vendor/bin/phpunit --coverage-text
         working-directory: api
         env:
-          DB_HOST: localhost:3306
+          DB_HOST: 127.0.0.1:3306
           DB_USERNAME: root
           DB_PASSWORD: root
           DB_NAME: splk
