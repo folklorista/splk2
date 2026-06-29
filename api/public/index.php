@@ -213,8 +213,8 @@ switch ($method) {
         } elseif ($tableName === 'audit_logs' && !isset($id)) {
             // Special handling for audit_logs with filtering by table_name and record_id
             $whereClause = '';
-            $filterTable = $_GET['table_name'] ?? null;
-            $filterId = $_GET['record_id'] ?? null;
+            $filterTable = $queryParams['table_name'] ?? null;
+            $filterId = $queryParams['record_id'] ?? null;
 
             if ($filterTable || $filterId) {
                 $conditions = [];
