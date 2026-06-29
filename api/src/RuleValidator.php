@@ -172,7 +172,7 @@ class RuleValidator
     private function isUnique(string $table, string $field, $value): bool
     {
         try {
-            $result = $this->db->getAll($table, "`$field` = :value", whereParams: [':value' => $value]);
+            $result = $this->db->getAllWhere($table, "`$field` = :value", [':value' => $value]);
             return empty($result['data']) || (isset($result['status']) && $result['status'] === 404);
         } catch (\Exception $e) {
             $this->logger->error("Unique check failed for $table.$field", ['error' => $e->getMessage()]);
