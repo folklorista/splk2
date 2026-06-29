@@ -218,11 +218,11 @@ switch ($method) {
 
             if ($filterTable || $filterId) {
                 $conditions = [];
-                if ($filterTable) {
-                    $conditions[] = "`table_name` = '{$filterTable}'";
+                if ($filterTable && preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $filterTable)) {
+                    $conditions[] = "`table_name` = '" . addslashes($filterTable) . "'";
                 }
-                if ($filterId) {
-                    $conditions[] = "`record_id` = {$filterId}";
+                if ($filterId && is_numeric($filterId)) {
+                    $conditions[] = "`record_id` = " . intval($filterId);
                 }
                 $whereClause = implode(' AND ', $conditions);
             }
