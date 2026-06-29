@@ -722,11 +722,11 @@ class Database
 
     private function getSearchableColumns(array $schema): array {
         $filteredColumns = [];
-    
+
         if (!isset($schema['data']['columns']) || !is_array($schema['data']['columns'])) {
             return $filteredColumns;
         }
-    
+
         foreach ($schema['data']['columns'] as $column) {
             // Podmínky pro vyloučení sloupců
             if (
@@ -738,10 +738,50 @@ class Database
             ) {
                 continue;
             }
-    
+
             $filteredColumns[] = $column['name'];
         }
-    
+
         return $filteredColumns;
+    }
+
+    /**
+     * Execute raw SQL query with parameters
+     * Used by hooks and custom business logic
+     */
+    public function execute(string $query, array $params = []): bool
+    {
+        try {
+            $stmt = $this->pdo->prepare($query);
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            throw new \Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get all records with raw WHERE clause (internal use only)
+     * Used by hooks for filtering
+     */
+    public function getAllWhere(string $table, string $whereClause, array $params = []): array
+    {
+        try {
+            $query = "SELECT * FROM `{$table}`";
+            if (!empty($whereClause)) {
+                $query .= " WHERE {$whereClause}";
+            }
+
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute($params);
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if ($result) {
+                return Response::prepare(200, "Records found", $result);
+            } else {
+                return Response::prepare(204, "No records found");
+            }
+        } catch (PDOException $e) {
+            return Response::prepare(400, "Database error", null, $e->getMessage());
+        }
     }
 }
