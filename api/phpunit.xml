@@ -22,5 +22,8 @@
             <directory>vendor</directory>
             <directory>tests</directory>
         </exclude>
+        <report>
+            <cobertura outputFile="coverage.xml"/>
+        </report>
     </coverage>
 </phpunit>
