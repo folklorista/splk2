@@ -211,18 +211,22 @@ switch ($method) {
                 Response::send(404, "Table not found");
             }
         } elseif ($tableName === 'audit_logs' && !isset($id)) {
-            // Special handling for audit_logs with filtering by table_name and record_id
+            // Special handling for audit_logs with filtering by table_name, record_id, and action_id
             $whereClause = '';
             $filterTable = $queryParams['table_name'] ?? null;
             $filterId = $queryParams['record_id'] ?? null;
+            $filterActionId = $queryParams['action_id'] ?? null;
 
-            if ($filterTable || $filterId) {
+            if ($filterTable || $filterId || $filterActionId) {
                 $conditions = [];
                 if ($filterTable && preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $filterTable)) {
                     $conditions[] = "`table_name` = '" . addslashes($filterTable) . "'";
                 }
                 if ($filterId && is_numeric($filterId)) {
                     $conditions[] = "`record_id` = " . intval($filterId);
+                }
+                if ($filterActionId && is_numeric($filterActionId)) {
+                    $conditions[] = "`action_id` = " . intval($filterActionId);
                 }
                 $whereClause = implode(' AND ', $conditions);
             }

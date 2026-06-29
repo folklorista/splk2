@@ -285,7 +285,18 @@ class ChangeTrackingE2ETest extends TestCase
 
     private function getAuditLogs(string $tableName, int $recordId, string $action): array
     {
+        // Map action name to action_id
+        $actionMap = [
+            'CREATE' => 2,   // DATA_INSERT
+            'UPDATE' => 3,   // DATA_UPDATE
+            'DELETE' => 4,   // DATA_DELETE
+        ];
+        $actionId = $actionMap[$action] ?? null;
+
         $endpoint = "/audit_logs?table_name={$tableName}&record_id={$recordId}";
+        if ($actionId) {
+            $endpoint .= "&action_id={$actionId}";
+        }
         return $this->makeRequest('GET', $endpoint);
     }
 
