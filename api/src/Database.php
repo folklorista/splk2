@@ -13,7 +13,14 @@ class Database
     {
         $this->logger = $logger;
 
-        $dsn       = "mysql:host={$config['host']};dbname={$config['dbname']};charset=utf8mb4";
+        // Parse host and port
+        $host = $config['host'];
+        $port = '3306';
+        if (strpos($host, ':') !== false) {
+            [$host, $port] = explode(':', $host);
+        }
+
+        $dsn       = "mysql:host={$host};port={$port};dbname={$config['dbname']};charset=utf8mb4";
         $this->pdo = new PDO($dsn, $config['username'], $config['password']);
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
