@@ -17,16 +17,15 @@ jobs:
 
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:5.7
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: splk
-          MYSQL_TCP_PORT: 3306
         options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
+          --health-cmd="mysql -uroot -proot -e 'SELECT 1'"
+          --health-interval=5s
+          --health-timeout=10s
+          --health-retries=10
         ports:
           - 3306:3306
 
@@ -54,25 +53,27 @@ jobs:
       - name: Cache Composer dependencies
         uses: actions/cache@v3
         with:
-          path: ${{ steps.composer-cache.outputs.dir }}
+          path: |
+            ${{ steps.composer-cache.outputs.dir }}
+            api/vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('api/composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install PHP dependencies
-        run: composer install --no-progress --prefer-dist
+        run: composer install --no-progress --prefer-dist --no-interaction
         working-directory: api
 
       - name: Wait for MySQL to be ready
         run: |
-          for i in {1..30}; do
-            if mysql -h localhost -u root -proot -e "SELECT 1;" 2>/dev/null; then
-              echo "MySQL is ready!"
+          for i in {1..60}; do
+            if mysql -h 127.0.0.1 -P 3306 -u root -proot -e "SELECT 1;" 2>/dev/null; then
+              echo "✓ MySQL is ready!"
               exit 0
             fi
-            echo "Waiting for MySQL... attempt $i/30"
+            echo "Waiting for MySQL... attempt $i/60"
             sleep 1
           done
-          echo "MySQL failed to start"
+          echo "✗ MySQL failed to start after 60 seconds"
           exit 1
 
       - name: Create test database
