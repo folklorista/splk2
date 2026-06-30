@@ -228,6 +228,10 @@ CREATE TABLE `roles` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_czech_ci COMMENT='uživatelské role';
 
+INSERT INTO `roles` (`id`, `name`, `description`) VALUES
+(1, 'admin', 'Administrátor s plným přístupem'),
+(2, 'user', 'Běžný uživatel'),
+(3, 'guest', 'Host bez přístupu');
 
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
