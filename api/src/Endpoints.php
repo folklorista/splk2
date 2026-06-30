@@ -66,8 +66,7 @@ class Endpoints
 
             // Assign 'user' role to new user
             try {
-                $user = (object)['id' => $userId];
-                $this->rbac->assignRole($user, 'user');
+                $this->rbac->assignRoleByName($userId, 'user');
                 $this->logger->info('User role assigned to new user', ['user_id' => $userId]);
             } catch (\Exception $e) {
                 $this->logger->warning('Failed to assign user role', ['user_id' => $userId, 'error' => $e->getMessage()]);

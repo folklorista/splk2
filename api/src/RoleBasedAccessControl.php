@@ -200,6 +200,47 @@ class RoleBasedAccessControl {
     }
 
     /**
+     * Assign role to user by role name
+     *
+     * @param int $userId
+     * @param string $roleName
+     * @return array Status response
+     */
+    public function assignRoleByName(int $userId, string $roleName): array {
+        try {
+            // Find role by name
+            $roleResult = $this->db->getAllWhere(
+                'roles',
+                'name = ?',
+                [$roleName]
+            );
+
+            if ($roleResult['status'] !== 200 || empty($roleResult['data'])) {
+                return [
+                    'status' => 404,
+                    'message' => 'Role not found',
+                    'data' => null,
+                ];
+            }
+
+            $roleId = $roleResult['data'][0]['id'];
+            return $this->assignRole($userId, $roleId);
+        } catch (\Exception $e) {
+            $this->logger->error('Error assigning role by name', [
+                'user_id' => $userId,
+                'role_name' => $roleName,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'status' => 500,
+                'message' => 'Error assigning role',
+                'data' => null,
+            ];
+        }
+    }
+
+    /**
      * Check if user is owner of a record (for PUT/DELETE own data)
      *
      * @param int $userId
