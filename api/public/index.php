@@ -96,6 +96,18 @@ if ($fieldsParam) {
     }
 }
 
+// Parse and set relationship loading for eager loading (after queryParams parsing)
+$includeParam = $queryParams['include'] ?? null;
+if ($includeParam) {
+    try {
+        $relationshipLoader = new RelationshipLoader($db, $logger);
+        $relationships = $relationshipLoader->parseInclude($includeParam);
+        $endpoints->setRelationships($relationships);
+    } catch (\InvalidArgumentException $e) {
+        Response::send(400, "Invalid include parameter", null, $e->getMessage());
+    }
+}
+
 // Validace endpointu
 if (count($path) == 0 || empty($path[$pathIndex['table']])) {
     Response::send(400, "Routing failed", null, "Invalid endpoint");

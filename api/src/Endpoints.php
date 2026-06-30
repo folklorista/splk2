@@ -11,6 +11,8 @@ class Endpoints
     private FileUploadManager $fileUploadManager;
     private RoleBasedAccessControl $rbac;
     private ?array $selectedFields = null;
+    private ?array $relationships = null;
+    private RelationshipLoader $relationshipLoader;
 
     public function __construct(Database $db, Auth $auth, Logger $logger, RuleValidator $validator = null, WebhookManager $webhookManager = null, FileUploadManager $fileUploadManager = null, RoleBasedAccessControl $rbac = null)
     {
@@ -21,6 +23,7 @@ class Endpoints
         $this->webhookManager = $webhookManager ?? new WebhookManager($db, $logger);
         $this->fileUploadManager = $fileUploadManager ?? new FileUploadManager($db, $logger);
         $this->rbac = $rbac ?? new RoleBasedAccessControl($db, $logger);
+        $this->relationshipLoader = new RelationshipLoader($db, $logger);
     }
 
     /**
@@ -34,14 +37,61 @@ class Endpoints
     }
 
     /**
-     * Apply field selection filter to response data
-     * Used internally to filter data before returning
-     * Always filters to remove sensitive fields (null = all non-sensitive)
-     * Or filters to selected fields if specified
+     * Set relationships to load for responses
+     *
+     * @param array|null $relationships Array of relationship names to include
+     */
+    public function setRelationships(?array $relationships): void
+    {
+        // Store for later use in responses
+        $this->relationships = $relationships;
+    }
+
+    /**
+     * Apply relationship loading to response data
      *
      * @param mixed $data The response data
-     * @param string $tableName The table name for field filtering
-     * @return mixed Filtered data or original data if not array
+     * @param string $tableName The table name for context
+     * @param array|null $relationships Relationships to load
+     * @return mixed Data with relationships loaded
+     */
+    private function applyRelationships($data, string $tableName, ?array $relationships)
+    {
+        if (!$relationships || empty($relationships)) {
+            return $data;
+        }
+
+        if (is_array($data)) {
+            if (isset($data[0]) && is_array($data[0])) {
+                // Array of records
+                return $this->relationshipLoader->loadRelationshipsForRecords(
+                    $tableName,
+                    $data,
+                    $relationships
+                );
+            } elseif (!empty($data) && !isset($data[0])) {
+                // Single record (associative array)
+                return $this->relationshipLoader->loadRelationships(
+                    $tableName,
+                    $data,
+                    $relationships
+                );
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Apply field selection filter and relationship loading to response data
+     * Used internally to filter and enrich data before returning
+     * Always filters to remove sensitive fields (null = all non-sensitive)
+     * Or filters to selected fields if specified
+     * Also loads relationships if requested
+     *
+     * @param mixed $data The response data
+     * @param string $tableName The table name for field filtering and relationships
+     * @return mixed Filtered and enriched data or original data if not array
      */
     private function applyFieldSelection($data, string $tableName)
     {
@@ -52,11 +102,14 @@ class Endpoints
         if (is_array($data)) {
             if (isset($data[0]) && is_array($data[0])) {
                 // Array of records - always filter (selectedFields may be null for defaults)
-                return FieldSelector::filterRecords($data, $tableName, $this->selectedFields);
+                $data = FieldSelector::filterRecords($data, $tableName, $this->selectedFields);
             } elseif (!empty($data) && !isset($data[0])) {
                 // Single record (associative array) - always filter
-                return FieldSelector::filterRecord($data, $tableName, $this->selectedFields);
+                $data = FieldSelector::filterRecord($data, $tableName, $this->selectedFields);
             }
+
+            // Apply relationship loading after field selection
+            $data = $this->applyRelationships($data, $tableName, $this->relationships);
         }
 
         return $data;
