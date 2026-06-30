@@ -9,8 +9,9 @@ class Endpoints
     private RuleValidator $validator;
     private WebhookManager $webhookManager;
     private FileUploadManager $fileUploadManager;
+    private RoleBasedAccessControl $rbac;
 
-    public function __construct(Database $db, Auth $auth, Logger $logger, RuleValidator $validator = null, WebhookManager $webhookManager = null, FileUploadManager $fileUploadManager = null)
+    public function __construct(Database $db, Auth $auth, Logger $logger, RuleValidator $validator = null, WebhookManager $webhookManager = null, FileUploadManager $fileUploadManager = null, RoleBasedAccessControl $rbac = null)
     {
         $this->db = $db;
         $this->auth = $auth;
@@ -18,6 +19,7 @@ class Endpoints
         $this->validator = $validator;
         $this->webhookManager = $webhookManager ?? new WebhookManager($db, $logger);
         $this->fileUploadManager = $fileUploadManager ?? new FileUploadManager($db, $logger);
+        $this->rbac = $rbac ?? new RoleBasedAccessControl($db, $logger);
     }
 
     // Funkce pro logiku registrace
@@ -59,7 +61,18 @@ class Endpoints
             'last_name' => $data['last_name'],
         ];
         $userIdResponse = $this->db->insert('users', $newUser);
-        if ($userIdResponse && $userIdResponse['status'] === 200) {
+        if ($userIdResponse && $userIdResponse['status'] === 201) {
+            $userId = $userIdResponse['data']['id'];
+
+            // Assign 'user' role to new user
+            try {
+                $user = (object)['id' => $userId];
+                $this->rbac->assignRole($user, 'user');
+                $this->logger->info('User role assigned to new user', ['user_id' => $userId]);
+            } catch (\Exception $e) {
+                $this->logger->warning('Failed to assign user role', ['user_id' => $userId, 'error' => $e->getMessage()]);
+            }
+
             $userIdResponse['message'] = "User registered";
         }
         return $userIdResponse;
