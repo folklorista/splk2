@@ -80,7 +80,7 @@ class CacheHeadersE2ETest extends TestCase
 
         $lastModified = $response['headers']['last-modified'];
         // Should be valid HTTP date format
-        $this->assertRegExp('/^[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4}/', $lastModified);
+        $this->assertMatchesRegularExpression('/^[A-Za-z]{3}, \d{2} [A-Za-z]{3} \d{4}/', $lastModified);
     }
 
     /**
@@ -298,7 +298,7 @@ class CacheHeadersE2ETest extends TestCase
             if (strpos($directive, 'max-age=') === 0) {
                 $hasMaxAge = true;
                 // Validate format: max-age=XXX
-                $this->assertRegExp('/^max-age=\d+$/', $directive);
+                $this->assertMatchesRegularExpression('/^max-age=\d+$/', $directive);
             }
         }
 
@@ -320,6 +320,6 @@ class CacheHeadersE2ETest extends TestCase
 
         // Remove quotes and validate hash format (should be 64 hex chars for SHA-256)
         $hash = trim($eTag, '"');
-        $this->assertRegExp('/^[a-f0-9]{64}$/', $hash);
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $hash);
     }
 }
