@@ -182,8 +182,8 @@ class Endpoints
 
         // Insert
         $response = $this->db->insert($table, $data);
-        if ($response['status'] !== 201) {
-            return $response;
+        if (!is_array($response) || ($response['status'] ?? null) !== 201) {
+            return $response ?? Response::prepare(500, "Database insert failed");
         }
 
         // Hook: afterCreate
