@@ -158,6 +158,19 @@ jobs:
           rm -rf api/log/rate_limit 2>/dev/null || true
           sleep 1
 
+      - name: Restart API Server for full test run
+        run: |
+          cd api
+          php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
+          sleep 3
+          if curl -s http://127.0.0.1:8000/health > /dev/null; then
+            echo "✓ API server restarted successfully"
+          else
+            echo "✗ API server failed to restart"
+            cat /tmp/api.log
+            exit 1
+          fi
+
       - name: Run All Tests with Coverage
         run: |
           # Clear rate limit cache before running full test suite
