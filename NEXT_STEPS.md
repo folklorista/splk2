@@ -415,7 +415,7 @@ As you complete each task, mark it here:
 - [x] 1.2 Fix JWT Token Expiration ✅ COMPLETE
 - [x] 1.3 Fix Hardcoded JWT Secret ✅ COMPLETE
 - [x] 1.4 Fix SQL Injection Vulnerabilities ✅ COMPLETE
-- [ ] 1.5 Secure File Upload Validation
+- [x] 1.5 Secure File Upload Validation ✅ COMPLETE
 - [ ] 1.6 Implement Authorization on CRUD
 - [ ] 1.7 Implement Password Reset
 - [ ] 1.8 Fix Rate Limiting Issues
