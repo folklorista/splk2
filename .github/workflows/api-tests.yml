@@ -5,11 +5,13 @@ on:
     branches: [ master, main, develop ]
     paths:
       - 'api/**'
+      - 'dev/db.sql'
       - '.github/workflows/api-tests.yml'
   pull_request:
     branches: [ master, main ]
     paths:
       - 'api/**'
+      - 'dev/db.sql'
 
 jobs:
   test:
