@@ -157,20 +157,20 @@ jobs:
           sleep 1
 
           echo "=== Cache state BEFORE cleanup (Integration Tests) ==="
-          if [ -d api/log/rate_limit ]; then
+          if [ -d log/rate_limit ]; then
             echo "Cache files exist:"
-            find api/log/rate_limit -type f 2>/dev/null | wc -l
+            find log/rate_limit -type f 2>/dev/null | wc -l
           else
             echo "No cache directory"
           fi
 
           echo "=== Clearing cache ==="
-          rm -rf api/log/rate_limit 2>/dev/null || true
+          rm -rf log/rate_limit 2>/dev/null || true
 
           echo "=== Verify cache cleared ==="
-          if [ -d api/log/rate_limit ]; then
+          if [ -d log/rate_limit ]; then
             echo "ERROR: Cache still exists!"
-            find api/log/rate_limit -type f 2>/dev/null | wc -l
+            find log/rate_limit -type f 2>/dev/null | wc -l
           else
             echo "✓ Cache cleared successfully"
           fi
