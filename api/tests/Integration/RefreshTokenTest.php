@@ -21,6 +21,10 @@ class RefreshTokenTest extends TestCase
     public function __construct(?string $name = null)
     {
         parent::__construct($name);
+        // Start session for storing tokens between tests
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         // Initialize test email only once for all tests
         if (self::$testEmail === null) {
             self::$testEmail = 'refresh-token-test-' . time() . '-' . random_int(100000, 999999) . '@example.com';

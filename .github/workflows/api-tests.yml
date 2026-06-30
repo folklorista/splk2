@@ -151,7 +151,12 @@ jobs:
         continue-on-error: true
 
       - name: Clear rate limit cache after Integration Tests
-        run: rm -rf api/log/rate_limit 2>/dev/null || true
+        run: |
+          # Kill running PHP servers
+          pkill -f "php -S" || true
+          # Clear rate limit cache
+          rm -rf api/log/rate_limit 2>/dev/null || true
+          sleep 1
 
       - name: Run All Tests with Coverage
         run: |
