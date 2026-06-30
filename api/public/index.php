@@ -90,6 +90,9 @@ if (count($path) == 0 || empty($path[$pathIndex['table']])) {
     Response::send(400, "Routing failed", null, "Invalid endpoint");
 }
 
+// Set context for cache headers (must be before Response::send calls)
+Response::setContext($tableName, $method);
+
 // Add API version info to response headers
 header("X-API-Version: $version");
 
