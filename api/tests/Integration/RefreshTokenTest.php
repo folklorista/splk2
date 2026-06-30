@@ -16,15 +16,13 @@ class RefreshTokenTest extends TestCase
 {
     private const API_URL = 'http://localhost:8000';
     private static ?string $testEmail = null;
+    private static ?string $accessToken = null;
+    private static ?string $refreshToken = null;
     private string $email;
 
     public function __construct(?string $name = null)
     {
         parent::__construct($name);
-        // Start session for storing tokens between tests
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
         // Initialize test email only once for all tests
         if (self::$testEmail === null) {
             self::$testEmail = 'refresh-token-test-' . time() . '-' . random_int(100000, 999999) . '@example.com';
@@ -118,8 +116,8 @@ class RefreshTokenTest extends TestCase
         $this->assertEquals(900, $response['data']['data']['expiresIn']);
 
         // Store tokens for next test
-        $_SESSION['accessToken'] = $response['data']['data']['accessToken'];
-        $_SESSION['refreshToken'] = $response['data']['data']['refreshToken'];
+        self::$accessToken = $response['data']['data']['accessToken'];
+        self::$refreshToken = $response['data']['data']['refreshToken'];
 
         echo "✓ Login successful, received tokens\n";
         echo "Access Token: " . substr($response['data']['data']['accessToken'], 0, 50) . "...\n";
@@ -132,13 +130,13 @@ class RefreshTokenTest extends TestCase
     public function test_03_RefreshTokenReturnsNewAccessToken(): void
     {
         // Skip if tokens not set
-        if (!isset($_SESSION['refreshToken'])) {
+        if (!self::$refreshToken) {
             $this->markTestSkipped('Refresh token not available from login test');
         }
 
         echo "\n=== Test 3: Refresh Token Returns New Access Token ===\n";
 
-        $oldRefreshToken = $_SESSION['refreshToken'];
+        $oldRefreshToken = self::$refreshToken;
 
         $response = $this->request('POST', '/auth/refresh', [
             'refreshToken' => $oldRefreshToken,
@@ -155,8 +153,8 @@ class RefreshTokenTest extends TestCase
         $this->assertNotEquals($oldRefreshToken, $response['data']['data']['refreshToken']);
 
         // Store new tokens
-        $_SESSION['accessToken'] = $response['data']['data']['accessToken'];
-        $_SESSION['refreshToken'] = $response['data']['data']['refreshToken'];
+        self::$accessToken = $response['data']['data']['accessToken'];
+        self::$refreshToken = $response['data']['data']['refreshToken'];
 
         echo "✓ Refresh successful, received new tokens\n";
         echo "New Access Token: " . substr($response['data']['data']['accessToken'], 0, 50) . "...\n";
