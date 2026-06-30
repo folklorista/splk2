@@ -43,7 +43,7 @@ $validator  = new RuleValidator(rules: $tableRules, db: $db, logger: $logger);
 $rbac       = new RoleBasedAccessControl(db: $db, logger: $logger);
 $permissionChecker = new PermissionChecker(permissions: $permissions, rbac: $rbac, logger: $logger);
 
-$endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger, validator: $validator);
+$endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger, validator: $validator, rbac: $rbac);
 
 // Initialize rate limiter
 $rateLimiter = new RateLimiter(
