@@ -5,7 +5,8 @@ namespace App;
  * Rate Limiting Implementation
  *
  * Limits requests per IP address or user ID to prevent abuse and DDoS attacks.
- * Uses in-memory storage with file-based persistence.
+ * Supports role-based rate limiting with different limits for guest/user/admin.
+ * Uses file-based persistence.
  */
 class RateLimiter
 {
@@ -13,6 +14,11 @@ class RateLimiter
     private int $maxRequests;
     private int $windowSeconds;
     private Logger $logger;
+    private array $roleLimits = [
+        'guest' => 10,      // 10 requests/minute
+        'user' => 100,      // 100 requests/minute
+        'admin' => 1000,    // 1000 requests/minute
+    ];
 
     public function __construct(
         Logger $logger,
@@ -25,6 +31,11 @@ class RateLimiter
         $this->maxRequests = $maxRequests;
         $this->windowSeconds = $windowSeconds;
 
+        // Allow override of role limits from env
+        $this->roleLimits['guest'] = (int)($_ENV['RATE_LIMIT_GUEST'] ?? 10);
+        $this->roleLimits['user'] = (int)($_ENV['RATE_LIMIT_USER'] ?? 100);
+        $this->roleLimits['admin'] = (int)($_ENV['RATE_LIMIT_ADMIN'] ?? 1000);
+
         // Initialize storage if doesn't exist
         if (!file_exists($this->storePath)) {
             @mkdir($this->storePath, 0755, true);
@@ -32,16 +43,26 @@ class RateLimiter
     }
 
     /**
+     * Get limit based on user role
+     */
+    public function getLimitForRole(string $role): int
+    {
+        return $this->roleLimits[$role] ?? $this->maxRequests;
+    }
+
+    /**
      * Check if request should be rate limited
      *
      * @param string $identifier IP address or user ID
-     * @return array ['allowed' => bool, 'remaining' => int, 'reset_at' => int]
+     * @param string $role User role for role-based limiting (guest, user, admin)
+     * @return array ['allowed' => bool, 'remaining' => int, 'reset_at' => int, 'limit' => int]
      */
-    public function checkLimit(string $identifier): array
+    public function checkLimit(string $identifier, string $role = 'guest'): array
     {
         $key = $this->getKey($identifier);
         $data = $this->readData($key);
         $now = time();
+        $limit = $this->getLimitForRole($role);
 
         // Clean up old window
         if ($data['reset_at'] < $now) {
@@ -57,14 +78,15 @@ class RateLimiter
         // Save updated data
         $this->writeData($key, $data);
 
-        $allowed = $data['count'] <= $this->maxRequests;
-        $remaining = max(0, $this->maxRequests - $data['count']);
+        $allowed = $data['count'] <= $limit;
+        $remaining = max(0, $limit - $data['count']);
 
         if (!$allowed) {
-            $this->logger->warning("Rate limit exceeded for $identifier", [
+            $this->logger->warning("Rate limit exceeded for $identifier (role: $role)", [
                 'identifier' => $identifier,
+                'role' => $role,
                 'count' => $data['count'],
-                'limit' => $this->maxRequests,
+                'limit' => $limit,
             ]);
         }
 
@@ -72,7 +94,7 @@ class RateLimiter
             'allowed' => $allowed,
             'remaining' => $remaining,
             'reset_at' => $data['reset_at'],
-            'limit' => $this->maxRequests,
+            'limit' => $limit,
         ];
     }
 

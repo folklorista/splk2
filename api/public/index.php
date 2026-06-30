@@ -50,36 +50,84 @@ $rateLimiter = new RateLimiter(
     windowSeconds: 60
 );
 
-// Apply rate limiting (excluding docs/health/login/register)
+// Apply rate limiting to all endpoints
 $clientIp = RateLimiter::getClientIdentifier();
-$rateLimitExempt = ['login', 'register', 'health', 'docs', 'openapi.yaml'];
+$rateLimitExempt = ['health', 'docs', 'openapi.yaml']; // Only health check and docs exempt
+
+// Determine user role for rate limiting
+$userRole = 'guest';
+$limitIdentifier = $clientIp;
+
+// Check if user is authenticated for better rate limit
+$authHeader = null;
+if (function_exists('apache_request_headers')) {
+    $headers = apache_request_headers();
+    foreach ($headers as $key => $value) {
+        if (strtolower($key) === 'authorization') {
+            $authHeader = $value;
+            break;
+        }
+    }
+}
+if (!$authHeader && !empty($_SERVER['HTTP_AUTHORIZATION'])) {
+    $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+}
+
+// For authenticated requests, use user ID instead of IP for better tracking
+if ($authHeader && strpos($authHeader, 'Bearer ') === 0) {
+    $token = str_replace('Bearer ', '', $authHeader);
+    try {
+        $decodedToken = $auth->verifyToken($token);
+        if ($decodedToken && isset($decodedToken['sub'])) {
+            $limitIdentifier = 'user_' . $decodedToken['sub'];
+            // Try to get user role for role-based limiting
+            $userResult = $db->get('users', $decodedToken['sub']);
+            if ($userResult && $userResult['status'] === 200) {
+                $rbac = new RoleBasedAccessControl($db, $logger);
+                if ($rbac->hasRole((object)$userResult['data'], 'admin')) {
+                    $userRole = 'admin';
+                } else {
+                    $userRole = 'user';
+                }
+            }
+        }
+    } catch (\Exception $e) {
+        // Not a valid token, use IP-based limiting
+    }
+}
 
 // Perform rate limit check for non-exempt endpoints
-if (!isset($_GET['skipRateLimit']) && !in_array($tableName ?? '', $rateLimitExempt)) {
-    $limitCheck = $rateLimiter->checkLimit($clientIp);
+if (!in_array($tableName ?? '', $rateLimitExempt)) {
+    $limitCheck = $rateLimiter->checkLimit($limitIdentifier, $userRole);
 
     if (!$limitCheck['allowed']) {
         http_response_code(429);
         header('Content-Type: application/json');
         header('Retry-After: ' . max(1, $limitCheck['reset_at'] - time()));
+        header('X-RateLimit-Limit: ' . $limitCheck['limit']);
+        header('X-RateLimit-Remaining: 0');
+        header('X-RateLimit-Reset: ' . $limitCheck['reset_at']);
         echo json_encode([
             'status' => 429,
             'message' => 'Too Many Requests',
             'data' => null,
-            'error' => 'Rate limit exceeded. Max ' . $limitCheck['limit'] . ' requests per ' . 60 . ' seconds.',
+            'error' => 'Rate limit exceeded. Max ' . $limitCheck['limit'] . ' requests per ' . $this->windowSeconds . ' seconds.',
             'meta' => [
                 'limit' => $limitCheck['limit'],
-                'remaining' => $limitCheck['remaining'],
+                'remaining' => 0,
                 'reset_at' => $limitCheck['reset_at'],
+                'retry_after' => max(1, $limitCheck['reset_at'] - time()),
             ],
         ]);
         exit;
     }
+} else {
+    $limitCheck = ['limit' => 0, 'remaining' => 0, 'reset_at' => time() + 60];
 }
 
-// Add rate limit headers to responses
-header('X-RateLimit-Limit: 100');
-header('X-RateLimit-Remaining: ' . max(0, $limitCheck['remaining'] ?? 100));
+// Add rate limit headers to all responses
+header('X-RateLimit-Limit: ' . $limitCheck['limit']);
+header('X-RateLimit-Remaining: ' . max(0, $limitCheck['remaining'] ?? 0));
 header('X-RateLimit-Reset: ' . ($limitCheck['reset_at'] ?? (time() + 60)));
 
 // Získání HTTP metody a endpointu
