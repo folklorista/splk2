@@ -75,9 +75,17 @@ class Endpoints
                 if (!$userResponse || $userResponse['status'] !== 200) {
                     return Response::prepare(401, "Invalid credentials");
                 }
-                $token = $this->auth->generateToken($userResponse['data']);
-                $this->db->logAction(AuditAction::USER_LOGIN, $userResponse['data']['id']); // Přihlášení uživatele
-                return Response::prepare(200, "User logged in", ['token' => $token]);
+                $user = $userResponse['data'];
+                $accessToken = $this->auth->generateToken($user);
+                $refreshToken = $this->auth->generateRefreshToken($user['id']);
+
+                $this->db->logAction(AuditAction::USER_LOGIN, $user['id']);
+
+                return Response::prepare(200, "User logged in", [
+                    'accessToken' => $accessToken,
+                    'refreshToken' => $refreshToken,
+                    'expiresIn' => (int)($_ENV['JWT_EXPIRATION'] ?? 900),
+                ]);
             }
             return Response::prepare(401, "Invalid credentials");
         }

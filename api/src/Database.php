@@ -1009,6 +1009,21 @@ class Database
     }
 
     /**
+     * Fetch single record directly (returns array or false)
+     * Used internally by Auth and other classes
+     */
+    public function fetchOne(string $query, array $params = []): array|false
+    {
+        try {
+            $stmt = $this->pdo->prepare($query);
+            $stmt->execute($params);
+            return $stmt->fetch(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+            throw new \Exception("Database error: " . $e->getMessage());
+        }
+    }
+
+    /**
      * Get all records with raw WHERE clause (internal use only)
      * Used by hooks for filtering
      */

@@ -179,6 +179,23 @@ if ($tableName == 'login' && $method == 'POST') {
 } elseif ($tableName == 'register' && $method == 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
     Response::sendPrepared($endpoints->registerUser($data));
+} elseif ($tableName == 'auth' && isset($path[$pathIndex['table'] + 1]) && $path[$pathIndex['table'] + 1] == 'refresh' && $method == 'POST') {
+    $data = json_decode(file_get_contents('php://input'), true);
+    $refreshToken = $data['refreshToken'] ?? null;
+
+    if (!$refreshToken) {
+        Response::send(400, "Refresh token is required");
+        exit;
+    }
+
+    $result = $auth->refreshAccessToken($refreshToken);
+    if (!$result) {
+        Response::send(401, "Invalid or expired refresh token");
+        exit;
+    }
+
+    Response::send(200, "Token refreshed", $result);
+    exit;
 }
 
 // Ověření tokenu pro ostatní endpointy

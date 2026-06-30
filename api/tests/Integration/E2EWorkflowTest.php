@@ -77,11 +77,14 @@ class E2EWorkflowTest extends TestCase
         echo "Response Status: {$response['status']}\n";
 
         $this->assertEquals(200, $response['status']);
-        $this->assertArrayHasKey('token', $response['data']);
+        $this->assertArrayHasKey('accessToken', $response['data']);
+        $this->assertArrayHasKey('refreshToken', $response['data']);
+        $this->assertArrayHasKey('expiresIn', $response['data']);
 
-        self::$token = $response['data']['token'];
+        self::$token = $response['data']['accessToken'];
         echo "✓ Login successful\n";
-        echo "Token: " . substr(self::$token, 0, 50) . "...\n";
+        echo "Access Token: " . substr(self::$token, 0, 50) . "...\n";
+        echo "Refresh Token: " . substr($response['data']['refreshToken'], 0, 50) . "...\n";
     }
 
     /**
