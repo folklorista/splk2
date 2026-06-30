@@ -51,11 +51,36 @@ $rateLimiter = new RateLimiter(
     windowSeconds: 60
 );
 
-// Apply rate limiting to all endpoints
-$clientIp = RateLimiter::getClientIdentifier();
-$rateLimitExempt = ['health', 'docs', 'openapi.yaml']; // Only health check and docs exempt
+// Endpoints exempt from rate limiting
+$rateLimitExempt = ['health', 'docs', 'openapi.yaml'];
 
-// Determine user role for rate limiting
+// Získání HTTP metody a endpointu
+$method = $_SERVER['REQUEST_METHOD'];
+
+// Rozparsování URL
+$parsedUrl = parse_url($_SERVER['REQUEST_URI']);
+
+// Cesta
+$path = explode('/', trim($parsedUrl['path'], '/'));
+
+// Query string (pokud existuje)
+$queryParams = [];
+if (isset($parsedUrl['query'])) {
+    parse_str($parsedUrl['query'], $queryParams);
+}
+
+// Validace endpointu
+$pathIndex = $config['pathIndex'];
+if (count($path) == 0 || empty($path[$pathIndex['table']])) {
+    Response::send(400, "Routing failed", null, "Invalid endpoint");
+}
+
+// Rozdělení endpointu na tabulku a ID
+$tableName = $path[$pathIndex['table']];
+$id        = $path[$pathIndex['id']] ?? null;
+
+// Apply rate limiting to non-exempt endpoints
+$clientIp = RateLimiter::getClientIdentifier();
 $userRole = 'guest';
 $limitIdentifier = $clientIp;
 
@@ -98,7 +123,7 @@ if ($authHeader && strpos($authHeader, 'Bearer ') === 0) {
 }
 
 // Perform rate limit check for non-exempt endpoints
-if (!in_array($tableName ?? '', $rateLimitExempt)) {
+if (!in_array($tableName, $rateLimitExempt)) {
     $limitCheck = $rateLimiter->checkLimit($limitIdentifier, $userRole);
 
     if (!$limitCheck['allowed']) {
@@ -130,31 +155,6 @@ if (!in_array($tableName ?? '', $rateLimitExempt)) {
 header('X-RateLimit-Limit: ' . $limitCheck['limit']);
 header('X-RateLimit-Remaining: ' . max(0, $limitCheck['remaining'] ?? 0));
 header('X-RateLimit-Reset: ' . ($limitCheck['reset_at'] ?? (time() + 60)));
-
-// Získání HTTP metody a endpointu
-$method = $_SERVER['REQUEST_METHOD'];
-
-// Rozparsování URL
-$parsedUrl = parse_url($_SERVER['REQUEST_URI']);
-
-// Cesta
-$path = explode('/', trim($parsedUrl['path'], '/'));
-
-// Query string (pokud existuje)
-$queryParams = [];
-if (isset($parsedUrl['query'])) {
-    parse_str($parsedUrl['query'], $queryParams);
-}
-
-// Validace endpointu
-$pathIndex = $config['pathIndex'];
-if (count($path) == 0 || empty($path[$pathIndex['table']])) {
-    Response::send(400, "Routing failed", null, "Invalid endpoint");
-}
-
-// Rozdělení endpointu na tabulku a ID
-$tableName = $path[$pathIndex['table']];
-$id        = $path[$pathIndex['id']] ?? null;
 
 // Health check endpoint (no authentication required)
 if ($tableName === 'health' && $method === 'GET') {
