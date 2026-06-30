@@ -66,7 +66,7 @@ jobs:
       - name: Wait for MySQL to be ready
         run: |
           for i in {1..60}; do
-            if mysql -h 127.0.0.1 -P 3306 -u root -proot -e "SELECT 1;" 2>/dev/null; then
+            if mysql -h mysql -P 3306 -u root -proot -e "SELECT 1;" 2>/dev/null; then
               echo "✓ MySQL is ready!"
               exit 0
             fi
@@ -78,13 +78,13 @@ jobs:
 
       - name: Import database schema
         run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -proot splk < dev/db.sql
-          mysql -h 127.0.0.1 -P 3306 -u root -proot splk < api/migrations/add-soft-deletes.sql
-          mysql -h 127.0.0.1 -P 3306 -u root -proot splk < api/migrations/add-change-tracking.sql
+          mysql -h mysql -P 3306 -u root -proot splk < dev/db.sql
+          mysql -h mysql -P 3306 -u root -proot splk < api/migrations/add-soft-deletes.sql
+          mysql -h mysql -P 3306 -u root -proot splk < api/migrations/add-change-tracking.sql
 
       - name: Seed audit actions
         run: |
-          mysql -h 127.0.0.1 -P 3306 -u root -proot splk -e "
+          mysql -h mysql -P 3306 -u root -proot splk -e "
           INSERT INTO audit_actions (id, name, description) VALUES
           (1, 'USER_LOGIN', 'Přihlášení uživatele'),
           (2, 'DATA_INSERT', 'Vložení nových dat'),
@@ -96,7 +96,7 @@ jobs:
         run: ./vendor/bin/phpunit tests/Unit/
         working-directory: api
         env:
-          DB_HOST: 127.0.0.1:3306
+          DB_HOST: mysql:3306
           DB_USERNAME: root
           DB_PASSWORD: root
           DB_NAME: splk
@@ -140,7 +140,7 @@ jobs:
         run: ./vendor/bin/phpunit tests/Integration/
         working-directory: api
         env:
-          DB_HOST: 127.0.0.1:3306
+          DB_HOST: mysql:3306
           DB_USERNAME: root
           DB_PASSWORD: root
           DB_NAME: splk
@@ -246,7 +246,7 @@ jobs:
             --display-warnings
         working-directory: api
         env:
-          DB_HOST: 127.0.0.1:3306
+          DB_HOST: mysql:3306
           DB_USERNAME: root
           DB_PASSWORD: root
           DB_NAME: splk
