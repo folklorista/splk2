@@ -9,51 +9,14 @@ class Response
      */
     private static ?string $endpoint = null;
     private static ?string $method = null;
-    /**
-     * Field selection for sparse fieldsets
-     */
-    private static ?array $selectedFields = null;
-
-    /**
-     * Set field selection for sparse fieldsets
-     *
-     * @param array|null $fields Array of field names or null for all fields
-     */
-    public static function setFieldSelection(?array $fields): void
-    {
-        self::$selectedFields = $fields;
-    }
-
-    /**
-     * Reset field selection
-     */
-    public static function resetFieldSelection(): void
-    {
-        self::$selectedFields = null;
-    }
-
     // Funkce pro přípravu odpovědi jako pole
     public static function prepare(
         int $statusCode,
         string $message,
         mixed $data = null,
         string $error = null,
-        array $meta = [],
-        ?string $tableName = null
+        array $meta = []
     ) {
-        // Apply field selection if data is present and table name is known
-        if ($data !== null && $tableName !== null && self::$selectedFields !== null) {
-            if (is_array($data)) {
-                if (isset($data[0]) && is_array($data[0])) {
-                    // Array of records
-                    $data = FieldSelector::filterRecords($data, $tableName, self::$selectedFields);
-                } elseif (is_array($data) && !empty($data) && !isset($data[0])) {
-                    // Single record (associative array)
-                    $data = FieldSelector::filterRecord($data, $tableName, self::$selectedFields);
-                }
-            }
-        }
-
         $response = [
             'status' => $statusCode,
             'message' => $message,
