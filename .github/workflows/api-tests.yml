@@ -150,8 +150,13 @@ jobs:
           RATE_LIMIT_USER: 10000
         continue-on-error: true
 
+      - name: Clear rate limit cache after Integration Tests
+        run: rm -rf api/log/rate_limit 2>/dev/null || true
+
       - name: Run All Tests with Coverage
         run: |
+          # Clear rate limit cache before running full test suite
+          rm -rf ../../log/rate_limit 2>/dev/null || true
           ./vendor/bin/phpunit \
             --coverage-clover coverage.xml \
             --display-deprecations \
