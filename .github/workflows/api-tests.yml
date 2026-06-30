@@ -233,11 +233,20 @@ jobs:
 
       - name: Check Health Endpoint
         run: |
+          cd api
           echo "Testing Health Endpoint..."
+
+          # Verify API server is still running
+          if ! pgrep -f "php -S 127.0.0.1:8000" > /dev/null; then
+            echo "API server is not running, starting it..."
+            php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
+            sleep 3
+          fi
+
           HEALTH=$(curl -s http://localhost:8000/health)
           echo "Health response: $HEALTH"
 
-          # Verify it's valid JSON and contains 'operational' or 'degraded'
+          # Verify it's valid JSON and contains 'status'
           if echo "$HEALTH" | grep -q '"status"'; then
             echo "✓ Health endpoint is working"
           else
