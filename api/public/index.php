@@ -85,6 +85,17 @@ if (isset($parsedUrl['query'])) {
     parse_str($parsedUrl['query'], $queryParams);
 }
 
+// Parse and set field selection for sparse fieldsets (after queryParams parsing)
+$fieldsParam = $queryParams['fields'] ?? null;
+if ($fieldsParam) {
+    try {
+        $selectedFields = FieldSelector::parseFields($fieldsParam);
+        $endpoints->setSelectedFields($selectedFields);
+    } catch (\InvalidArgumentException $e) {
+        Response::send(400, "Invalid fields parameter", null, $e->getMessage());
+    }
+}
+
 // Validace endpointu
 if (count($path) == 0 || empty($path[$pathIndex['table']])) {
     Response::send(400, "Routing failed", null, "Invalid endpoint");

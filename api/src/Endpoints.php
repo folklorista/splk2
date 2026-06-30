@@ -10,6 +10,7 @@ class Endpoints
     private WebhookManager $webhookManager;
     private FileUploadManager $fileUploadManager;
     private RoleBasedAccessControl $rbac;
+    private ?array $selectedFields = null;
 
     public function __construct(Database $db, Auth $auth, Logger $logger, RuleValidator $validator = null, WebhookManager $webhookManager = null, FileUploadManager $fileUploadManager = null, RoleBasedAccessControl $rbac = null)
     {
@@ -20,6 +21,45 @@ class Endpoints
         $this->webhookManager = $webhookManager ?? new WebhookManager($db, $logger);
         $this->fileUploadManager = $fileUploadManager ?? new FileUploadManager($db, $logger);
         $this->rbac = $rbac ?? new RoleBasedAccessControl($db, $logger);
+    }
+
+    /**
+     * Set field selection for sparse fieldsets
+     *
+     * @param array|null $fields Array of field names or null for all fields
+     */
+    public function setSelectedFields(?array $fields): void
+    {
+        $this->selectedFields = $fields;
+    }
+
+    /**
+     * Apply field selection filter to response data
+     * Used internally to filter data before returning
+     * Always filters to remove sensitive fields (null = all non-sensitive)
+     * Or filters to selected fields if specified
+     *
+     * @param mixed $data The response data
+     * @param string $tableName The table name for field filtering
+     * @return mixed Filtered data or original data if not array
+     */
+    private function applyFieldSelection($data, string $tableName)
+    {
+        if ($data === null) {
+            return $data;
+        }
+
+        if (is_array($data)) {
+            if (isset($data[0]) && is_array($data[0])) {
+                // Array of records - always filter (selectedFields may be null for defaults)
+                return FieldSelector::filterRecords($data, $tableName, $this->selectedFields);
+            } elseif (!empty($data) && !isset($data[0])) {
+                // Single record (associative array) - always filter
+                return FieldSelector::filterRecord($data, $tableName, $this->selectedFields);
+            }
+        }
+
+        return $data;
     }
 
     // Funkce pro logiku registrace
@@ -107,7 +147,11 @@ class Endpoints
     // Funkce pro GET operaci - záznamy podle ID
     public function getRecordByIdEndpoint(string $table, int $id)
     {
-        return $this->db->get($table, $id);
+        $response = $this->db->get($table, $id);
+        if ($response && $response['status'] === 200 && isset($response['data'])) {
+            $response['data'] = $this->applyFieldSelection($response['data'], $table);
+        }
+        return $response;
     }
 
     public function getAllRecords(
@@ -120,7 +164,11 @@ class Endpoints
         string $searchQuery = null,
         array $searchColumns = null
     ) {
-        return $this->db->getAll($table, $whereClause, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns);
+        $response = $this->db->getAll($table, $whereClause, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns);
+        if ($response && $response['status'] === 200 && isset($response['data'])) {
+            $response['data'] = $this->applyFieldSelection($response['data'], $table);
+        }
+        return $response;
     }
 
     /**
@@ -149,7 +197,11 @@ class Endpoints
         string $searchQuery = null,
         array $searchColumns = null
     ) {
-        return $this->db->getAllWithParams($table, $whereClause, $whereParams, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns);
+        $response = $this->db->getAllWithParams($table, $whereClause, $whereParams, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns);
+        if ($response && $response['status'] === 200 && isset($response['data'])) {
+            $response['data'] = $this->applyFieldSelection($response['data'], $table);
+        }
+        return $response;
     }
 
     // Funkce pro POST operaci - vytvoření nového záznamu
