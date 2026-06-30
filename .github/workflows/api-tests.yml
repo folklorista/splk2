@@ -179,6 +179,20 @@ jobs:
       - name: Restart API Server for full test run
         run: |
           cd api
+
+          # Kill any remaining PHP processes
+          echo "=== Killing all PHP servers ==="
+          pkill -f "php -S" || true
+          sleep 2
+
+          # Verify no PHP servers are running
+          echo "=== Verifying PHP servers are killed ==="
+          if pgrep -f "php -S" > /dev/null; then
+            echo "⚠ Some PHP servers still running, killing forcefully"
+            pkill -9 -f "php -S" || true
+            sleep 1
+          fi
+
           # Debug: Show cache state before cleanup
           echo "=== Cache state BEFORE cleanup ==="
           if [ -d ../log/rate_limit ]; then
@@ -209,10 +223,16 @@ jobs:
           echo "Checking index.php syntax..."
           php -l public/index.php
 
+          # Clean up any stale log file
+          rm -f /tmp/api.log
+          echo "Starting PHP server..."
           php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
           PHP_PID=$!
-          echo "Started with PID: $PHP_PID"
-          sleep 3
+          echo "Started PHP with PID: $PHP_PID"
+
+          # Wait for server to start and stabilize
+          echo "Waiting for server to start..."
+          sleep 5
 
           # Check if process is still alive
           if ! kill -0 $PHP_PID 2>/dev/null; then
