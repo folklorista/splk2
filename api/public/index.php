@@ -34,6 +34,7 @@ header(header: 'Content-Type: application/json');
 $logger    = new Logger($config['log']);
 $db        = new Database(config: $config['database'], logger: $logger);
 $auth      = new Auth(config: $config['auth'], db: $db, logger: $logger);
+$passwordReset = new PasswordReset(db: $db, logger: $logger, auth: $auth);
 
 // Load table rules
 $tableRules = require __DIR__ . '/../config/table-rules.php';
@@ -243,6 +244,35 @@ if ($tableName == 'login' && $method == 'POST') {
     }
 
     Response::send(200, "Token refreshed", $result);
+    exit;
+} elseif ($tableName == 'auth' && isset($path[$pathIndex['table'] + 1]) && $path[$pathIndex['table'] + 1] == 'password-reset' && $method == 'POST') {
+    // Request password reset: POST /auth/password-reset
+    // Body: { email: "user@example.com" }
+    $data = json_decode(file_get_contents('php://input'), true);
+    $email = $data['email'] ?? null;
+
+    if (!$email) {
+        Response::send(400, "Email is required");
+        exit;
+    }
+
+    $result = $passwordReset->requestReset($email);
+    Response::sendPrepared(Response::prepare($result['status'], $result['message'], $result['data']));
+    exit;
+} elseif ($tableName == 'auth' && isset($path[$pathIndex['table'] + 1]) && $path[$pathIndex['table'] + 1] == 'password-reset' && isset($path[$pathIndex['table'] + 2]) && $method == 'POST') {
+    // Complete password reset: POST /auth/password-reset/{token}
+    // Body: { password: "newPassword123" }
+    $token = $path[$pathIndex['table'] + 2] ?? null;
+    $data = json_decode(file_get_contents('php://input'), true);
+    $newPassword = $data['password'] ?? null;
+
+    if (!$token || !$newPassword) {
+        Response::send(400, "Token and password are required");
+        exit;
+    }
+
+    $result = $passwordReset->completeReset($token, $newPassword);
+    Response::sendPrepared(Response::prepare($result['status'], $result['message'], $result['data']));
     exit;
 }
 
