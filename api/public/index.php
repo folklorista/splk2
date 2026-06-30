@@ -30,8 +30,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 header('Content-Type: application/json');
 
+// Initialize Request ID for correlation/tracing
+$requestIdManager = new RequestIdManager();
+$requestId = $requestIdManager->getId();
+$requestIdManager->setResponseHeader();
+
 // Inicializace
 $logger    = new Logger($config['log']);
+Logger::setRequestId($requestId);  // Set request ID in logger for all log entries
 $db        = new Database(config: $config['database'], logger: $logger);
 $auth      = new Auth(config: $config['auth'], db: $db, logger: $logger);
 $passwordReset = new PasswordReset(db: $db, logger: $logger, auth: $auth);

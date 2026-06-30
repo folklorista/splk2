@@ -6,11 +6,34 @@ class Logger
 {
     private static string $path;
     private static LogLevel $level;
+    private static ?string $requestId = null;
 
     public function __construct($config)
     {
         self::$path = $config['path'];
         self::$level = $config['level'];
+    }
+
+    /**
+     * Set the request ID for this request
+     * Should be called early in request lifecycle to ensure it's logged
+     *
+     * @param string $requestId
+     * @return void
+     */
+    public static function setRequestId(string $requestId): void
+    {
+        self::$requestId = $requestId;
+    }
+
+    /**
+     * Get the current request ID
+     *
+     * @return string|null
+     */
+    public static function getRequestId(): ?string
+    {
+        return self::$requestId;
     }
 
     public function info($message, $context = [])
@@ -73,7 +96,11 @@ class Logger
         if (!is_string($message)) {
             $message = json_encode($message);
         }
-        $log = "$date [$file:$line]: $message\n";
+
+        // Include request ID if available
+        $requestIdStr = self::$requestId ? ' [' . self::$requestId . ']' : '';
+
+        $log = "$date$requestIdStr [$file:$line]: $message\n";
         file_put_contents(self::$path, $log, FILE_APPEND);
     }
 }
