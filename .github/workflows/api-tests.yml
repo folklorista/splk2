@@ -222,19 +222,21 @@ jobs:
             exit 1
           fi
 
-          # Test health endpoint
+          # Test health endpoint with timeout
           echo "=== Testing health endpoint ==="
-          HEALTH=$(curl -s http://127.0.0.1:8000/health)
+          HEALTH=$(curl -s --max-time 5 http://127.0.0.1:8000/health)
+          CURL_EXIT=$?
+          echo "Curl exit code: $CURL_EXIT"
           echo "Response: $HEALTH"
 
-          if echo "$HEALTH" | grep -q '"status"'; then
+          if [ $CURL_EXIT -eq 0 ] && echo "$HEALTH" | grep -q '"status"'; then
             echo "✓ API server restarted successfully"
           else
-            echo "✗ API server failed to restart"
+            echo "✗ API server failed to restart (curl exit: $CURL_EXIT)"
             echo "=== PHP Log ==="
-            cat /tmp/api.log
+            tail -50 /tmp/api.log
             echo "=== PHP processes ==="
-            ps aux | grep php
+            ps aux | grep php | grep -v grep
             exit 1
           fi
 
@@ -297,13 +299,14 @@ jobs:
 
           # Test with verbose curl
           echo "=== Testing health endpoint with verbose curl ==="
-          HEALTH=$(curl -v http://localhost:8000/health 2>&1)
+          HEALTH=$(curl -v --max-time 5 http://localhost:8000/health 2>&1)
           CURL_EXIT=$?
           echo "Curl exit code: $CURL_EXIT"
-          echo "Curl output: $HEALTH"
+          echo "Full curl output:"
+          echo "$HEALTH"
 
-          # Extract just the JSON response
-          HEALTH_JSON=$(echo "$HEALTH" | tail -1)
+          # Extract just the JSON response (look for lines starting with {)
+          HEALTH_JSON=$(echo "$HEALTH" | grep -E '^\{' | tail -1)
           echo "Health JSON response: $HEALTH_JSON"
 
           # Verify it's valid JSON and contains 'status'
