@@ -152,10 +152,28 @@ jobs:
 
       - name: Clear rate limit cache after Integration Tests
         run: |
-          # Kill running PHP servers
+          echo "=== Killing PHP servers ==="
           pkill -f "php -S" || true
-          # Clear rate limit cache
+          sleep 1
+
+          echo "=== Cache state BEFORE cleanup (Integration Tests) ==="
+          if [ -d api/log/rate_limit ]; then
+            echo "Cache files exist:"
+            find api/log/rate_limit -type f 2>/dev/null | wc -l
+          else
+            echo "No cache directory"
+          fi
+
+          echo "=== Clearing cache ==="
           rm -rf api/log/rate_limit 2>/dev/null || true
+
+          echo "=== Verify cache cleared ==="
+          if [ -d api/log/rate_limit ]; then
+            echo "ERROR: Cache still exists!"
+            find api/log/rate_limit -type f 2>/dev/null | wc -l
+          else
+            echo "✓ Cache cleared successfully"
+          fi
           sleep 1
 
       - name: Restart API Server for full test run
