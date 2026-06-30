@@ -122,6 +122,8 @@ jobs:
       - name: Start API Server
         run: |
           cd api
+          # Clear rate limit cache from previous runs
+          rm -rf ../../log/rate_limit 2>/dev/null || true
           php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
           API_PID=$!
           sleep 3

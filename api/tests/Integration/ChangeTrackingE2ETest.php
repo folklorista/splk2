@@ -64,9 +64,9 @@ class ChangeTrackingE2ETest extends TestCase
         echo "Response Status: {$response['status']}\n";
 
         $this->assertEquals(200, $response['status']);
-        $this->assertArrayHasKey('token', $response['data']);
+        $this->assertArrayHasKey('accessToken', $response['data']);
 
-        self::$token = $response['data']['token'];
+        self::$token = $response['data']['accessToken'];
         echo "✓ Login successful\n";
     }
 
