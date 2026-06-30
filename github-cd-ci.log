@@ -1,0 +1,1917 @@
+2026-06-30T10:36:30.7273217Z Current runner version: '2.335.1'
+2026-06-30T10:36:30.7299247Z ##[group]Runner Image Provisioner
+2026-06-30T10:36:30.7300154Z Hosted Compute Agent
+2026-06-30T10:36:30.7300942Z Version: 20260611.554
+2026-06-30T10:36:30.7301886Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+2026-06-30T10:36:30.7302761Z Build Date: 2026-06-11T21:40:46Z
+2026-06-30T10:36:30.7303495Z Worker ID: {6e82c037-586b-4b80-b798-6513f5d33698}
+2026-06-30T10:36:30.7304183Z Azure Region: westus
+2026-06-30T10:36:30.7304812Z ##[endgroup]
+2026-06-30T10:36:30.7306309Z ##[group]Operating System
+2026-06-30T10:36:30.7307033Z Ubuntu
+2026-06-30T10:36:30.7307564Z 24.04.4
+2026-06-30T10:36:30.7308122Z LTS
+2026-06-30T10:36:30.7308682Z ##[endgroup]
+2026-06-30T10:36:30.7309227Z ##[group]Runner Image
+2026-06-30T10:36:30.7309810Z Image: ubuntu-24.04
+2026-06-30T10:36:30.7310439Z Version: 20260622.220.1
+2026-06-30T10:36:30.7311974Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260622.220/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-30T10:36:30.7313585Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260622.220
+2026-06-30T10:36:30.7314546Z ##[endgroup]
+2026-06-30T10:36:30.7315886Z ##[group]GITHUB_TOKEN Permissions
+2026-06-30T10:36:30.7317887Z Contents: read
+2026-06-30T10:36:30.7318639Z Metadata: read
+2026-06-30T10:36:30.7319207Z Packages: read
+2026-06-30T10:36:30.7320048Z ##[endgroup]
+2026-06-30T10:36:30.7323189Z Secret source: Actions
+2026-06-30T10:36:30.7323962Z Prepare workflow directory
+2026-06-30T10:36:30.7831063Z Prepare all required actions
+2026-06-30T10:36:30.7870697Z Getting action download info
+2026-06-30T10:36:31.1537003Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-06-30T10:36:31.2365165Z Download action repository 'shivammathur/setup-php@v2' (SHA:f3e473d116dcccaddc5834248c87452386958240)
+2026-06-30T10:36:31.5548102Z Download action repository 'actions/cache@v3' (SHA:6f8efc29b200d32929f49075959781ed54ec270c)
+2026-06-30T10:36:31.7512513Z Download action repository 'codecov/codecov-action@v3' (SHA:ab904c41d6ece82784817410c45d8b8c02684457)
+2026-06-30T10:36:32.2961976Z Complete job name: test
+2026-06-30T10:36:32.3576579Z ##[group]Checking docker version
+2026-06-30T10:36:32.3590004Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-06-30T10:36:32.4637083Z '1.48'
+2026-06-30T10:36:32.4649882Z Docker daemon API version: '1.48'
+2026-06-30T10:36:32.4650816Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-06-30T10:36:32.4823510Z '1.48'
+2026-06-30T10:36:32.4836952Z Docker client API version: '1.48'
+2026-06-30T10:36:32.4843770Z ##[endgroup]
+2026-06-30T10:36:32.4847219Z ##[group]Clean up resources from previous jobs
+2026-06-30T10:36:32.4853080Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=2ace9e"
+2026-06-30T10:36:32.5004550Z ##[command]/usr/bin/docker network prune --force --filter "label=2ace9e"
+2026-06-30T10:36:32.5143634Z ##[endgroup]
+2026-06-30T10:36:32.5144217Z ##[group]Create local container network
+2026-06-30T10:36:32.5154872Z ##[command]/usr/bin/docker network create --label 2ace9e github_network_30895d0457694581bfc80c89fece9de4
+2026-06-30T10:36:32.5683654Z 9e8a6280041d2bff904e4e6500c7579a08f640d422ad8f905607286dc49c04c0
+2026-06-30T10:36:32.5705268Z ##[endgroup]
+2026-06-30T10:36:32.5731495Z ##[group]Starting mysql service container
+2026-06-30T10:36:32.5754117Z ##[command]/usr/bin/docker pull mysql:5.7
+2026-06-30T10:36:33.4652229Z 5.7: Pulling from library/mysql
+2026-06-30T10:36:33.7425178Z 20e4dcae4c69: Pulling fs layer
+2026-06-30T10:36:33.7426679Z 1c56c3d4ce74: Pulling fs layer
+2026-06-30T10:36:33.7428046Z e9f03a1c24ce: Pulling fs layer
+2026-06-30T10:36:33.7429367Z 68c3898c2015: Pulling fs layer
+2026-06-30T10:36:33.7430637Z 6b95a940e7b6: Pulling fs layer
+2026-06-30T10:36:33.7432180Z 90986bb8de6e: Pulling fs layer
+2026-06-30T10:36:33.7433221Z ae71319cb779: Pulling fs layer
+2026-06-30T10:36:33.7434500Z ffc89e9dfd88: Pulling fs layer
+2026-06-30T10:36:33.7435397Z 43d05e938198: Pulling fs layer
+2026-06-30T10:36:33.7436616Z 064b2d298fba: Pulling fs layer
+2026-06-30T10:36:33.7437447Z df9a4d85569b: Pulling fs layer
+2026-06-30T10:36:33.7438276Z ae71319cb779: Waiting
+2026-06-30T10:36:33.7439057Z ffc89e9dfd88: Waiting
+2026-06-30T10:36:33.7439797Z 68c3898c2015: Waiting
+2026-06-30T10:36:33.7440547Z 43d05e938198: Waiting
+2026-06-30T10:36:33.7441599Z 064b2d298fba: Waiting
+2026-06-30T10:36:33.7442372Z 6b95a940e7b6: Waiting
+2026-06-30T10:36:33.7443131Z 90986bb8de6e: Waiting
+2026-06-30T10:36:33.7443915Z df9a4d85569b: Waiting
+2026-06-30T10:36:33.9714915Z 1c56c3d4ce74: Verifying Checksum
+2026-06-30T10:36:33.9724386Z 1c56c3d4ce74: Download complete
+2026-06-30T10:36:33.9841653Z e9f03a1c24ce: Verifying Checksum
+2026-06-30T10:36:33.9843601Z e9f03a1c24ce: Download complete
+2026-06-30T10:36:34.1441900Z 20e4dcae4c69: Verifying Checksum
+2026-06-30T10:36:34.1444687Z 20e4dcae4c69: Download complete
+2026-06-30T10:36:34.2146887Z 6b95a940e7b6: Download complete
+2026-06-30T10:36:34.2261833Z 68c3898c2015: Verifying Checksum
+2026-06-30T10:36:34.2263476Z 68c3898c2015: Download complete
+2026-06-30T10:36:34.3674841Z 90986bb8de6e: Verifying Checksum
+2026-06-30T10:36:34.3677130Z 90986bb8de6e: Download complete
+2026-06-30T10:36:34.4586243Z ffc89e9dfd88: Verifying Checksum
+2026-06-30T10:36:34.4686255Z ffc89e9dfd88: Download complete
+2026-06-30T10:36:34.5285403Z ae71319cb779: Verifying Checksum
+2026-06-30T10:36:34.6806484Z ae71319cb779: Download complete
+2026-06-30T10:36:34.6808460Z 064b2d298fba: Verifying Checksum
+2026-06-30T10:36:34.6816673Z 064b2d298fba: Download complete
+2026-06-30T10:36:34.7483449Z df9a4d85569b: Verifying Checksum
+2026-06-30T10:36:34.7486692Z df9a4d85569b: Download complete
+2026-06-30T10:36:34.8051685Z 43d05e938198: Verifying Checksum
+2026-06-30T10:36:34.8053201Z 43d05e938198: Download complete
+2026-06-30T10:36:36.5661833Z 20e4dcae4c69: Pull complete
+2026-06-30T10:36:36.9038459Z 1c56c3d4ce74: Pull complete
+2026-06-30T10:36:36.9313055Z e9f03a1c24ce: Pull complete
+2026-06-30T10:36:37.1145207Z 68c3898c2015: Pull complete
+2026-06-30T10:36:37.1283292Z 6b95a940e7b6: Pull complete
+2026-06-30T10:36:37.1385807Z 90986bb8de6e: Pull complete
+2026-06-30T10:36:37.5512092Z ae71319cb779: Pull complete
+2026-06-30T10:36:37.5635562Z ffc89e9dfd88: Pull complete
+2026-06-30T10:36:42.4050639Z 43d05e938198: Pull complete
+2026-06-30T10:36:42.4182686Z 064b2d298fba: Pull complete
+2026-06-30T10:36:42.4281805Z df9a4d85569b: Pull complete
+2026-06-30T10:36:42.4437737Z Digest: sha256:4bc6bc963e6d8443453676cae56536f4b8156d78bae03c0145cbe47c2aad73bb
+2026-06-30T10:36:42.4456783Z Status: Downloaded newer image for mysql:5.7
+2026-06-30T10:36:42.4464513Z docker.io/library/mysql:5.7
+2026-06-30T10:36:42.4527801Z ##[command]/usr/bin/docker create --name ab06d67f09a54b0987d44e9ac50cb8ba_mysql57_5d7973 --label 2ace9e --network github_network_30895d0457694581bfc80c89fece9de4 --network-alias mysql -p 3306:3306 --health-cmd="mysql -uroot -proot -e 'SELECT 1'" --health-interval=5s --health-timeout=10s --health-retries=10 -e "MYSQL_ROOT_PASSWORD=root" -e "MYSQL_DATABASE=splk" -e GITHUB_ACTIONS=true -e CI=true mysql:5.7
+2026-06-30T10:36:42.4792654Z 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:36:42.4814448Z ##[command]/usr/bin/docker start 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:36:42.8801909Z 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:36:42.8822396Z ##[command]/usr/bin/docker ps --all --filter id=43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-06-30T10:36:42.8944486Z 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf Up Less than a second (health: starting)
+2026-06-30T10:36:42.8970569Z ##[command]/usr/bin/docker port 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:36:42.9104133Z 3306/tcp -> 0.0.0.0:3306
+2026-06-30T10:36:42.9104590Z 3306/tcp -> [::]:3306
+2026-06-30T10:36:42.9150030Z ##[endgroup]
+2026-06-30T10:36:42.9159298Z ##[group]Waiting for all services to be ready
+2026-06-30T10:36:42.9173631Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:36:42.9320035Z starting
+2026-06-30T10:36:42.9343815Z mysql service is starting, waiting 2 seconds before checking again.
+2026-06-30T10:36:44.9340732Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:36:44.9465821Z starting
+2026-06-30T10:36:44.9478958Z mysql service is starting, waiting 4 seconds before checking again.
+2026-06-30T10:36:49.1609318Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:36:49.1729522Z starting
+2026-06-30T10:36:49.1743366Z mysql service is starting, waiting 7 seconds before checking again.
+2026-06-30T10:36:56.9260004Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:36:56.9393873Z healthy
+2026-06-30T10:36:56.9420116Z mysql service is healthy.
+2026-06-30T10:36:56.9421421Z ##[endgroup]
+2026-06-30T10:36:56.9701121Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-30T10:36:56.9708896Z ##[group]Run actions/checkout@v4
+2026-06-30T10:36:56.9709326Z with:
+2026-06-30T10:36:56.9709543Z   repository: folklorista/splk2
+2026-06-30T10:36:56.9712469Z   token: ***
+2026-06-30T10:36:56.9712678Z   ssh-strict: true
+2026-06-30T10:36:56.9712879Z   ssh-user: git
+2026-06-30T10:36:56.9713115Z   persist-credentials: true
+2026-06-30T10:36:56.9713341Z   clean: true
+2026-06-30T10:36:56.9713546Z   sparse-checkout-cone-mode: true
+2026-06-30T10:36:56.9713789Z   fetch-depth: 1
+2026-06-30T10:36:56.9713980Z   fetch-tags: false
+2026-06-30T10:36:56.9714179Z   show-progress: true
+2026-06-30T10:36:56.9714376Z   lfs: false
+2026-06-30T10:36:56.9714605Z   submodules: false
+2026-06-30T10:36:56.9714803Z   set-safe-directory: true
+2026-06-30T10:36:56.9715305Z ##[endgroup]
+2026-06-30T10:36:57.0681770Z Syncing repository: folklorista/splk2
+2026-06-30T10:36:57.0683095Z ##[group]Getting Git version info
+2026-06-30T10:36:57.0683463Z Working directory is '/home/runner/work/splk2/splk2'
+2026-06-30T10:36:57.0683990Z [command]/usr/bin/git version
+2026-06-30T10:36:57.0783520Z git version 2.54.0
+2026-06-30T10:36:57.0837010Z ##[endgroup]
+2026-06-30T10:36:57.0852351Z Temporarily overriding HOME='/home/runner/work/_temp/a976d691-3e84-4a32-9ffa-a3d4f3181717' before making global git config changes
+2026-06-30T10:36:57.0853537Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-30T10:36:57.0859160Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/splk2/splk2
+2026-06-30T10:36:57.0908468Z Deleting the contents of '/home/runner/work/splk2/splk2'
+2026-06-30T10:36:57.0913920Z ##[group]Initializing the repository
+2026-06-30T10:36:57.0919100Z [command]/usr/bin/git init /home/runner/work/splk2/splk2
+2026-06-30T10:36:57.1024952Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-06-30T10:36:57.1026010Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-06-30T10:36:57.1026930Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-06-30T10:36:57.1027630Z hint: call:
+2026-06-30T10:36:57.1027954Z hint:
+2026-06-30T10:36:57.1028440Z hint: 	git config --global init.defaultBranch <name>
+2026-06-30T10:36:57.1028889Z hint:
+2026-06-30T10:36:57.1029255Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-06-30T10:36:57.1030162Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-06-30T10:36:57.1030871Z hint:
+2026-06-30T10:36:57.1031476Z hint: 	git branch -m <name>
+2026-06-30T10:36:57.1031899Z hint:
+2026-06-30T10:36:57.1032500Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-06-30T10:36:57.1033382Z Initialized empty Git repository in /home/runner/work/splk2/splk2/.git/
+2026-06-30T10:36:57.1042461Z [command]/usr/bin/git remote add origin https://github.com/folklorista/splk2
+2026-06-30T10:36:57.1085255Z ##[endgroup]
+2026-06-30T10:36:57.1085894Z ##[group]Disabling automatic garbage collection
+2026-06-30T10:36:57.1089008Z [command]/usr/bin/git config --local gc.auto 0
+2026-06-30T10:36:57.1116475Z ##[endgroup]
+2026-06-30T10:36:57.1117042Z ##[group]Setting up auth
+2026-06-30T10:36:57.1124185Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-30T10:36:57.1157305Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-30T10:36:57.1489261Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-30T10:36:57.1520767Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-30T10:36:57.1739998Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-30T10:36:57.1771102Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-30T10:36:57.1991080Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-06-30T10:36:57.2027229Z ##[endgroup]
+2026-06-30T10:36:57.2027789Z ##[group]Fetching the repository
+2026-06-30T10:36:57.2036290Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +e7d11497fcad27b77d02815bb4f5ff417e038ed1:refs/remotes/origin/master
+2026-06-30T10:36:57.7164651Z From https://github.com/folklorista/splk2
+2026-06-30T10:36:57.7166282Z  * [new ref]         e7d11497fcad27b77d02815bb4f5ff417e038ed1 -> origin/master
+2026-06-30T10:36:57.7198713Z ##[endgroup]
+2026-06-30T10:36:57.7199537Z ##[group]Determining the checkout info
+2026-06-30T10:36:57.7202401Z ##[endgroup]
+2026-06-30T10:36:57.7209496Z [command]/usr/bin/git sparse-checkout disable
+2026-06-30T10:36:57.7256652Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-06-30T10:36:57.7284866Z ##[group]Checking out the ref
+2026-06-30T10:36:57.7290492Z [command]/usr/bin/git checkout --progress --force -B master refs/remotes/origin/master
+2026-06-30T10:36:57.7453429Z Reset branch 'master'
+2026-06-30T10:36:57.7459381Z branch 'master' set up to track 'origin/master'.
+2026-06-30T10:36:57.7463486Z ##[endgroup]
+2026-06-30T10:36:57.7511303Z [command]/usr/bin/git log -1 --format=%H
+2026-06-30T10:36:57.7535434Z e7d11497fcad27b77d02815bb4f5ff417e038ed1
+2026-06-30T10:36:57.7712669Z ##[group]Run sudo apt-get update
+2026-06-30T10:36:57.7713019Z [36;1msudo apt-get update[0m
+2026-06-30T10:36:57.7713355Z [36;1msudo apt-get install -y mysql-client[0m
+2026-06-30T10:36:57.7748613Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:36:57.7748874Z ##[endgroup]
+2026-06-30T10:36:57.9644688Z Hit:1 https://packages.microsoft.com/repos/azure-cli noble InRelease
+2026-06-30T10:36:57.9682184Z Get:2 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-06-30T10:36:57.9751696Z Get:3 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+2026-06-30T10:36:57.9849838Z Get:8 https://dl.google.com/linux/chrome-stable/deb stable InRelease [1825 B]
+2026-06-30T10:36:57.9964593Z Hit:4 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+2026-06-30T10:36:57.9981086Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+2026-06-30T10:36:58.0029312Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+2026-06-30T10:36:58.0076341Z Get:7 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+2026-06-30T10:36:58.2264445Z Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [156 kB]
+2026-06-30T10:36:58.2362231Z Get:10 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [187 kB]
+2026-06-30T10:36:58.2974184Z Get:11 https://dl.google.com/linux/chrome-stable/deb stable/main amd64 Packages [1211 B]
+2026-06-30T10:36:58.3870084Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1041 kB]
+2026-06-30T10:36:58.3925312Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [261 kB]
+2026-06-30T10:36:58.3952555Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [181 kB]
+2026-06-30T10:36:58.3963794Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 c-n-f Metadata [17.5 kB]
+2026-06-30T10:36:58.3992173Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1656 kB]
+2026-06-30T10:36:58.4052859Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [326 kB]
+2026-06-30T10:36:58.4076680Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [388 kB]
+2026-06-30T10:36:58.4101997Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 c-n-f Metadata [34.8 kB]
+2026-06-30T10:36:58.4113575Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1134 kB]
+2026-06-30T10:36:58.4170298Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [257 kB]
+2026-06-30T10:36:58.4611897Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+2026-06-30T10:36:58.4626053Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [5760 B]
+2026-06-30T10:36:58.4634414Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [10.5 kB]
+2026-06-30T10:36:58.4980686Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [788 kB]
+2026-06-30T10:36:58.5025047Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [179 kB]
+2026-06-30T10:36:58.5039247Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [44.9 kB]
+2026-06-30T10:36:58.5047665Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 c-n-f Metadata [11.6 kB]
+2026-06-30T10:36:58.5056755Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1171 kB]
+2026-06-30T10:36:58.5113867Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [229 kB]
+2026-06-30T10:36:58.5130415Z Get:31 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [76.3 kB]
+2026-06-30T10:36:58.5140670Z Get:32 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 c-n-f Metadata [24.1 kB]
+2026-06-30T10:36:58.5149475Z Get:33 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1071 kB]
+2026-06-30T10:36:58.5201905Z Get:34 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [245 kB]
+2026-06-30T10:37:03.8807433Z Fetched 9881 kB in 1s (6871 kB/s)
+2026-06-30T10:37:04.5304005Z Reading package lists...
+2026-06-30T10:37:04.5601537Z Reading package lists...
+2026-06-30T10:37:04.7119155Z Building dependency tree...
+2026-06-30T10:37:04.7141883Z Reading state information...
+2026-06-30T10:37:04.8618802Z mysql-client is already the newest version (8.0.46-0ubuntu0.24.04.3).
+2026-06-30T10:37:04.8619433Z 0 upgraded, 0 newly installed, 0 to remove and 16 not upgraded.
+2026-06-30T10:37:04.8695828Z ##[group]Run shivammathur/setup-php@v2
+2026-06-30T10:37:04.8696134Z with:
+2026-06-30T10:37:04.8696511Z   php-version: 8.3
+2026-06-30T10:37:04.8696732Z   extensions: mysql, curl, json
+2026-06-30T10:37:04.8696978Z   tools: composer
+2026-06-30T10:37:04.8697177Z   ini-file: production
+2026-06-30T10:37:04.8699811Z   github-token: ***
+2026-06-30T10:37:04.8700031Z ##[endgroup]
+2026-06-30T10:37:04.9114347Z [command]/usr/bin/bash /home/runner/work/_actions/shivammathur/setup-php/v2/src/scripts/run.sh
+2026-06-30T10:37:04.9524909Z 
+2026-06-30T10:37:04.9525636Z [90;1m==> [0m[37;1mSetup PHP[0m
+2026-06-30T10:37:06.8978711Z [32;1m✓ [0m[34;1mPHP [0m[90;1mUpdated to PHP 8.3.31[0m
+2026-06-30T10:37:06.8979720Z 
+2026-06-30T10:37:06.8992318Z [90;1m==> [0m[37;1mSetup Extensions[0m
+2026-06-30T10:37:06.9461105Z [32;1m✓ [0m[34;1mmysql [0m[90;1mEnabled[0m
+2026-06-30T10:37:06.9491400Z [32;1m✓ [0m[34;1mcurl [0m[90;1mEnabled[0m
+2026-06-30T10:37:06.9523056Z [32;1m✓ [0m[34;1mjson [0m[90;1mEnabled[0m
+2026-06-30T10:37:06.9523947Z 
+2026-06-30T10:37:06.9524250Z [90;1m==> [0m[37;1mSetup Tools[0m
+2026-06-30T10:37:07.2345950Z [32;1m✓ [0m[34;1mcomposer [0m[90;1mAdded composer 2.10.1[0m
+2026-06-30T10:37:07.2346939Z 
+2026-06-30T10:37:07.2347517Z [90;1m==> [0m[37;1mSponsor setup-php[0m
+2026-06-30T10:37:07.2348370Z [32;1m✓ [0m[34;1msetup-php [0m[90;1mhttps://setup-php.com/sponsor[0m
+2026-06-30T10:37:07.2511678Z ##[group]Run echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+2026-06-30T10:37:07.2512253Z [36;1mecho "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT[0m
+2026-06-30T10:37:07.2545910Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:07.2546166Z env:
+2026-06-30T10:37:07.2546360Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:07.2546612Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:07.2546856Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:07.2547064Z ##[endgroup]
+2026-06-30T10:37:07.5134320Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-30T10:37:07.5135658Z ##[group]Run actions/cache@v3
+2026-06-30T10:37:07.5135899Z with:
+2026-06-30T10:37:07.5136152Z   path: /home/runner/.cache/composer/files
+api/vendor
+
+2026-06-30T10:37:07.5136634Z   key: Linux-composer-03eefbcec2961f11304712276bace39513c4c51fd94fa51115174227b7952aac
+2026-06-30T10:37:07.5137083Z   restore-keys: Linux-composer-
+2026-06-30T10:37:07.5137333Z   enableCrossOsArchive: false
+2026-06-30T10:37:07.5137577Z   fail-on-cache-miss: false
+2026-06-30T10:37:07.5137804Z   lookup-only: false
+2026-06-30T10:37:07.5138010Z env:
+2026-06-30T10:37:07.5138195Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:07.5138432Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:07.5138697Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:07.5138903Z ##[endgroup]
+2026-06-30T10:37:07.6171165Z (node:3582) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-06-30T10:37:07.6172318Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-06-30T10:37:07.8842144Z Cache hit for: Linux-composer-03eefbcec2961f11304712276bace39513c4c51fd94fa51115174227b7952aac
+2026-06-30T10:37:07.8960816Z (node:3582) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-06-30T10:37:08.9993986Z Received 2921983 of 2921983 (100.0%), 3.4 MBs/sec
+2026-06-30T10:37:08.9994418Z Cache Size: ~3 MB (2921983 B)
+2026-06-30T10:37:09.0027837Z [command]/usr/bin/tar -xf /home/runner/work/_temp/eb5fbf55-75fa-48a2-b56e-0e43940bdad6/cache.tzst -P -C /home/runner/work/splk2/splk2 --use-compress-program unzstd
+2026-06-30T10:37:09.0886174Z Cache restored successfully
+2026-06-30T10:37:09.0967150Z Cache restored from key: Linux-composer-03eefbcec2961f11304712276bace39513c4c51fd94fa51115174227b7952aac
+2026-06-30T10:37:09.1057800Z ##[group]Run composer install --no-progress --prefer-dist --no-interaction
+2026-06-30T10:37:09.1058382Z [36;1mcomposer install --no-progress --prefer-dist --no-interaction[0m
+2026-06-30T10:37:09.1090202Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:09.1090456Z env:
+2026-06-30T10:37:09.1090655Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:09.1090914Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:09.1091362Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:09.1091625Z ##[endgroup]
+2026-06-30T10:37:09.2949381Z Installing dependencies from lock file (including require-dev)
+2026-06-30T10:37:09.2955035Z Verifying lock file contents can be installed on current platform.
+2026-06-30T10:37:09.3975633Z Nothing to install, update or remove
+2026-06-30T10:37:09.3997429Z Generating autoload files
+2026-06-30T10:37:09.5292494Z 34 packages you are using are looking for funding.
+2026-06-30T10:37:09.5292912Z Use the `composer fund` command to find out more!
+2026-06-30T10:37:09.5510798Z ##[group]Run for i in {1..60}; do
+2026-06-30T10:37:09.5511691Z [36;1mfor i in {1..60}; do[0m
+2026-06-30T10:37:09.5512354Z [36;1m  if mysql -h 127.0.0.1 -P 3306 -u root -proot -e "SELECT 1;" 2>/dev/null; then[0m
+2026-06-30T10:37:09.5513220Z [36;1m    echo "✓ MySQL is ready!"[0m
+2026-06-30T10:37:09.5513696Z [36;1m    exit 0[0m
+2026-06-30T10:37:09.5514098Z [36;1m  fi[0m
+2026-06-30T10:37:09.5514524Z [36;1m  echo "Waiting for MySQL... attempt $i/60"[0m
+2026-06-30T10:37:09.5515110Z [36;1m  sleep 1[0m
+2026-06-30T10:37:09.5515476Z [36;1mdone[0m
+2026-06-30T10:37:09.5515930Z [36;1mecho "✗ MySQL failed to start after 60 seconds"[0m
+2026-06-30T10:37:09.5516495Z [36;1mexit 1[0m
+2026-06-30T10:37:09.5561723Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:09.5562168Z env:
+2026-06-30T10:37:09.5562512Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:09.5562964Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:09.5563394Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:09.5563839Z ##[endgroup]
+2026-06-30T10:37:09.8105530Z 1
+2026-06-30T10:37:09.8105886Z 1
+2026-06-30T10:37:09.8112593Z ✓ MySQL is ready!
+2026-06-30T10:37:09.8140634Z ##[group]Run mysql -h 127.0.0.1 -P 3306 -u root -proot splk < dev/db.sql
+2026-06-30T10:37:09.8141514Z [36;1mmysql -h 127.0.0.1 -P 3306 -u root -proot splk < dev/db.sql[0m
+2026-06-30T10:37:09.8142089Z [36;1mmysql -h 127.0.0.1 -P 3306 -u root -proot splk < api/migrations/add-soft-deletes.sql[0m
+2026-06-30T10:37:09.8142704Z [36;1mmysql -h 127.0.0.1 -P 3306 -u root -proot splk < api/migrations/add-change-tracking.sql[0m
+2026-06-30T10:37:09.8173757Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:09.8174025Z env:
+2026-06-30T10:37:09.8174223Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:09.8174481Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:09.8174726Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:09.8174948Z ##[endgroup]
+2026-06-30T10:37:09.8257471Z mysql: [Warning] Using a password on the command line interface can be insecure.
+2026-06-30T10:37:10.0471476Z mysql: [Warning] Using a password on the command line interface can be insecure.
+2026-06-30T10:37:10.2098975Z mysql: [Warning] Using a password on the command line interface can be insecure.
+2026-06-30T10:37:10.2566909Z ##[group]Run mysql -h 127.0.0.1 -P 3306 -u root -proot splk -e "
+2026-06-30T10:37:10.2567417Z [36;1mmysql -h 127.0.0.1 -P 3306 -u root -proot splk -e "[0m
+2026-06-30T10:37:10.2567844Z [36;1mINSERT INTO audit_actions (id, name, description) VALUES[0m
+2026-06-30T10:37:10.2568277Z [36;1m(1, 'USER_LOGIN', 'Přihlášení uživatele'),[0m
+2026-06-30T10:37:10.2568639Z [36;1m(2, 'DATA_INSERT', 'Vložení nových dat'),[0m
+2026-06-30T10:37:10.2568967Z [36;1m(3, 'DATA_UPDATE', 'Aktualizace dat'),[0m
+2026-06-30T10:37:10.2569273Z [36;1m(4, 'DATA_DELETE', 'Smazání dat'),[0m
+2026-06-30T10:37:10.2569630Z [36;1m(5, 'TREE_UPDATE', 'Aktualizace stromové struktury');"[0m
+2026-06-30T10:37:10.2600970Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:10.2601633Z env:
+2026-06-30T10:37:10.2601875Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:10.2602339Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:10.2602579Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:10.2602796Z ##[endgroup]
+2026-06-30T10:37:10.2683017Z mysql: [Warning] Using a password on the command line interface can be insecure.
+2026-06-30T10:37:10.3070641Z ##[group]Run ./vendor/bin/phpunit tests/Unit/
+2026-06-30T10:37:10.3071024Z [36;1m./vendor/bin/phpunit tests/Unit/[0m
+2026-06-30T10:37:10.3101669Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:10.3102017Z env:
+2026-06-30T10:37:10.3102320Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:10.3102692Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:10.3103192Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:10.3103505Z   DB_HOST: 127.0.0.1:3306
+2026-06-30T10:37:10.3103908Z   DB_USERNAME: root
+2026-06-30T10:37:10.3104208Z   DB_PASSWORD: root
+2026-06-30T10:37:10.3104487Z   DB_NAME: splk
+2026-06-30T10:37:10.3104867Z   APP_ENV: local
+2026-06-30T10:37:10.3105320Z   CORS_ALLOWED_ORIGINS: http://localhost:8000,http://127.0.0.1:8000
+2026-06-30T10:37:10.3105838Z   RATE_LIMIT_GUEST: 10000
+2026-06-30T10:37:10.3106180Z   RATE_LIMIT_USER: 10000
+2026-06-30T10:37:10.3106489Z ##[endgroup]
+2026-06-30T10:37:10.4625145Z PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+2026-06-30T10:37:10.4625797Z 
+2026-06-30T10:37:10.4626315Z Runtime:       PHP 8.3.31 with Xdebug 3.5.3
+2026-06-30T10:37:10.4626978Z Configuration: /home/runner/work/splk2/splk2/api/phpunit.xml
+2026-06-30T10:37:10.4627443Z 
+2026-06-30T10:37:10.9159316Z ......................W........................................  63 / 138 ( 45%)
+2026-06-30T10:37:11.1042607Z ........DD..................................................... 126 / 138 ( 91%)
+2026-06-30T10:37:11.1963287Z ............                                                    138 / 138 (100%)
+2026-06-30T10:37:11.1963617Z 
+2026-06-30T10:37:11.1964190Z Time: 00:00.732, Memory: 22.00 MB
+2026-06-30T10:37:11.1964534Z 
+2026-06-30T10:37:11.1964713Z Cors (Tests\Unit\Cors)
+2026-06-30T10:37:11.1965465Z  ✔ Missing configuration throws exception
+2026-06-30T10:37:11.1966167Z  ✔ Allowed origin receives cors headers
+2026-06-30T10:37:11.1966852Z  ✔ Disallowed origin no allow origin header
+2026-06-30T10:37:11.1967572Z  ✔ Subdomain wildcard pattern
+2026-06-30T10:37:11.1968172Z  ✔ Options preflight
+2026-06-30T10:37:11.1968746Z  ✔ Exact origin matching
+2026-06-30T10:37:11.1969352Z  ✔ Whitespace handling in origin list
+2026-06-30T10:37:11.1970029Z  ✔ Wildcard origin not allowed
+2026-06-30T10:37:11.1970678Z  ✔ Multiple origin configuration
+2026-06-30T10:37:11.1971515Z  ✔ Missing origin header
+2026-06-30T10:37:11.1972117Z  ✔ Cors headers structure
+2026-06-30T10:37:11.1972704Z  ✔ Origin with port number
+2026-06-30T10:37:11.1973289Z  ✔ Similar origin rejected
+2026-06-30T10:37:11.1973620Z 
+2026-06-30T10:37:11.1973937Z File Upload Manager (App\Tests\Unit\FileUploadManager)
+2026-06-30T10:37:11.1974726Z  ✔ Get file successfully
+2026-06-30T10:37:11.1975313Z  ✔ Get file fails when not found
+2026-06-30T10:37:11.1975944Z  ✔ Get user files successfully
+2026-06-30T10:37:11.1976553Z  ✔ Get allowed extensions
+2026-06-30T10:37:11.1977137Z  ✔ Get max file size
+2026-06-30T10:37:11.1977734Z  ✔ Handle upload fails with invalid array
+2026-06-30T10:37:11.1978407Z  ✔ Handle upload fails with oversized file
+2026-06-30T10:37:11.1979048Z  ✔ Handle upload fails with invalid extension
+2026-06-30T10:37:11.1979662Z  ✔ Delete file fails when not found
+2026-06-30T10:37:11.1980239Z  ⚠ Delete file fails when not owner
+2026-06-30T10:37:11.1980536Z 
+2026-06-30T10:37:11.1980791Z File Upload Security (Tests\Unit\FileUploadSecurity)
+2026-06-30T10:37:11.1981675Z  ✔ Env example includes file upload config
+2026-06-30T10:37:11.1982284Z  ✔ Uploads directory is outside webroot
+2026-06-30T10:37:11.1982686Z  ✔ Blocked mime types configured
+2026-06-30T10:37:11.1983218Z  ✔ Mime type validation
+2026-06-30T10:37:11.1983641Z  ✔ File content validation
+2026-06-30T10:37:11.1983902Z  ✔ Filenames are randomized
+2026-06-30T10:37:11.1984164Z  ✔ File permissions are secure
+2026-06-30T10:37:11.1984453Z  ✔ Validation failures are logged
+2026-06-30T10:37:11.1984963Z  ✔ Max file size from env
+2026-06-30T10:37:11.1985221Z  ✔ Allowed extensions from env
+2026-06-30T10:37:11.1985375Z 
+2026-06-30T10:37:11.1985483Z Jwt Expiration (Tests\Unit\JwtExpiration)
+2026-06-30T10:37:11.1986006Z  ✔ Jwt expiration env variable
+2026-06-30T10:37:11.1986304Z  ✔ Default jwt expiration is 15 minutes
+2026-06-30T10:37:11.1986611Z  ✔ Env example includes jwt expiration
+2026-06-30T10:37:11.1986903Z  ✔ Jwt expiration is not too long
+2026-06-30T10:37:11.1987067Z 
+2026-06-30T10:37:11.1987188Z Jwt Secret Config (Tests\Unit\JwtSecretConfig)
+2026-06-30T10:37:11.1987515Z  ✔ Missing jwt secret throws exception
+2026-06-30T10:37:11.1987809Z  ✔ Empty jwt secret throws exception
+2026-06-30T10:37:11.1988086Z  ✔ Valid jwt secret loads
+2026-06-30T10:37:11.1988331Z  ✔ Jwt secret not hardcoded
+2026-06-30T10:37:11.1988590Z  ✔ Error message is helpful
+2026-06-30T10:37:11.1988853Z  ✔ Env example no hardcoded secret
+2026-06-30T10:37:11.1989018Z 
+2026-06-30T10:37:11.1989131Z Password Reset (Tests\Unit\PasswordReset)
+2026-06-30T10:37:11.1989460Z  ✔ Password reset class exists
+2026-06-30T10:37:11.1989730Z  ✔ Password reset docs exist
+2026-06-30T10:37:11.1989999Z  ✔ Token expiry is one hour
+2026-06-30T10:37:11.1990260Z  ✔ Rate limit three per hour
+2026-06-30T10:37:11.1990518Z  ✔ Token can only be used once
+2026-06-30T10:37:11.1990774Z  ✔ Passwords are hashed
+2026-06-30T10:37:11.1991010Z  ✔ Token hash used
+2026-06-30T10:37:11.1991575Z  ✔ Reset endpoints exist
+2026-06-30T10:37:11.1991836Z  ✔ Email validation
+2026-06-30T10:37:11.1992080Z  ✔ Other tokens revoked on reset
+2026-06-30T10:37:11.1992364Z  ✔ Password minimum length enforced
+2026-06-30T10:37:11.1992645Z  ✔ Audit logging performed
+2026-06-30T10:37:11.1992899Z  ✔ Email sending is stubbed
+2026-06-30T10:37:11.1993136Z  ✔ Migration exists
+2026-06-30T10:37:11.1993271Z 
+2026-06-30T10:37:11.1993415Z Rate Limiting Security (Tests\Unit\RateLimitingSecurity)
+2026-06-30T10:37:11.1993781Z  ✔ Skip rate limit bypass removed
+2026-06-30T10:37:11.1994059Z  ✔ Login endpoint rate limited
+2026-06-30T10:37:11.1994341Z  ✔ Register endpoint rate limited
+2026-06-30T10:37:11.1994606Z  ✔ Role based rate limiting
+2026-06-30T10:37:11.1994871Z  ✔ Authenticated requests use user id
+2026-06-30T10:37:11.1995169Z  ✔ Rate limit headers set
+2026-06-30T10:37:11.1995425Z  ✔ Env variables for rate limits
+2026-06-30T10:37:11.1995704Z  ✔ Proper http status on rate limit
+2026-06-30T10:37:11.1995973Z  ✔ Retry after header
+2026-06-30T10:37:11.1996216Z  ✔ Only health and docs exempt
+2026-06-30T10:37:11.1996366Z 
+2026-06-30T10:37:11.1996538Z Role Based Access Control (App\Tests\Unit\RoleBasedAccessControl)
+2026-06-30T10:37:11.1996947Z  ✔ Has role returns true when user has role
+2026-06-30T10:37:11.1997311Z  ✔ Has role returns false when user doesnt have role
+2026-06-30T10:37:11.1997643Z  ✔ Has role with multiple roles
+2026-06-30T10:37:11.1997928Z  ✔ Has role returns false when user is null
+2026-06-30T10:37:11.1998232Z  ⚠ Assign role successfully
+2026-06-30T10:37:11.1998523Z  ⚠ Assign role fails when role already assigned
+2026-06-30T10:37:11.1998865Z  ✔ Assign role fails when user not found
+2026-06-30T10:37:11.1999152Z  ✔ Remove role successfully
+2026-06-30T10:37:11.1999424Z  ✔ Remove role fails when role not assigned
+2026-06-30T10:37:11.1999746Z  ✔ Is owner returns true when user is owner
+2026-06-30T10:37:11.2000074Z  ✔ Is owner returns false when user is not owner
+2026-06-30T10:37:11.2000415Z  ✔ Is owner returns false for non users table
+2026-06-30T10:37:11.2000608Z 
+2026-06-30T10:37:11.2000726Z Rule Validator (SPLK2\Tests\Unit\RuleValidator)
+2026-06-30T10:37:11.2001037Z  ✔ Required field valid
+2026-06-30T10:37:11.2001413Z  ✔ Required field missing
+2026-06-30T10:37:11.2001667Z  ✔ Required field empty string
+2026-06-30T10:37:11.2001924Z  ✔ Required field null
+2026-06-30T10:37:11.2002183Z  ✔ Email type valid
+2026-06-30T10:37:11.2002414Z  ✔ Email type invalid
+2026-06-30T10:37:11.2002644Z  ✔ Integer type valid
+2026-06-30T10:37:11.2002881Z  ✔ Integer type string integer
+2026-06-30T10:37:11.2003163Z  ✔ Integer type float invalid
+2026-06-30T10:37:11.2003579Z  ✔ Float type valid
+2026-06-30T10:37:11.2003811Z  ✔ Boolean type valid
+2026-06-30T10:37:11.2004041Z  ✔ String type valid
+2026-06-30T10:37:11.2004267Z  ✔ MinLength valid
+2026-06-30T10:37:11.2004628Z  ✔ MinLength too short
+2026-06-30T10:37:11.2004862Z  ✔ MaxLength valid
+2026-06-30T10:37:11.2005092Z  ✔ MaxLength too long
+2026-06-30T10:37:11.2005311Z  ✔ Enum valid
+2026-06-30T10:37:11.2005527Z  ✔ Enum invalid
+2026-06-30T10:37:11.2005738Z  ✔ Min value valid
+2026-06-30T10:37:11.2005956Z  ✔ Min value too low
+2026-06-30T10:37:11.2006183Z  ✔ Max value valid
+2026-06-30T10:37:11.2006399Z  ✔ Max value too high
+2026-06-30T10:37:11.2006624Z  ✔ Min float valid
+2026-06-30T10:37:11.2006837Z  ✔ Min float too low
+2026-06-30T10:37:11.2007056Z  ✔ Unique exists
+2026-06-30T10:37:11.2007278Z  ✔ Unique not exists
+2026-06-30T10:37:11.2007511Z  ✔ Unique database 404
+2026-06-30T10:37:11.2007745Z  ✔ Update partial data
+2026-06-30T10:37:11.2008007Z  ✔ Update validates provided
+2026-06-30T10:37:11.2008322Z  ✔ Hook beforeCreate executed
+2026-06-30T10:37:11.2008590Z  ✔ Hook beforeDelete executed
+2026-06-30T10:37:11.2008854Z  ✔ Hook no matching table
+2026-06-30T10:37:11.2009098Z  ✔ Hook no matching hook
+2026-06-30T10:37:11.2009347Z  ✔ Get table rules
+2026-06-30T10:37:11.2009580Z  ✔ GetTableRules nonexistent
+2026-06-30T10:37:11.2009826Z  ✔ HasRules true
+2026-06-30T10:37:11.2010046Z  ✔ HasRules false
+2026-06-30T10:37:11.2010260Z  ✔ Multiple errors
+2026-06-30T10:37:11.2010502Z  ✔ Required stops other validations
+2026-06-30T10:37:11.2010775Z  ✔ No rules for table
+2026-06-30T10:37:11.2010906Z 
+2026-06-30T10:37:11.2011008Z SQLInjection (Tests\Unit\SQLInjection)
+2026-06-30T10:37:11.2011476Z  ✔ Equality condition with malicious input
+2026-06-30T10:37:11.2011791Z  ✔ In condition with malicious input
+2026-06-30T10:37:11.2012092Z  ✔ Like condition with malicious input
+2026-06-30T10:37:11.2012386Z  ✔ Fulltext with malicious input
+2026-06-30T10:37:11.2012689Z  ✔ Multiple conditions with malicious input
+2026-06-30T10:37:11.2013001Z  ✔ Null value handling
+2026-06-30T10:37:11.2013231Z  ✔ Column name quoting
+2026-06-30T10:37:11.2013464Z  ✔ Correct query structure
+2026-06-30T10:37:11.2013724Z  ✔ Special characters in values
+2026-06-30T10:37:11.2013893Z 
+2026-06-30T10:37:11.2014019Z Webhook Manager (App\Tests\Unit\WebhookManager)
+2026-06-30T10:37:11.2014366Z  ✔ Create webhook fails with invalid url
+2026-06-30T10:37:11.2014681Z  ✔ Create webhook fails with empty events
+2026-06-30T10:37:11.2014995Z  ✔ Create webhook fails with invalid event
+2026-06-30T10:37:11.2015295Z  ✔ Update webhook successfully
+2026-06-30T10:37:11.2015581Z  ✔ Update webhook fails when not found
+2026-06-30T10:37:11.2015869Z  ✔ Delete webhook successfully
+2026-06-30T10:37:11.2016128Z  ✔ Get webhook successfully
+2026-06-30T10:37:11.2016391Z  ✔ Get user webhooks successfully
+2026-06-30T10:37:11.2016678Z  ✔ Test webhook fails when not found
+2026-06-30T10:37:11.2016968Z  ✔ Trigger event with no webhooks
+2026-06-30T10:37:11.2017122Z 
+2026-06-30T10:37:11.2017223Z OK, but there were issues!
+2026-06-30T10:37:11.2017534Z Tests: 138, Assertions: 293, Warnings: 1, PHPUnit Deprecations: 2.
+2026-06-30T10:37:11.2017802Z 
+2026-06-30T10:37:11.4030442Z Generating code coverage report in Cobertura XML format ... done [00:00.204]
+2026-06-30T10:37:11.4161873Z ##[group]Run cat > api/.env << EOF
+2026-06-30T10:37:11.4162226Z [36;1mcat > api/.env << EOF[0m
+2026-06-30T10:37:11.4162487Z [36;1mAPP_ENV=local[0m
+2026-06-30T10:37:11.4162714Z [36;1mDB_HOST=127.0.0.1:3306[0m
+2026-06-30T10:37:11.4162966Z [36;1mDB_USERNAME=root[0m
+2026-06-30T10:37:11.4163198Z [36;1mDB_PASSWORD=root[0m
+2026-06-30T10:37:11.4163418Z [36;1mDB_NAME=splk[0m
+2026-06-30T10:37:11.4163651Z [36;1mJWT_SECRET=my_little_secret[0m
+2026-06-30T10:37:11.4164050Z [36;1mCORS_ALLOWED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000[0m
+2026-06-30T10:37:11.4164457Z [36;1mLOG_PATH=../../log/api/app.log[0m
+2026-06-30T10:37:11.4164724Z [36;1mLOG_LEVEL=DEBUG[0m
+2026-06-30T10:37:11.4164957Z [36;1mEOF[0m
+2026-06-30T10:37:11.4195364Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:11.4195618Z env:
+2026-06-30T10:37:11.4195816Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:11.4196071Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:11.4196316Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:11.4196566Z ##[endgroup]
+2026-06-30T10:37:11.4299356Z ##[group]Run cd api
+2026-06-30T10:37:11.4299803Z [36;1mcd api[0m
+2026-06-30T10:37:11.4300263Z [36;1m# Clear rate limit cache from previous runs[0m
+2026-06-30T10:37:11.4301102Z [36;1mrm -rf ../../log/rate_limit 2>/dev/null || true[0m
+2026-06-30T10:37:11.4302124Z [36;1mphp -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &[0m
+2026-06-30T10:37:11.4302732Z [36;1mAPI_PID=$![0m
+2026-06-30T10:37:11.4303289Z [36;1msleep 3[0m
+2026-06-30T10:37:11.4303697Z [36;1m# Verify server is running[0m
+2026-06-30T10:37:11.4304458Z [36;1mif curl -s http://127.0.0.1:8000/health > /dev/null; then[0m
+2026-06-30T10:37:11.4305238Z [36;1m  echo "API server started successfully (PID: $API_PID)"[0m
+2026-06-30T10:37:11.4306111Z [36;1melse[0m
+2026-06-30T10:37:11.4306540Z [36;1m  echo "API server failed to start"[0m
+2026-06-30T10:37:11.4307229Z [36;1m  cat /tmp/api.log[0m
+2026-06-30T10:37:11.4307799Z [36;1m  exit 1[0m
+2026-06-30T10:37:11.4308151Z [36;1mfi[0m
+2026-06-30T10:37:11.4357462Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:11.4357968Z env:
+2026-06-30T10:37:11.4358317Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:11.4358828Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:11.4359259Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:11.4359991Z ##[endgroup]
+2026-06-30T10:37:14.4695871Z API server started successfully (PID: 3647)
+2026-06-30T10:37:14.4734208Z ##[group]Run ./vendor/bin/phpunit tests/Integration/
+2026-06-30T10:37:14.4734926Z [36;1m./vendor/bin/phpunit tests/Integration/[0m
+2026-06-30T10:37:14.4779905Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:14.4780327Z env:
+2026-06-30T10:37:14.4780663Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:14.4781116Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:14.4781903Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:14.4782312Z   DB_HOST: 127.0.0.1:3306
+2026-06-30T10:37:14.4782701Z   DB_USERNAME: root
+2026-06-30T10:37:14.4783074Z   DB_PASSWORD: root
+2026-06-30T10:37:14.4783437Z   DB_NAME: splk
+2026-06-30T10:37:14.4783780Z   APP_ENV: local
+2026-06-30T10:37:14.4784323Z   CORS_ALLOWED_ORIGINS: http://localhost:8000,http://127.0.0.1:8000
+2026-06-30T10:37:14.4784997Z   RATE_LIMIT_GUEST: 10000
+2026-06-30T10:37:14.4785407Z   RATE_LIMIT_USER: 10000
+2026-06-30T10:37:14.4785795Z ##[endgroup]
+2026-06-30T10:37:14.5508035Z ✓ API is running at http://localhost:8000
+2026-06-30T10:37:14.5702218Z PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+2026-06-30T10:37:14.5702630Z 
+2026-06-30T10:37:14.5702789Z Runtime:       PHP 8.3.31 with Xdebug 3.5.3
+2026-06-30T10:37:14.5703268Z Configuration: /home/runner/work/splk2/splk2/api/phpunit.xml
+2026-06-30T10:37:14.5703622Z 
+2026-06-30T10:37:14.6509196Z 
+2026-06-30T10:37:14.6509923Z === STEP 1: Register User for Change Tracking ===
+2026-06-30T10:37:14.6510615Z Email: change-tracking-1782815834-306550@example.com
+2026-06-30T10:37:14.6511501Z Response Status: 201
+2026-06-30T10:37:14.6512158Z ✓ User registered
+2026-06-30T10:37:14.7188077Z .
+2026-06-30T10:37:14.7188442Z === STEP 2: Login User ===
+2026-06-30T10:37:14.7188710Z Response Status: 200
+2026-06-30T10:37:14.7189181Z ✓ Login successful
+2026-06-30T10:37:15.7336122Z .
+2026-06-30T10:37:15.7336572Z === STEP 3: Create Category (Check new_values) ===
+2026-06-30T10:37:15.7337145Z Request: POST /categories
+2026-06-30T10:37:15.7337447Z Data: {"name":"Change Tracking Test Category"}
+2026-06-30T10:37:15.7337791Z Response Status: 201
+2026-06-30T10:37:15.7338232Z ✓ Category created (ID: 1)
+2026-06-30T10:37:15.7338395Z 
+2026-06-30T10:37:15.7338489Z Audit Log Response:
+2026-06-30T10:37:15.7338699Z {
+2026-06-30T10:37:15.7338882Z     "status": 200,
+2026-06-30T10:37:15.7339089Z     "data": [
+2026-06-30T10:37:15.7339281Z         {
+2026-06-30T10:37:15.7339470Z             "id": 2,
+2026-06-30T10:37:15.7339931Z             "user_id": 1,
+2026-06-30T10:37:15.7340159Z             "action_id": 2,
+2026-06-30T10:37:15.7340424Z             "table_name": "categories",
+2026-06-30T10:37:15.7340694Z             "record_id": 1,
+2026-06-30T10:37:15.7340944Z             "details": "Record created",
+2026-06-30T10:37:15.7341613Z             "data": "{\"name\": \"Change Tracking Test Category\"}",
+2026-06-30T10:37:15.7341961Z             "old_values": null,
+2026-06-30T10:37:15.7342298Z             "new_values": "{\"name\": \"Change Tracking Test Category\"}",
+2026-06-30T10:37:15.7342698Z             "ip_address": "127.0.0.1",
+2026-06-30T10:37:15.7342986Z             "user_agent": null,
+2026-06-30T10:37:15.7343262Z             "created_at": "2026-06-30 10:37:14"
+2026-06-30T10:37:15.7343552Z         }
+2026-06-30T10:37:15.7343741Z     ],
+2026-06-30T10:37:15.7343948Z     "message": "Records found",
+2026-06-30T10:37:15.7344202Z     "error": null
+2026-06-30T10:37:15.7344412Z }
+2026-06-30T10:37:15.7344654Z ✓ Audit log verified:
+2026-06-30T10:37:15.7344966Z   - new_values: {"name": "Change Tracking Test Category"}
+2026-06-30T10:37:15.7345319Z   - old_values: NULL
+2026-06-30T10:37:16.7481779Z .
+2026-06-30T10:37:16.7482347Z === STEP 4: Update Category (Check old_values + new_values) ===
+2026-06-30T10:37:16.7482935Z Request: PUT /categories/1
+2026-06-30T10:37:16.7483401Z Data: {"name":"Updated Change Tracking Category"}
+2026-06-30T10:37:16.7483906Z Response Status: 200
+2026-06-30T10:37:16.7484493Z ✓ Category updated
+2026-06-30T10:37:16.7484774Z 
+2026-06-30T10:37:16.7484924Z Audit Log Response:
+2026-06-30T10:37:16.7485257Z {
+2026-06-30T10:37:16.7485922Z     "status": 200,
+2026-06-30T10:37:16.7486276Z     "data": [
+2026-06-30T10:37:16.7486584Z         {
+2026-06-30T10:37:16.7486888Z             "id": 3,
+2026-06-30T10:37:16.7487233Z             "user_id": 1,
+2026-06-30T10:37:16.7487612Z             "action_id": 3,
+2026-06-30T10:37:16.7488014Z             "table_name": "categories",
+2026-06-30T10:37:16.7488450Z             "record_id": 1,
+2026-06-30T10:37:16.7488880Z             "details": "Record updated",
+2026-06-30T10:37:16.7489435Z             "data": "{\"name\": \"Updated Change Tracking Category\"}",
+2026-06-30T10:37:16.7490840Z             "old_values": "{\"id\": 1, \"name\": \"Change Tracking Test Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-06-30 10:37:14\", \"is_deleted\": 0, \"updated_at\": \"2026-06-30 10:37:14\"}",
+2026-06-30T10:37:16.7493249Z             "new_values": "{\"id\": 1, \"name\": \"Updated Change Tracking Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-06-30 10:37:14\", \"is_deleted\": 0, \"updated_at\": \"2026-06-30 10:37:14\"}",
+2026-06-30T10:37:16.7494568Z             "ip_address": "127.0.0.1",
+2026-06-30T10:37:16.7495012Z             "user_agent": null,
+2026-06-30T10:37:16.7495447Z             "created_at": "2026-06-30 10:37:15"
+2026-06-30T10:37:16.7495919Z         }
+2026-06-30T10:37:16.7496252Z     ],
+2026-06-30T10:37:16.7496589Z     "message": "Records found",
+2026-06-30T10:37:16.7496968Z     "error": null
+2026-06-30T10:37:16.7497160Z }
+2026-06-30T10:37:16.7497405Z ✓ Audit log verified:
+2026-06-30T10:37:16.7498078Z   - old_values: {"id": 1, "name": "Change Tracking Test Category", "position": 0, "parent_id": null, "created_at": "2026-06-30 10:37:14", "is_deleted": 0, "updated_at": "2026-06-30 10:37:14"}
+2026-06-30T10:37:16.7499198Z   - new_values: {"id": 1, "name": "Updated Change Tracking Category", "position": 0, "parent_id": null, "created_at": "2026-06-30 10:37:14", "is_deleted": 0, "updated_at": "2026-06-30 10:37:14"}
+2026-06-30T10:37:17.7639312Z .
+2026-06-30T10:37:17.7639842Z === STEP 5: Delete Category (Check old_values) ===
+2026-06-30T10:37:17.7640372Z Request: DELETE /categories/1
+2026-06-30T10:37:17.7640797Z Response Status: 200
+2026-06-30T10:37:17.7641625Z ✓ Category deleted
+2026-06-30T10:37:17.7641844Z 
+2026-06-30T10:37:17.7641984Z Audit Log Response:
+2026-06-30T10:37:17.7642324Z {
+2026-06-30T10:37:17.7642614Z     "status": 200,
+2026-06-30T10:37:17.7642948Z     "data": [
+2026-06-30T10:37:17.7643633Z         {
+2026-06-30T10:37:17.7643930Z             "id": 4,
+2026-06-30T10:37:17.7644279Z             "user_id": 1,
+2026-06-30T10:37:17.7644660Z             "action_id": 4,
+2026-06-30T10:37:17.7645065Z             "table_name": "categories",
+2026-06-30T10:37:17.7645511Z             "record_id": 1,
+2026-06-30T10:37:17.7645903Z             "details": "Record deleted",
+2026-06-30T10:37:17.7646344Z             "data": null,
+2026-06-30T10:37:17.7647577Z             "old_values": "{\"id\": 1, \"name\": \"Updated Change Tracking Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-06-30 10:37:14\", \"is_deleted\": 0, \"updated_at\": \"2026-06-30 10:37:15\"}",
+2026-06-30T10:37:17.7648902Z             "new_values": null,
+2026-06-30T10:37:17.7649331Z             "ip_address": "127.0.0.1",
+2026-06-30T10:37:17.7649766Z             "user_agent": null,
+2026-06-30T10:37:17.7650195Z             "created_at": "2026-06-30 10:37:16"
+2026-06-30T10:37:17.7650637Z         }
+2026-06-30T10:37:17.7650934Z     ],
+2026-06-30T10:37:17.7651527Z     "message": "Records found",
+2026-06-30T10:37:17.7651943Z     "error": null
+2026-06-30T10:37:17.7652275Z }
+2026-06-30T10:37:17.7652652Z ✓ Audit log verified:
+2026-06-30T10:37:17.7653797Z   - old_values: {"id": 1, "name": "Updated Change Tracking Category", "position": 0, "parent_id": null, "created_at": "2026-06-30 10:37:14", "is_deleted": 0, "updated_at": "2026-06-30 10:37:15"}
+2026-06-30T10:37:17.7654940Z   - new_values: NULL
+2026-06-30T10:37:17.7713011Z .
+2026-06-30T10:37:17.7713377Z === STEP 6: Verify Full Audit Trail ===
+2026-06-30T10:37:17.7714137Z Total audit entries: 3
+2026-06-30T10:37:17.7714389Z 
+2026-06-30T10:37:17.7714530Z Audit Actions Found:
+2026-06-30T10:37:17.7714885Z   - Record created
+2026-06-30T10:37:17.7715233Z   - Record updated
+2026-06-30T10:37:17.7715564Z   - Record deleted
+2026-06-30T10:37:17.7715768Z 
+2026-06-30T10:37:17.7716038Z ✓ Full audit trail verified!
+2026-06-30T10:37:17.7716481Z   - CREATE with new_values ✓
+2026-06-30T10:37:17.7716963Z   - UPDATE with old_values + new_values ✓
+2026-06-30T10:37:17.7717451Z   - DELETE with old_values ✓
+2026-06-30T10:37:17.8351859Z .
+2026-06-30T10:37:17.8352361Z === STEP 1: Register New User ===
+2026-06-30T10:37:17.8352995Z Request: POST /register
+2026-06-30T10:37:17.8353477Z Email: e2e-test-1782815834-795463@example.com
+2026-06-30T10:37:17.8353981Z Response Status: 201
+2026-06-30T10:37:17.8354349Z Response: {
+2026-06-30T10:37:17.8354659Z     "status": 201,
+2026-06-30T10:37:17.8355023Z     "message": "Record created",
+2026-06-30T10:37:17.8355433Z     "data": {
+2026-06-30T10:37:17.8355749Z         "id": "2"
+2026-06-30T10:37:17.8356093Z     }
+2026-06-30T10:37:17.8356414Z }
+2026-06-30T10:37:17.8356883Z ✓ User registered successfully (ID: 2)
+2026-06-30T10:37:17.8991605Z .
+2026-06-30T10:37:17.8991858Z === STEP 2: Login User ===
+2026-06-30T10:37:17.8992159Z Request: POST /login
+2026-06-30T10:37:17.8992556Z Email: e2e-test-1782815834-795463@example.com
+2026-06-30T10:37:17.8992901Z Response Status: 200
+2026-06-30T10:37:17.8993259Z ✓ Login successful
+2026-06-30T10:37:17.8994231Z Access Token: ***
+2026-06-30T10:37:17.8994490Z Refresh Token: ...
+2026-06-30T10:37:17.9060742Z .
+2026-06-30T10:37:17.9060960Z === STEP 3: Create Category ===
+2026-06-30T10:37:17.9061882Z Authorization: ***
+2026-06-30T10:37:17.9062232Z Request: POST /categories
+2026-06-30T10:37:17.9062567Z Response Status: 201
+2026-06-30T10:37:17.9063024Z Response: {
+2026-06-30T10:37:17.9063307Z     "status": 201,
+2026-06-30T10:37:17.9063743Z     "message": "Record created",
+2026-06-30T10:37:17.9076046Z     "data": {
+2026-06-30T10:37:17.9076413Z         "id": "2"
+2026-06-30T10:37:17.9076739Z     }
+2026-06-30T10:37:17.9077023Z }
+2026-06-30T10:37:17.9077438Z ✓ Category created successfully (ID: 2)
+2026-06-30T10:37:17.9134896Z .
+2026-06-30T10:37:17.9135247Z === STEP 4: Create Item ===
+2026-06-30T10:37:17.9135653Z Category ID: 2
+2026-06-30T10:37:17.9135942Z Request: POST /items
+2026-06-30T10:37:17.9136174Z Response Status: 201
+2026-06-30T10:37:17.9136614Z Response: {
+2026-06-30T10:37:17.9136799Z     "status": 201,
+2026-06-30T10:37:17.9137016Z     "message": "Record created",
+2026-06-30T10:37:17.9137270Z     "data": {
+2026-06-30T10:37:17.9137460Z         "id": "1"
+2026-06-30T10:37:17.9137653Z     }
+2026-06-30T10:37:17.9137819Z }
+2026-06-30T10:37:17.9138103Z ✓ Item created successfully (ID: 1)
+2026-06-30T10:37:17.9200158Z .
+2026-06-30T10:37:17.9200574Z === STEP 5: Try Delete Category (Should Fail) ===
+2026-06-30T10:37:17.9201110Z Category ID: 2
+2026-06-30T10:37:17.9201682Z Category has 1 item(s)
+2026-06-30T10:37:17.9202082Z Request: DELETE /categories/2
+2026-06-30T10:37:17.9202534Z Response Status: 409
+2026-06-30T10:37:17.9202889Z Response: {
+2026-06-30T10:37:17.9203203Z     "status": 409,
+2026-06-30T10:37:17.9203731Z     "message": "Cannot delete category with items. Remove items first.",
+2026-06-30T10:37:17.9204386Z     "data": null,
+2026-06-30T10:37:17.9204742Z     "error": "Unknown error"
+2026-06-30T10:37:17.9205125Z }
+2026-06-30T10:37:17.9205693Z ✓ Correctly prevented deletion (business rule enforced)
+2026-06-30T10:37:17.9206257Z   Error: Unknown error
+2026-06-30T10:37:17.9285478Z .
+2026-06-30T10:37:17.9285813Z === STEP 6: Delete Item ===
+2026-06-30T10:37:17.9286217Z Item ID: 1
+2026-06-30T10:37:17.9286448Z Request: DELETE /items/1
+2026-06-30T10:37:17.9286696Z Response Status: 200
+2026-06-30T10:37:17.9286914Z Response: {
+2026-06-30T10:37:17.9287104Z     "status": 200,
+2026-06-30T10:37:17.9287310Z     "message": "Record deleted",
+2026-06-30T10:37:17.9287547Z     "data": null
+2026-06-30T10:37:17.9287733Z }
+2026-06-30T10:37:17.9288000Z ✓ Item deleted successfully
+2026-06-30T10:37:17.9365696Z .
+2026-06-30T10:37:17.9366102Z === STEP 7: Delete Category (Now Succeeds) ===
+2026-06-30T10:37:17.9366542Z Category ID: 2
+2026-06-30T10:37:17.9366750Z Category is now empty
+2026-06-30T10:37:17.9367022Z Request: DELETE /categories/2
+2026-06-30T10:37:17.9367279Z Response Status: 200
+2026-06-30T10:37:17.9367494Z Response: {
+2026-06-30T10:37:17.9367677Z     "status": 200,
+2026-06-30T10:37:17.9367899Z     "message": "Record deleted",
+2026-06-30T10:37:17.9368134Z     "data": null
+2026-06-30T10:37:17.9368325Z }
+2026-06-30T10:37:17.9368597Z ✓ Category deleted successfully
+2026-06-30T10:37:17.9468653Z .
+2026-06-30T10:37:17.9469022Z === STEP 8: Verify Cleanup ===
+2026-06-30T10:37:17.9469504Z Request: GET /categories/2
+2026-06-30T10:37:17.9469920Z Response Status: 404
+2026-06-30T10:37:17.9470454Z ✓ Category properly deleted (not found)
+2026-06-30T10:37:17.9470924Z Request: GET /items/1
+2026-06-30T10:37:17.9471512Z Response Status: 404
+2026-06-30T10:37:17.9471995Z ✓ Item properly deleted (not found)
+2026-06-30T10:37:18.0103299Z .
+2026-06-30T10:37:18.0103658Z === Test 1: Register User ===
+2026-06-30T10:37:18.0104092Z Response Status: 201
+2026-06-30T10:37:18.0104448Z ✓ User registered
+2026-06-30T10:37:18.0744020Z .
+2026-06-30T10:37:18.0744457Z === Test 2: Login Returns Tokens ===
+2026-06-30T10:37:18.0744986Z Response Status: 200
+2026-06-30T10:37:18.0745692Z ✓ Login successful, received tokens
+2026-06-30T10:37:18.0746775Z Access Token: ***
+2026-06-30T10:37:18.0747287Z Expires In: 900 seconds
+2026-06-30T10:37:18.0845119Z .S
+2026-06-30T10:37:18.0845654Z === Test 4: Token Rotation - Old Token Cannot Be Reused ===
+2026-06-30T10:37:18.0846228Z Response Status: 401
+2026-06-30T10:37:18.0846667Z ✓ Invalid refresh token properly rejected
+2026-06-30T10:37:18.0898848Z .
+2026-06-30T10:37:18.0899098Z === Test 5: Missing Refresh Token ===
+2026-06-30T10:37:18.0899480Z Response Status: 400
+2026-06-30T10:37:18.0899943Z ✓ Missing refresh token properly rejected
+2026-06-30T10:37:18.0910908Z .                                               19 / 19 (100%)
+2026-06-30T10:37:18.0911367Z 
+2026-06-30T10:37:18.0912253Z Time: 00:03.520, Memory: 10.00 MB
+2026-06-30T10:37:18.0912630Z 
+2026-06-30T10:37:18.0912978Z Change Tracking E2E (SPLK2\Tests\Integration\ChangeTrackingE2E)
+2026-06-30T10:37:18.0913822Z  ✔ 01 RegisterUser
+2026-06-30T10:37:18.0914308Z  ✔ 02 LoginUser
+2026-06-30T10:37:18.0914887Z  ✔ 03 CreateCategoryWithChangeTracking
+2026-06-30T10:37:18.0915637Z  ✔ 04 UpdateCategoryWithChangeTracking
+2026-06-30T10:37:18.0916184Z  ✔ 05 DeleteCategoryWithChangeTracking
+2026-06-30T10:37:18.0916653Z  ✔ 06 VerifyFullAuditTrail
+2026-06-30T10:37:18.0916815Z 
+2026-06-30T10:37:18.0916955Z E2EWorkflow (SPLK2\Tests\Integration\E2EWorkflow)
+2026-06-30T10:37:18.0917300Z  ✔ 01 RegisterNewUser
+2026-06-30T10:37:18.0917530Z  ✔ 02 LoginUser
+2026-06-30T10:37:18.0917745Z  ✔ 03 CreateCategory
+2026-06-30T10:37:18.0917966Z  ✔ 04 CreateItem
+2026-06-30T10:37:18.0918207Z  ✔ 05 TryDeleteCategoryWithItems
+2026-06-30T10:37:18.0918482Z  ✔ 06 DeleteItem
+2026-06-30T10:37:18.0918711Z  ✔ 07 DeleteCategory
+2026-06-30T10:37:18.0918940Z  ✔ 08 VerifyCleanup
+2026-06-30T10:37:18.0919073Z 
+2026-06-30T10:37:18.0919203Z Refresh Token (SPLK2\Tests\Integration\RefreshToken)
+2026-06-30T10:37:18.0919531Z  ✔ 01 RegisterUser
+2026-06-30T10:37:18.0919774Z  ✔ 02 LoginReturnsTokens
+2026-06-30T10:37:18.0920064Z  ↩ 03 RefreshTokenReturnsNewAccessToken
+2026-06-30T10:37:18.0920404Z  ✔ 04 OldRefreshTokenCannotBeReused
+2026-06-30T10:37:18.0920712Z  ✔ 05 MissingRefreshTokenReturnsError
+2026-06-30T10:37:18.0920895Z 
+2026-06-30T10:37:18.0920995Z OK, but some tests were skipped!
+2026-06-30T10:37:18.0921506Z Tests: 19, Assertions: 63, Skipped: 1.
+2026-06-30T10:37:18.0921690Z 
+2026-06-30T10:37:18.7010905Z Generating code coverage report in Cobertura XML format ... done [00:00.609]
+2026-06-30T10:37:18.7149599Z ##[group]Run echo "=== Killing PHP servers ==="
+2026-06-30T10:37:18.7150007Z [36;1mecho "=== Killing PHP servers ==="[0m
+2026-06-30T10:37:18.7150318Z [36;1mpkill -f "php -S" || true[0m
+2026-06-30T10:37:18.7150582Z [36;1msleep 1[0m
+2026-06-30T10:37:18.7150788Z [36;1m[0m
+2026-06-30T10:37:18.7151072Z [36;1mecho "=== Cache state BEFORE cleanup (Integration Tests) ==="[0m
+2026-06-30T10:37:18.7151831Z [36;1mif [ -d log/rate_limit ]; then[0m
+2026-06-30T10:37:18.7152139Z [36;1m  echo "Cache files exist:"[0m
+2026-06-30T10:37:18.7152468Z [36;1m  find log/rate_limit -type f 2>/dev/null | wc -l[0m
+2026-06-30T10:37:18.7152803Z [36;1melse[0m
+2026-06-30T10:37:18.7153018Z [36;1m  echo "No cache directory"[0m
+2026-06-30T10:37:18.7153270Z [36;1mfi[0m
+2026-06-30T10:37:18.7153457Z [36;1m[0m
+2026-06-30T10:37:18.7153657Z [36;1mecho "=== Clearing cache ==="[0m
+2026-06-30T10:37:18.7153955Z [36;1mrm -rf log/rate_limit 2>/dev/null || true[0m
+2026-06-30T10:37:18.7154285Z [36;1m[0m
+2026-06-30T10:37:18.7154496Z [36;1mecho "=== Verify cache cleared ==="[0m
+2026-06-30T10:37:18.7154782Z [36;1mif [ -d log/rate_limit ]; then[0m
+2026-06-30T10:37:18.7155060Z [36;1m  echo "ERROR: Cache still exists!"[0m
+2026-06-30T10:37:18.7155390Z [36;1m  find log/rate_limit -type f 2>/dev/null | wc -l[0m
+2026-06-30T10:37:18.7155693Z [36;1melse[0m
+2026-06-30T10:37:18.7155930Z [36;1m  echo "✓ Cache cleared successfully"[0m
+2026-06-30T10:37:18.7156214Z [36;1mfi[0m
+2026-06-30T10:37:18.7156401Z [36;1msleep 1[0m
+2026-06-30T10:37:18.7188205Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:18.7188466Z env:
+2026-06-30T10:37:18.7188684Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:18.7188946Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:18.7189192Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:18.7189409Z ##[endgroup]
+2026-06-30T10:37:18.7241948Z === Killing PHP servers ===
+2026-06-30T10:37:19.7457312Z === Cache state BEFORE cleanup (Integration Tests) ===
+2026-06-30T10:37:19.7457849Z Cache files exist:
+2026-06-30T10:37:19.7473047Z 3
+2026-06-30T10:37:19.7475165Z === Clearing cache ===
+2026-06-30T10:37:19.7488842Z === Verify cache cleared ===
+2026-06-30T10:37:19.7489577Z ✓ Cache cleared successfully
+2026-06-30T10:37:20.7532984Z ##[group]Run cd api
+2026-06-30T10:37:20.7533301Z [36;1mcd api[0m
+2026-06-30T10:37:20.7533501Z [36;1m[0m
+2026-06-30T10:37:20.7533717Z [36;1m# Kill any remaining PHP processes[0m
+2026-06-30T10:37:20.7534050Z [36;1mecho "=== Killing all PHP servers ==="[0m
+2026-06-30T10:37:20.7534392Z [36;1mpkill -f "php -S" || true[0m
+2026-06-30T10:37:20.7534651Z [36;1msleep 2[0m
+2026-06-30T10:37:20.7535023Z [36;1m[0m
+2026-06-30T10:37:20.7535230Z [36;1m# Verify no PHP servers are running[0m
+2026-06-30T10:37:20.7535558Z [36;1mecho "=== Verifying PHP servers are killed ==="[0m
+2026-06-30T10:37:20.7535897Z [36;1mif pgrep -f "php -S" > /dev/null; then[0m
+2026-06-30T10:37:20.7536279Z [36;1m  echo "⚠ Some PHP servers still running, killing forcefully"[0m
+2026-06-30T10:37:20.7536657Z [36;1m  pkill -9 -f "php -S" || true[0m
+2026-06-30T10:37:20.7537256Z [36;1m  sleep 1[0m
+2026-06-30T10:37:20.7537536Z [36;1mfi[0m
+2026-06-30T10:37:20.7537716Z [36;1m[0m
+2026-06-30T10:37:20.7537962Z [36;1m# Debug: Show cache state before cleanup[0m
+2026-06-30T10:37:20.7538296Z [36;1mecho "=== Cache state BEFORE cleanup ==="[0m
+2026-06-30T10:37:20.7538605Z [36;1mif [ -d ../log/rate_limit ]; then[0m
+2026-06-30T10:37:20.7538949Z [36;1m  echo "Cache directory exists: ../log/rate_limit"[0m
+2026-06-30T10:37:20.7539340Z [36;1m  ls -la ../log/rate_limit 2>/dev/null | head -20[0m
+2026-06-30T10:37:20.7539755Z [36;1m  echo "Total files: $(find ../log/rate_limit -type f 2>/dev/null | wc -l)"[0m
+2026-06-30T10:37:20.7540145Z [36;1melse[0m
+2026-06-30T10:37:20.7540416Z [36;1m  echo "Cache directory does NOT exist: ../log/rate_limit"[0m
+2026-06-30T10:37:20.7540747Z [36;1mfi[0m
+2026-06-30T10:37:20.7540923Z [36;1m[0m
+2026-06-30T10:37:20.7541364Z [36;1m# Clear rate limit cache before starting server[0m
+2026-06-30T10:37:20.7541727Z [36;1mecho "=== Clearing cache ==="[0m
+2026-06-30T10:37:20.7542027Z [36;1mrm -rf ../log/rate_limit 2>/dev/null || true[0m
+2026-06-30T10:37:20.7542307Z [36;1m[0m
+2026-06-30T10:37:20.7542503Z [36;1m# Debug: Verify cleanup[0m
+2026-06-30T10:37:20.7542779Z [36;1mecho "=== Cache state AFTER cleanup ==="[0m
+2026-06-30T10:37:20.7543079Z [36;1mif [ -d ../log/rate_limit ]; then[0m
+2026-06-30T10:37:20.7543425Z [36;1m  echo "ERROR: Cache directory STILL EXISTS after cleanup!"[0m
+2026-06-30T10:37:20.7543823Z [36;1m  ls -la ../log/rate_limit 2>/dev/null | head -20[0m
+2026-06-30T10:37:20.7544122Z [36;1melse[0m
+2026-06-30T10:37:20.7544361Z [36;1m  echo "✓ Cache directory successfully removed"[0m
+2026-06-30T10:37:20.7544657Z [36;1mfi[0m
+2026-06-30T10:37:20.7544829Z [36;1m[0m
+2026-06-30T10:37:20.7545007Z [36;1m# Start server[0m
+2026-06-30T10:37:20.7545287Z [36;1mecho "=== Starting API server ==="[0m
+2026-06-30T10:37:20.7545573Z [36;1mecho "Current directory: $(pwd)"[0m
+2026-06-30T10:37:20.7545876Z [36;1mecho "Files in public/: $(ls public/)"[0m
+2026-06-30T10:37:20.7546181Z [36;1mecho "Checking index.php syntax..."[0m
+2026-06-30T10:37:20.7546470Z [36;1mphp -l public/index.php[0m
+2026-06-30T10:37:20.7546703Z [36;1m[0m
+2026-06-30T10:37:20.7546895Z [36;1m# Clean up any stale log file[0m
+2026-06-30T10:37:20.7547158Z [36;1mrm -f /tmp/api.log[0m
+2026-06-30T10:37:20.7547398Z [36;1mecho "Starting PHP server..."[0m
+2026-06-30T10:37:20.7547718Z [36;1mphp -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &[0m
+2026-06-30T10:37:20.7548038Z [36;1mPHP_PID=$![0m
+2026-06-30T10:37:20.7548288Z [36;1mecho "Started PHP with PID: $PHP_PID"[0m
+2026-06-30T10:37:20.7548561Z [36;1m[0m
+2026-06-30T10:37:20.7548772Z [36;1m# Wait for server to start and stabilize[0m
+2026-06-30T10:37:20.7549082Z [36;1mecho "Waiting for server to start..."[0m
+2026-06-30T10:37:20.7549354Z [36;1msleep 5[0m
+2026-06-30T10:37:20.7549548Z [36;1m[0m
+2026-06-30T10:37:20.7549744Z [36;1m# Check if process is still alive[0m
+2026-06-30T10:37:20.7550036Z [36;1mif ! kill -0 $PHP_PID 2>/dev/null; then[0m
+2026-06-30T10:37:20.7550327Z [36;1m  echo "✗ PHP process died"[0m
+2026-06-30T10:37:20.7550785Z [36;1m  echo "=== PHP Log ==="[0m
+2026-06-30T10:37:20.7551038Z [36;1m  cat /tmp/api.log[0m
+2026-06-30T10:37:20.7551554Z [36;1m  exit 1[0m
+2026-06-30T10:37:20.7551751Z [36;1mfi[0m
+2026-06-30T10:37:20.7551932Z [36;1m[0m
+2026-06-30T10:37:20.7552144Z [36;1m# Test health endpoint with timeout[0m
+2026-06-30T10:37:20.7552462Z [36;1mecho "=== Testing health endpoint ==="[0m
+2026-06-30T10:37:20.7552851Z [36;1mHEALTH=$(curl -s --max-time 5 http://127.0.0.1:8000/health)[0m
+2026-06-30T10:37:20.7553351Z [36;1mCURL_EXIT=$?[0m
+2026-06-30T10:37:20.7553578Z [36;1mecho "Curl exit code: $CURL_EXIT"[0m
+2026-06-30T10:37:20.7553858Z [36;1mecho "Response: $HEALTH"[0m
+2026-06-30T10:37:20.7554091Z [36;1m[0m
+2026-06-30T10:37:20.7554365Z [36;1mif [ $CURL_EXIT -eq 0 ] && echo "$HEALTH" | grep -q '"status"'; then[0m
+2026-06-30T10:37:20.7554765Z [36;1m  echo "✓ API server restarted successfully"[0m
+2026-06-30T10:37:20.7555060Z [36;1melse[0m
+2026-06-30T10:37:20.7555350Z [36;1m  echo "✗ API server failed to restart (curl exit: $CURL_EXIT)"[0m
+2026-06-30T10:37:20.7555721Z [36;1m  echo "=== PHP Log ==="[0m
+2026-06-30T10:37:20.7555969Z [36;1m  tail -50 /tmp/api.log[0m
+2026-06-30T10:37:20.7556225Z [36;1m  echo "=== PHP processes ==="[0m
+2026-06-30T10:37:20.7556513Z [36;1m  ps aux | grep php | grep -v grep[0m
+2026-06-30T10:37:20.7556777Z [36;1m  exit 1[0m
+2026-06-30T10:37:20.7556964Z [36;1mfi[0m
+2026-06-30T10:37:20.7587730Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:20.7587992Z env:
+2026-06-30T10:37:20.7588191Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:20.7588445Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:20.7588687Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:20.7588903Z ##[endgroup]
+2026-06-30T10:37:20.7639869Z === Killing all PHP servers ===
+2026-06-30T10:37:22.7775151Z === Verifying PHP servers are killed ===
+2026-06-30T10:37:22.7894064Z === Cache state BEFORE cleanup ===
+2026-06-30T10:37:22.7894667Z Cache directory does NOT exist: ../log/rate_limit
+2026-06-30T10:37:22.7895331Z === Clearing cache ===
+2026-06-30T10:37:22.7906098Z === Cache state AFTER cleanup ===
+2026-06-30T10:37:22.7906969Z ✓ Cache directory successfully removed
+2026-06-30T10:37:22.7907643Z === Starting API server ===
+2026-06-30T10:37:22.7910623Z Current directory: /home/runner/work/splk2/splk2/api
+2026-06-30T10:37:22.7925808Z Files in public/: index.php
+2026-06-30T10:37:22.7926269Z openapi.yaml
+2026-06-30T10:37:22.7926624Z router.php
+2026-06-30T10:37:22.7927118Z Checking index.php syntax...
+2026-06-30T10:37:22.8315534Z No syntax errors detected in public/index.php
+2026-06-30T10:37:22.8396968Z Starting PHP server...
+2026-06-30T10:37:22.8399312Z Started PHP with PID: 3709
+2026-06-30T10:37:22.8399967Z Waiting for server to start...
+2026-06-30T10:37:27.8417517Z === Testing health endpoint ===
+2026-06-30T10:37:27.8647580Z Curl exit code: 0
+2026-06-30T10:37:27.8648701Z Response: {"status":"operational","database":"OK","uptime":0,"timestamp":"2026-06-30T10:37:27+00:00","version":"1.0.0"}
+2026-06-30T10:37:27.8664743Z ✓ API server restarted successfully
+2026-06-30T10:37:27.8690532Z ##[group]Run ./vendor/bin/phpunit \
+2026-06-30T10:37:27.8690922Z [36;1m./vendor/bin/phpunit \[0m
+2026-06-30T10:37:27.8691516Z [36;1m  --coverage-clover coverage.xml \[0m
+2026-06-30T10:37:27.8691832Z [36;1m  --display-deprecations \[0m
+2026-06-30T10:37:27.8692117Z [36;1m  --display-warnings[0m
+2026-06-30T10:37:27.8722589Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:27.8722844Z env:
+2026-06-30T10:37:27.8723064Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:27.8723322Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:27.8723558Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:27.8723766Z   DB_HOST: 127.0.0.1:3306
+2026-06-30T10:37:27.8723982Z   DB_USERNAME: root
+2026-06-30T10:37:27.8724178Z   DB_PASSWORD: root
+2026-06-30T10:37:27.8724364Z   DB_NAME: splk
+2026-06-30T10:37:27.8724551Z   APP_ENV: local
+2026-06-30T10:37:27.8724860Z   CORS_ALLOWED_ORIGINS: http://localhost:8000,http://127.0.0.1:8000
+2026-06-30T10:37:27.8725233Z   RATE_LIMIT_GUEST: 10000
+2026-06-30T10:37:27.8725491Z   RATE_LIMIT_USER: 10000
+2026-06-30T10:37:27.8725706Z ##[endgroup]
+2026-06-30T10:37:27.9422334Z ✓ API is running at http://localhost:8000
+2026-06-30T10:37:27.9899594Z PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+2026-06-30T10:37:27.9900152Z 
+2026-06-30T10:37:27.9900379Z Runtime:       PHP 8.3.31 with Xdebug 3.5.3
+2026-06-30T10:37:27.9901384Z Configuration: /home/runner/work/splk2/splk2/api/phpunit.xml
+2026-06-30T10:37:27.9902291Z 
+2026-06-30T10:37:28.0749646Z 
+2026-06-30T10:37:28.0750197Z === STEP 1: Register User for Change Tracking ===
+2026-06-30T10:37:28.0750965Z Email: change-tracking-1782815847-983608@example.com
+2026-06-30T10:37:28.0751767Z Response Status: 201
+2026-06-30T10:37:28.0752224Z ✓ User registered
+2026-06-30T10:37:28.1424741Z .
+2026-06-30T10:37:28.1425076Z === STEP 2: Login User ===
+2026-06-30T10:37:28.1425478Z Response Status: 200
+2026-06-30T10:37:28.1425880Z ✓ Login successful
+2026-06-30T10:37:29.1569937Z .
+2026-06-30T10:37:29.1570408Z === STEP 3: Create Category (Check new_values) ===
+2026-06-30T10:37:29.1571001Z Request: POST /categories
+2026-06-30T10:37:29.1571667Z Data: {"name":"Change Tracking Test Category"}
+2026-06-30T10:37:29.1572178Z Response Status: 201
+2026-06-30T10:37:29.1572787Z ✓ Category created (ID: 3)
+2026-06-30T10:37:29.1573043Z 
+2026-06-30T10:37:29.1573193Z Audit Log Response:
+2026-06-30T10:37:29.1573523Z {
+2026-06-30T10:37:29.1573702Z     "status": 200,
+2026-06-30T10:37:29.1573919Z     "data": [
+2026-06-30T10:37:29.1574107Z         {
+2026-06-30T10:37:29.1574284Z             "id": 12,
+2026-06-30T10:37:29.1574504Z             "user_id": 4,
+2026-06-30T10:37:29.1574721Z             "action_id": 2,
+2026-06-30T10:37:29.1574956Z             "table_name": "categories",
+2026-06-30T10:37:29.1575212Z             "record_id": 3,
+2026-06-30T10:37:29.1575440Z             "details": "Record created",
+2026-06-30T10:37:29.1575772Z             "data": "{\"name\": \"Change Tracking Test Category\"}",
+2026-06-30T10:37:29.1576101Z             "old_values": null,
+2026-06-30T10:37:29.1576423Z             "new_values": "{\"name\": \"Change Tracking Test Category\"}",
+2026-06-30T10:37:29.1576771Z             "ip_address": "127.0.0.1",
+2026-06-30T10:37:29.1577033Z             "user_agent": null,
+2026-06-30T10:37:29.1577283Z             "created_at": "2026-06-30 10:37:28"
+2026-06-30T10:37:29.1577551Z         }
+2026-06-30T10:37:29.1577724Z     ],
+2026-06-30T10:37:29.1577902Z     "message": "Records found",
+2026-06-30T10:37:29.1578141Z     "error": null
+2026-06-30T10:37:29.1578331Z }
+2026-06-30T10:37:29.1578546Z ✓ Audit log verified:
+2026-06-30T10:37:29.1578813Z   - new_values: {"name": "Change Tracking Test Category"}
+2026-06-30T10:37:29.1579363Z   - old_values: NULL
+2026-06-30T10:37:30.1716626Z .
+2026-06-30T10:37:30.1717159Z === STEP 4: Update Category (Check old_values + new_values) ===
+2026-06-30T10:37:30.1717752Z Request: PUT /categories/3
+2026-06-30T10:37:30.1718221Z Data: {"name":"Updated Change Tracking Category"}
+2026-06-30T10:37:30.1718729Z Response Status: 200
+2026-06-30T10:37:30.1719721Z ✓ Category updated
+2026-06-30T10:37:30.1719965Z 
+2026-06-30T10:37:30.1720114Z Audit Log Response:
+2026-06-30T10:37:30.1720470Z {
+2026-06-30T10:37:30.1720774Z     "status": 200,
+2026-06-30T10:37:30.1721109Z     "data": [
+2026-06-30T10:37:30.1721663Z         {
+2026-06-30T10:37:30.1721961Z             "id": 13,
+2026-06-30T10:37:30.1722317Z             "user_id": 4,
+2026-06-30T10:37:30.1722691Z             "action_id": 3,
+2026-06-30T10:37:30.1723118Z             "table_name": "categories",
+2026-06-30T10:37:30.1723563Z             "record_id": 3,
+2026-06-30T10:37:30.1723966Z             "details": "Record updated",
+2026-06-30T10:37:30.1724533Z             "data": "{\"name\": \"Updated Change Tracking Category\"}",
+2026-06-30T10:37:30.1725929Z             "old_values": "{\"id\": 3, \"name\": \"Change Tracking Test Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-06-30 10:37:28\", \"is_deleted\": 0, \"updated_at\": \"2026-06-30 10:37:28\"}",
+2026-06-30T10:37:30.1728071Z             "new_values": "{\"id\": 3, \"name\": \"Updated Change Tracking Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-06-30 10:37:28\", \"is_deleted\": 0, \"updated_at\": \"2026-06-30 10:37:28\"}",
+2026-06-30T10:37:30.1729410Z             "ip_address": "127.0.0.1",
+2026-06-30T10:37:30.1729845Z             "user_agent": null,
+2026-06-30T10:37:30.1730268Z             "created_at": "2026-06-30 10:37:29"
+2026-06-30T10:37:30.1730968Z         }
+2026-06-30T10:37:30.1731524Z     ],
+2026-06-30T10:37:30.1731873Z     "message": "Records found",
+2026-06-30T10:37:30.1732301Z     "error": null
+2026-06-30T10:37:30.1732636Z }
+2026-06-30T10:37:30.1733002Z ✓ Audit log verified:
+2026-06-30T10:37:30.1733671Z   - old_values: {"id": 3, "name": "Change Tracking Test Category", "position": 0, "parent_id": null, "created_at": "2026-06-30 10:37:28", "is_deleted": 0, "updated_at": "2026-06-30 10:37:28"}
+2026-06-30T10:37:30.1734820Z   - new_values: {"id": 3, "name": "Updated Change Tracking Category", "position": 0, "parent_id": null, "created_at": "2026-06-30 10:37:28", "is_deleted": 0, "updated_at": "2026-06-30 10:37:28"}
+2026-06-30T10:37:31.1870881Z .
+2026-06-30T10:37:31.1871580Z === STEP 5: Delete Category (Check old_values) ===
+2026-06-30T10:37:31.1872005Z Request: DELETE /categories/3
+2026-06-30T10:37:31.1872269Z Response Status: 200
+2026-06-30T10:37:31.1872671Z ✓ Category deleted
+2026-06-30T10:37:31.1872798Z 
+2026-06-30T10:37:31.1872916Z Audit Log Response:
+2026-06-30T10:37:31.1873111Z {
+2026-06-30T10:37:31.1873282Z     "status": 200,
+2026-06-30T10:37:31.1873478Z     "data": [
+2026-06-30T10:37:31.1873658Z         {
+2026-06-30T10:37:31.1873831Z             "id": 14,
+2026-06-30T10:37:31.1874032Z             "user_id": 4,
+2026-06-30T10:37:31.1874245Z             "action_id": 4,
+2026-06-30T10:37:31.1874476Z             "table_name": "categories",
+2026-06-30T10:37:31.1874735Z             "record_id": 3,
+2026-06-30T10:37:31.1874961Z             "details": "Record deleted",
+2026-06-30T10:37:31.1875212Z             "data": null,
+2026-06-30T10:37:31.1875937Z             "old_values": "{\"id\": 3, \"name\": \"Updated Change Tracking Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-06-30 10:37:28\", \"is_deleted\": 0, \"updated_at\": \"2026-06-30 10:37:29\"}",
+2026-06-30T10:37:31.1876707Z             "new_values": null,
+2026-06-30T10:37:31.1876950Z             "ip_address": "127.0.0.1",
+2026-06-30T10:37:31.1877208Z             "user_agent": null,
+2026-06-30T10:37:31.1877470Z             "created_at": "2026-06-30 10:37:30"
+2026-06-30T10:37:31.1877732Z         }
+2026-06-30T10:37:31.1877909Z     ],
+2026-06-30T10:37:31.1878092Z     "message": "Records found",
+2026-06-30T10:37:31.1878328Z     "error": null
+2026-06-30T10:37:31.1878521Z }
+2026-06-30T10:37:31.1878730Z ✓ Audit log verified:
+2026-06-30T10:37:31.1879392Z   - old_values: {"id": 3, "name": "Updated Change Tracking Category", "position": 0, "parent_id": null, "created_at": "2026-06-30 10:37:28", "is_deleted": 0, "updated_at": "2026-06-30 10:37:29"}
+2026-06-30T10:37:31.1880339Z   - new_values: NULL
+2026-06-30T10:37:31.1945198Z .
+2026-06-30T10:37:31.1945579Z === STEP 6: Verify Full Audit Trail ===
+2026-06-30T10:37:31.1946071Z Total audit entries: 3
+2026-06-30T10:37:31.1946301Z 
+2026-06-30T10:37:31.1946449Z Audit Actions Found:
+2026-06-30T10:37:31.1946821Z   - Record created
+2026-06-30T10:37:31.1947173Z   - Record updated
+2026-06-30T10:37:31.1947500Z   - Record deleted
+2026-06-30T10:37:31.1947726Z 
+2026-06-30T10:37:31.1948030Z ✓ Full audit trail verified!
+2026-06-30T10:37:31.1948496Z   - CREATE with new_values ✓
+2026-06-30T10:37:31.1948968Z   - UPDATE with old_values + new_values ✓
+2026-06-30T10:37:31.1949421Z   - DELETE with old_values ✓
+2026-06-30T10:37:31.2593587Z .
+2026-06-30T10:37:31.2593993Z === STEP 1: Register New User ===
+2026-06-30T10:37:31.2594461Z Request: POST /register
+2026-06-30T10:37:31.2594908Z Email: e2e-test-1782815847-130677@example.com
+2026-06-30T10:37:31.2595400Z Response Status: 201
+2026-06-30T10:37:31.2595752Z Response: {
+2026-06-30T10:37:31.2596101Z     "status": 201,
+2026-06-30T10:37:31.2596467Z     "message": "Record created",
+2026-06-30T10:37:31.2596873Z     "data": {
+2026-06-30T10:37:31.2597197Z         "id": "5"
+2026-06-30T10:37:31.2597525Z     }
+2026-06-30T10:37:31.2597813Z }
+2026-06-30T10:37:31.2598399Z ✓ User registered successfully (ID: 5)
+2026-06-30T10:37:31.3243739Z .
+2026-06-30T10:37:31.3244347Z === STEP 2: Login User ===
+2026-06-30T10:37:31.3257649Z Request: POST /login
+2026-06-30T10:37:31.3258111Z Email: e2e-test-1782815847-130677@example.com
+2026-06-30T10:37:31.3258533Z Response Status: 200
+2026-06-30T10:37:31.3258972Z ✓ Login successful
+2026-06-30T10:37:31.3259498Z Access Token: ***
+2026-06-30T10:37:31.3259719Z Refresh Token: ...
+2026-06-30T10:37:31.3364684Z .
+2026-06-30T10:37:31.3365069Z === STEP 3: Create Category ===
+2026-06-30T10:37:31.3365701Z Authorization: ***
+2026-06-30T10:37:31.3365945Z Request: POST /categories
+2026-06-30T10:37:31.3366193Z Response Status: 201
+2026-06-30T10:37:31.3366417Z Response: {
+2026-06-30T10:37:31.3366630Z     "status": 201,
+2026-06-30T10:37:31.3366851Z     "message": "Record created",
+2026-06-30T10:37:31.3367089Z     "data": {
+2026-06-30T10:37:31.3367269Z         "id": "4"
+2026-06-30T10:37:31.3367456Z     }
+2026-06-30T10:37:31.3367628Z }
+2026-06-30T10:37:31.3367986Z ✓ Category created successfully (ID: 4)
+2026-06-30T10:37:31.3440346Z .
+2026-06-30T10:37:31.3440573Z === STEP 4: Create Item ===
+2026-06-30T10:37:31.3440856Z Category ID: 4
+2026-06-30T10:37:31.3441384Z Request: POST /items
+2026-06-30T10:37:31.3441620Z Response Status: 201
+2026-06-30T10:37:31.3441822Z Response: {
+2026-06-30T10:37:31.3442003Z     "status": 201,
+2026-06-30T10:37:31.3442209Z     "message": "Record created",
+2026-06-30T10:37:31.3442451Z     "data": {
+2026-06-30T10:37:31.3442640Z         "id": "2"
+2026-06-30T10:37:31.3442822Z     }
+2026-06-30T10:37:31.3442986Z }
+2026-06-30T10:37:31.3443304Z ✓ Item created successfully (ID: 2)
+2026-06-30T10:37:31.3512557Z .
+2026-06-30T10:37:31.3512970Z === STEP 5: Try Delete Category (Should Fail) ===
+2026-06-30T10:37:31.3513443Z Category ID: 4
+2026-06-30T10:37:31.3513654Z Category has 2 item(s)
+2026-06-30T10:37:31.3513900Z Request: DELETE /categories/4
+2026-06-30T10:37:31.3514156Z Response Status: 409
+2026-06-30T10:37:31.3514367Z Response: {
+2026-06-30T10:37:31.3514552Z     "status": 409,
+2026-06-30T10:37:31.3514860Z     "message": "Cannot delete category with items. Remove items first.",
+2026-06-30T10:37:31.3515229Z     "data": null,
+2026-06-30T10:37:31.3515437Z     "error": "Unknown error"
+2026-06-30T10:37:31.3515660Z }
+2026-06-30T10:37:31.3516042Z ✓ Correctly prevented deletion (business rule enforced)
+2026-06-30T10:37:31.3516368Z   Error: Unknown error
+2026-06-30T10:37:31.3599634Z .
+2026-06-30T10:37:31.3599986Z === STEP 6: Delete Item ===
+2026-06-30T10:37:31.3600407Z Item ID: 2
+2026-06-30T10:37:31.3600727Z Request: DELETE /items/2
+2026-06-30T10:37:31.3601128Z Response Status: 200
+2026-06-30T10:37:31.3601723Z Response: {
+2026-06-30T10:37:31.3602040Z     "status": 200,
+2026-06-30T10:37:31.3602701Z     "message": "Record deleted",
+2026-06-30T10:37:31.3603135Z     "data": null
+2026-06-30T10:37:31.3603461Z }
+2026-06-30T10:37:31.3603941Z ✓ Item deleted successfully
+2026-06-30T10:37:31.3692044Z .
+2026-06-30T10:37:31.3692479Z === STEP 7: Delete Category (Now Succeeds) ===
+2026-06-30T10:37:31.3692992Z Category ID: 4
+2026-06-30T10:37:31.3693343Z Category is now empty
+2026-06-30T10:37:31.3693736Z Request: DELETE /categories/4
+2026-06-30T10:37:31.3694173Z Response Status: 200
+2026-06-30T10:37:31.3694528Z Response: {
+2026-06-30T10:37:31.3694847Z     "status": 200,
+2026-06-30T10:37:31.3695208Z     "message": "Record deleted",
+2026-06-30T10:37:31.3695615Z     "data": null
+2026-06-30T10:37:31.3695937Z }
+2026-06-30T10:37:31.3696416Z ✓ Category deleted successfully
+2026-06-30T10:37:31.3801036Z .
+2026-06-30T10:37:31.3801576Z === STEP 8: Verify Cleanup ===
+2026-06-30T10:37:31.3802022Z Request: GET /categories/4
+2026-06-30T10:37:31.3802282Z Response Status: 404
+2026-06-30T10:37:31.3802716Z ✓ Category properly deleted (not found)
+2026-06-30T10:37:31.3803023Z Request: GET /items/2
+2026-06-30T10:37:31.3803237Z Response Status: 404
+2026-06-30T10:37:31.3803497Z ✓ Item properly deleted (not found)
+2026-06-30T10:37:31.4443889Z .
+2026-06-30T10:37:31.4444281Z === Test 1: Register User ===
+2026-06-30T10:37:31.4444725Z Response Status: 201
+2026-06-30T10:37:31.4445315Z ✓ User registered
+2026-06-30T10:37:31.5109079Z .
+2026-06-30T10:37:31.5109732Z === Test 2: Login Returns Tokens ===
+2026-06-30T10:37:31.5110071Z Response Status: 200
+2026-06-30T10:37:31.5110543Z ✓ Login successful, received tokens
+2026-06-30T10:37:31.5111536Z Access Token: ***
+2026-06-30T10:37:31.5111799Z Expires In: 900 seconds
+2026-06-30T10:37:31.5213928Z .S
+2026-06-30T10:37:31.5214418Z === Test 4: Token Rotation - Old Token Cannot Be Reused ===
+2026-06-30T10:37:31.5215007Z Response Status: 401
+2026-06-30T10:37:31.5215646Z ✓ Invalid refresh token properly rejected
+2026-06-30T10:37:31.5264345Z .
+2026-06-30T10:37:31.5264699Z === Test 5: Missing Refresh Token ===
+2026-06-30T10:37:31.5265156Z Response Status: 400
+2026-06-30T10:37:31.5265561Z ✓ Missing refresh token properly rejected
+2026-06-30T10:37:31.9573389Z .......................W.....................  63 / 157 ( 40%)
+2026-06-30T10:37:32.1258812Z ...........................DD.................................. 126 / 157 ( 80%)
+2026-06-30T10:37:32.2701959Z ...............................                                 157 / 157 (100%)
+2026-06-30T10:37:32.2702547Z 
+2026-06-30T10:37:32.2702720Z Time: 00:04.278, Memory: 24.00 MB
+2026-06-30T10:37:32.2703023Z 
+2026-06-30T10:37:32.2703326Z Change Tracking E2E (SPLK2\Tests\Integration\ChangeTrackingE2E)
+2026-06-30T10:37:32.2704202Z  ✔ 01 RegisterUser
+2026-06-30T10:37:32.2704644Z  ✔ 02 LoginUser
+2026-06-30T10:37:32.2705104Z  ✔ 03 CreateCategoryWithChangeTracking
+2026-06-30T10:37:32.2705705Z  ✔ 04 UpdateCategoryWithChangeTracking
+2026-06-30T10:37:32.2706299Z  ✔ 05 DeleteCategoryWithChangeTracking
+2026-06-30T10:37:32.2706868Z  ✔ 06 VerifyFullAuditTrail
+2026-06-30T10:37:32.2707131Z 
+2026-06-30T10:37:32.2707311Z Cors (Tests\Unit\Cors)
+2026-06-30T10:37:32.2707808Z  ✔ Missing configuration throws exception
+2026-06-30T10:37:32.2708408Z  ✔ Allowed origin receives cors headers
+2026-06-30T10:37:32.2708983Z  ✔ Disallowed origin no allow origin header
+2026-06-30T10:37:32.2709544Z  ✔ Subdomain wildcard pattern
+2026-06-30T10:37:32.2710016Z  ✔ Options preflight
+2026-06-30T10:37:32.2710452Z  ✔ Exact origin matching
+2026-06-30T10:37:32.2710956Z  ✔ Whitespace handling in origin list
+2026-06-30T10:37:32.2711788Z  ✔ Wildcard origin not allowed
+2026-06-30T10:37:32.2712307Z  ✔ Multiple origin configuration
+2026-06-30T10:37:32.2712796Z  ✔ Missing origin header
+2026-06-30T10:37:32.2713245Z  ✔ Cors headers structure
+2026-06-30T10:37:32.2713706Z  ✔ Origin with port number
+2026-06-30T10:37:32.2714185Z  ✔ Similar origin rejected
+2026-06-30T10:37:32.2714434Z 
+2026-06-30T10:37:32.2714659Z E2EWorkflow (SPLK2\Tests\Integration\E2EWorkflow)
+2026-06-30T10:37:32.2715244Z  ✔ 01 RegisterNewUser
+2026-06-30T10:37:32.2715940Z  ✔ 02 LoginUser
+2026-06-30T10:37:32.2716356Z  ✔ 03 CreateCategory
+2026-06-30T10:37:32.2716759Z  ✔ 04 CreateItem
+2026-06-30T10:37:32.2717186Z  ✔ 05 TryDeleteCategoryWithItems
+2026-06-30T10:37:32.2717653Z  ✔ 06 DeleteItem
+2026-06-30T10:37:32.2718042Z  ✔ 07 DeleteCategory
+2026-06-30T10:37:32.2718442Z  ✔ 08 VerifyCleanup
+2026-06-30T10:37:32.2718660Z 
+2026-06-30T10:37:32.2718907Z File Upload Manager (App\Tests\Unit\FileUploadManager)
+2026-06-30T10:37:32.2719537Z  ✔ Get file successfully
+2026-06-30T10:37:32.2719997Z  ✔ Get file fails when not found
+2026-06-30T10:37:32.2720491Z  ✔ Get user files successfully
+2026-06-30T10:37:32.2720962Z  ✔ Get allowed extensions
+2026-06-30T10:37:32.2721626Z  ✔ Get max file size
+2026-06-30T10:37:32.2722115Z  ✔ Handle upload fails with invalid array
+2026-06-30T10:37:32.2722710Z  ✔ Handle upload fails with oversized file
+2026-06-30T10:37:32.2723326Z  ✔ Handle upload fails with invalid extension
+2026-06-30T10:37:32.2723933Z  ✔ Delete file fails when not found
+2026-06-30T10:37:32.2724483Z  ⚠ Delete file fails when not owner
+2026-06-30T10:37:32.2724772Z 
+2026-06-30T10:37:32.2725016Z File Upload Security (Tests\Unit\FileUploadSecurity)
+2026-06-30T10:37:32.2725675Z  ✔ Env example includes file upload config
+2026-06-30T10:37:32.2726245Z  ✔ Uploads directory is outside webroot
+2026-06-30T10:37:32.2726810Z  ✔ Blocked mime types configured
+2026-06-30T10:37:32.2727292Z  ✔ Mime type validation
+2026-06-30T10:37:32.2727982Z  ✔ File content validation
+2026-06-30T10:37:32.2728433Z  ✔ Filenames are randomized
+2026-06-30T10:37:32.2728892Z  ✔ File permissions are secure
+2026-06-30T10:37:32.2729382Z  ✔ Validation failures are logged
+2026-06-30T10:37:32.2729924Z  ✔ Max file size from env
+2026-06-30T10:37:32.2730371Z  ✔ Allowed extensions from env
+2026-06-30T10:37:32.2730656Z 
+2026-06-30T10:37:32.2730846Z Jwt Expiration (Tests\Unit\JwtExpiration)
+2026-06-30T10:37:32.2731941Z  ✔ Jwt expiration env variable
+2026-06-30T10:37:32.2732470Z  ✔ Default jwt expiration is 15 minutes
+2026-06-30T10:37:32.2733052Z  ✔ Env example includes jwt expiration
+2026-06-30T10:37:32.2733602Z  ✔ Jwt expiration is not too long
+2026-06-30T10:37:32.2733889Z 
+2026-06-30T10:37:32.2734099Z Jwt Secret Config (Tests\Unit\JwtSecretConfig)
+2026-06-30T10:37:32.2734704Z  ✔ Missing jwt secret throws exception
+2026-06-30T10:37:32.2735231Z  ✔ Empty jwt secret throws exception
+2026-06-30T10:37:32.2735710Z  ✔ Valid jwt secret loads
+2026-06-30T10:37:32.2736156Z  ✔ Jwt secret not hardcoded
+2026-06-30T10:37:32.2736621Z  ✔ Error message is helpful
+2026-06-30T10:37:32.2737082Z  ✔ Env example no hardcoded secret
+2026-06-30T10:37:32.2737367Z 
+2026-06-30T10:37:32.2737627Z Password Reset (Tests\Unit\PasswordReset)
+2026-06-30T10:37:32.2738174Z  ✔ Password reset class exists
+2026-06-30T10:37:32.2738648Z  ✔ Password reset docs exist
+2026-06-30T10:37:32.2739104Z  ✔ Token expiry is one hour
+2026-06-30T10:37:32.2739557Z  ✔ Rate limit three per hour
+2026-06-30T10:37:32.2740017Z  ✔ Token can only be used once
+2026-06-30T10:37:32.2740477Z  ✔ Passwords are hashed
+2026-06-30T10:37:32.2740906Z  ✔ Token hash used
+2026-06-30T10:37:32.2741558Z  ✔ Reset endpoints exist
+2026-06-30T10:37:32.2741997Z  ✔ Email validation
+2026-06-30T10:37:32.2742423Z  ✔ Other tokens revoked on reset
+2026-06-30T10:37:32.2742934Z  ✔ Password minimum length enforced
+2026-06-30T10:37:32.2743448Z  ✔ Audit logging performed
+2026-06-30T10:37:32.2743915Z  ✔ Email sending is stubbed
+2026-06-30T10:37:32.2744351Z  ✔ Migration exists
+2026-06-30T10:37:32.2744576Z 
+2026-06-30T10:37:32.2744835Z Rate Limiting Security (Tests\Unit\RateLimitingSecurity)
+2026-06-30T10:37:32.2745466Z  ✔ Skip rate limit bypass removed
+2026-06-30T10:37:32.2745962Z  ✔ Login endpoint rate limited
+2026-06-30T10:37:32.2746453Z  ✔ Register endpoint rate limited
+2026-06-30T10:37:32.2746934Z  ✔ Role based rate limiting
+2026-06-30T10:37:32.2747421Z  ✔ Authenticated requests use user id
+2026-06-30T10:37:32.2747933Z  ✔ Rate limit headers set
+2026-06-30T10:37:32.2748391Z  ✔ Env variables for rate limits
+2026-06-30T10:37:32.2749149Z  ✔ Proper http status on rate limit
+2026-06-30T10:37:32.2749659Z  ✔ Retry after header
+2026-06-30T10:37:32.2750098Z  ✔ Only health and docs exempt
+2026-06-30T10:37:32.2750373Z 
+2026-06-30T10:37:32.2750607Z Refresh Token (SPLK2\Tests\Integration\RefreshToken)
+2026-06-30T10:37:32.2751434Z  ✔ 01 RegisterUser
+2026-06-30T10:37:32.2751874Z  ✔ 02 LoginReturnsTokens
+2026-06-30T10:37:32.2752378Z  ↩ 03 RefreshTokenReturnsNewAccessToken
+2026-06-30T10:37:32.2752958Z  ✔ 04 OldRefreshTokenCannotBeReused
+2026-06-30T10:37:32.2753521Z  ✔ 05 MissingRefreshTokenReturnsError
+2026-06-30T10:37:32.2753856Z 
+2026-06-30T10:37:32.2754175Z Role Based Access Control (App\Tests\Unit\RoleBasedAccessControl)
+2026-06-30T10:37:32.2754927Z  ✔ Has role returns true when user has role
+2026-06-30T10:37:32.2755567Z  ✔ Has role returns false when user doesnt have role
+2026-06-30T10:37:32.2756162Z  ✔ Has role with multiple roles
+2026-06-30T10:37:32.2756682Z  ✔ Has role returns false when user is null
+2026-06-30T10:37:32.2757226Z  ⚠ Assign role successfully
+2026-06-30T10:37:32.2757761Z  ⚠ Assign role fails when role already assigned
+2026-06-30T10:37:32.2758337Z  ✔ Assign role fails when user not found
+2026-06-30T10:37:32.2758846Z  ✔ Remove role successfully
+2026-06-30T10:37:32.2759342Z  ✔ Remove role fails when role not assigned
+2026-06-30T10:37:32.2759923Z  ✔ Is owner returns true when user is owner
+2026-06-30T10:37:32.2760508Z  ✔ Is owner returns false when user is not owner
+2026-06-30T10:37:32.2761597Z  ✔ Is owner returns false for non users table
+2026-06-30T10:37:32.2761949Z 
+2026-06-30T10:37:32.2762150Z Rule Validator (SPLK2\Tests\Unit\RuleValidator)
+2026-06-30T10:37:32.2762700Z  ✔ Required field valid
+2026-06-30T10:37:32.2763124Z  ✔ Required field missing
+2026-06-30T10:37:32.2763573Z  ✔ Required field empty string
+2026-06-30T10:37:32.2764020Z  ✔ Required field null
+2026-06-30T10:37:32.2764414Z  ✔ Email type valid
+2026-06-30T10:37:32.2764798Z  ✔ Email type invalid
+2026-06-30T10:37:32.2765196Z  ✔ Integer type valid
+2026-06-30T10:37:32.2765616Z  ✔ Integer type string integer
+2026-06-30T10:37:32.2766096Z  ✔ Integer type float invalid
+2026-06-30T10:37:32.2766557Z  ✔ Float type valid
+2026-06-30T10:37:32.2766949Z  ✔ Boolean type valid
+2026-06-30T10:37:32.2767352Z  ✔ String type valid
+2026-06-30T10:37:32.2767751Z  ✔ MinLength valid
+2026-06-30T10:37:32.2768145Z  ✔ MinLength too short
+2026-06-30T10:37:32.2768547Z  ✔ MaxLength valid
+2026-06-30T10:37:32.2768933Z  ✔ MaxLength too long
+2026-06-30T10:37:32.2769336Z  ✔ Enum valid
+2026-06-30T10:37:32.2769690Z  ✔ Enum invalid
+2026-06-30T10:37:32.2770060Z  ✔ Min value valid
+2026-06-30T10:37:32.2770440Z  ✔ Min value too low
+2026-06-30T10:37:32.2770830Z  ✔ Max value valid
+2026-06-30T10:37:32.2771417Z  ✔ Max value too high
+2026-06-30T10:37:32.2771829Z  ✔ Min float valid
+2026-06-30T10:37:32.2772215Z  ✔ Min float too low
+2026-06-30T10:37:32.2772595Z  ✔ Unique exists
+2026-06-30T10:37:32.2772972Z  ✔ Unique not exists
+2026-06-30T10:37:32.2773363Z  ✔ Unique database 404
+2026-06-30T10:37:32.2773789Z  ✔ Update partial data
+2026-06-30T10:37:32.2774241Z  ✔ Update validates provided
+2026-06-30T10:37:32.2774728Z  ✔ Hook beforeCreate executed
+2026-06-30T10:37:32.2775200Z  ✔ Hook beforeDelete executed
+2026-06-30T10:37:32.2775654Z  ✔ Hook no matching table
+2026-06-30T10:37:32.2776085Z  ✔ Hook no matching hook
+2026-06-30T10:37:32.2776490Z  ✔ Get table rules
+2026-06-30T10:37:32.2776898Z  ✔ GetTableRules nonexistent
+2026-06-30T10:37:32.2777335Z  ✔ HasRules true
+2026-06-30T10:37:32.2777766Z  ✔ HasRules false
+2026-06-30T10:37:32.2778162Z  ✔ Multiple errors
+2026-06-30T10:37:32.2778588Z  ✔ Required stops other validations
+2026-06-30T10:37:32.2779074Z  ✔ No rules for table
+2026-06-30T10:37:32.2779290Z 
+2026-06-30T10:37:32.2779461Z SQLInjection (Tests\Unit\SQLInjection)
+2026-06-30T10:37:32.2780035Z  ✔ Equality condition with malicious input
+2026-06-30T10:37:32.2780600Z  ✔ In condition with malicious input
+2026-06-30T10:37:32.2781132Z  ✔ Like condition with malicious input
+2026-06-30T10:37:32.2781892Z  ✔ Fulltext with malicious input
+2026-06-30T10:37:32.2782623Z  ✔ Multiple conditions with malicious input
+2026-06-30T10:37:32.2783166Z  ✔ Null value handling
+2026-06-30T10:37:32.2783573Z  ✔ Column name quoting
+2026-06-30T10:37:32.2783989Z  ✔ Correct query structure
+2026-06-30T10:37:32.2784443Z  ✔ Special characters in values
+2026-06-30T10:37:32.2784720Z 
+2026-06-30T10:37:32.2784924Z Webhook Manager (App\Tests\Unit\WebhookManager)
+2026-06-30T10:37:32.2785537Z  ✔ Create webhook fails with invalid url
+2026-06-30T10:37:32.2786107Z  ✔ Create webhook fails with empty events
+2026-06-30T10:37:32.2786671Z  ✔ Create webhook fails with invalid event
+2026-06-30T10:37:32.2787209Z  ✔ Update webhook successfully
+2026-06-30T10:37:32.2787712Z  ✔ Update webhook fails when not found
+2026-06-30T10:37:32.2788238Z  ✔ Delete webhook successfully
+2026-06-30T10:37:32.2788712Z  ✔ Get webhook successfully
+2026-06-30T10:37:32.2789184Z  ✔ Get user webhooks successfully
+2026-06-30T10:37:32.2789693Z  ✔ Test webhook fails when not found
+2026-06-30T10:37:32.2790211Z  ✔ Trigger event with no webhooks
+2026-06-30T10:37:32.2790518Z 
+2026-06-30T10:37:32.2790683Z 1 test triggered 1 PHP warning:
+2026-06-30T10:37:32.2790954Z 
+2026-06-30T10:37:32.2791516Z 1) /home/runner/work/splk2/splk2/api/src/RoleBasedAccessControl.php:49
+2026-06-30T10:37:32.2792185Z Undefined array key "status"
+2026-06-30T10:37:32.2792448Z 
+2026-06-30T10:37:32.2792577Z Triggered by:
+2026-06-30T10:37:32.2792770Z 
+2026-06-30T10:37:32.2799207Z * App\Tests\Unit\FileUploadManagerTest::testDeleteFileFailsWhenNotOwner
+2026-06-30T10:37:32.2800387Z   /home/runner/work/splk2/splk2/api/tests/Unit/FileUploadManagerTest.php:175
+2026-06-30T10:37:32.2800948Z 
+2026-06-30T10:37:32.2801110Z OK, but there were issues!
+2026-06-30T10:37:32.2801982Z Tests: 157, Assertions: 356, Warnings: 1, PHPUnit Deprecations: 2, Skipped: 1.
+2026-06-30T10:37:32.2802529Z 
+2026-06-30T10:37:32.4797428Z Generating code coverage report in Clover XML format ... done [00:00.206]
+2026-06-30T10:37:32.4797993Z 
+2026-06-30T10:37:32.4915465Z Generating code coverage report in Cobertura XML format ... done [00:00.011]
+2026-06-30T10:37:32.5044386Z ##[group]Run cd api
+2026-06-30T10:37:32.5044705Z [36;1mcd api[0m
+2026-06-30T10:37:32.5044939Z [36;1mecho "Testing Health Endpoint..."[0m
+2026-06-30T10:37:32.5045221Z [36;1m[0m
+2026-06-30T10:37:32.5045434Z [36;1m# Debug: Show running PHP processes[0m
+2026-06-30T10:37:32.5045760Z [36;1mecho "=== Running PHP processes ==="[0m
+2026-06-30T10:37:32.5046063Z [36;1mps aux | grep php || true[0m
+2026-06-30T10:37:32.5046326Z [36;1m[0m
+2026-06-30T10:37:32.5046519Z [36;1m# Debug: Check if port is open[0m
+2026-06-30T10:37:32.5046800Z [36;1mecho "=== Checking port 8000 ==="[0m
+2026-06-30T10:37:32.5047176Z [36;1mnetstat -tuln | grep 8000 || echo "Port 8000 not found in netstat"[0m
+2026-06-30T10:37:32.5047538Z [36;1m[0m
+2026-06-30T10:37:32.5047752Z [36;1m# Verify API server is still running[0m
+2026-06-30T10:37:32.5048103Z [36;1mif ! pgrep -f "php -S 127.0.0.1:8000" > /dev/null; then[0m
+2026-06-30T10:37:32.5048538Z [36;1m  echo "⚠ API server is not running, starting it..."[0m
+2026-06-30T10:37:32.5048925Z [36;1m  # Show current directory and environment[0m
+2026-06-30T10:37:32.5049246Z [36;1m  echo "Current directory: $(pwd)"[0m
+2026-06-30T10:37:32.5049533Z [36;1m  echo "Current user: $(whoami)"[0m
+2026-06-30T10:37:32.5049872Z [36;1m  echo "Files in public/: $(ls -la public/ | head -5)"[0m
+2026-06-30T10:37:32.5050186Z [36;1m[0m
+2026-06-30T10:37:32.5050432Z [36;1m  php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &[0m
+2026-06-30T10:37:32.5050760Z [36;1m  PHP_PID=$![0m
+2026-06-30T10:37:32.5051029Z [36;1m  echo "Started PHP server with PID: $PHP_PID"[0m
+2026-06-30T10:37:32.5051706Z [36;1m  sleep 5[0m
+2026-06-30T10:37:32.5052001Z [36;1m[0m
+2026-06-30T10:37:32.5052215Z [36;1m  # Check if server is actually running[0m
+2026-06-30T10:37:32.5052535Z [36;1m  if ! kill -0 $PHP_PID 2>/dev/null; then[0m
+2026-06-30T10:37:32.5052872Z [36;1m    echo "✗ PHP process died immediately"[0m
+2026-06-30T10:37:32.5053166Z [36;1m    cat /tmp/api.log[0m
+2026-06-30T10:37:32.5053400Z [36;1m    exit 1[0m
+2026-06-30T10:37:32.5053597Z [36;1m  fi[0m
+2026-06-30T10:37:32.5053778Z [36;1melse[0m
+2026-06-30T10:37:32.5053983Z [36;1m  echo "✓ API server is running"[0m
+2026-06-30T10:37:32.5054239Z [36;1mfi[0m
+2026-06-30T10:37:32.5054416Z [36;1m[0m
+2026-06-30T10:37:32.5054612Z [36;1m# Show server log before testing[0m
+2026-06-30T10:37:32.5054881Z [36;1mecho "=== API Server Log ==="[0m
+2026-06-30T10:37:32.5055250Z [36;1mcat /tmp/api.log 2>/dev/null || echo "No log file"[0m
+2026-06-30T10:37:32.5055556Z [36;1m[0m
+2026-06-30T10:37:32.5055739Z [36;1m# Test with verbose curl[0m
+2026-06-30T10:37:32.5056055Z [36;1mecho "=== Testing health endpoint with verbose curl ==="[0m
+2026-06-30T10:37:32.5056513Z [36;1mHEALTH=$(curl -v --max-time 5 http://localhost:8000/health 2>&1)[0m
+2026-06-30T10:37:32.5056883Z [36;1mCURL_EXIT=$?[0m
+2026-06-30T10:37:32.5057112Z [36;1mecho "Curl exit code: $CURL_EXIT"[0m
+2026-06-30T10:37:32.5057385Z [36;1mecho "Full curl output:"[0m
+2026-06-30T10:37:32.5057634Z [36;1mecho "$HEALTH"[0m
+2026-06-30T10:37:32.5057859Z [36;1m[0m
+2026-06-30T10:37:32.5058147Z [36;1m# Extract just the JSON response (look for lines starting with {)[0m
+2026-06-30T10:37:32.5058601Z [36;1mHEALTH_JSON=$(echo "$HEALTH" | grep -E '^\{' | tail -1)[0m
+2026-06-30T10:37:32.5058969Z [36;1mecho "Health JSON response: $HEALTH_JSON"[0m
+2026-06-30T10:37:32.5059254Z [36;1m[0m
+2026-06-30T10:37:32.5059667Z [36;1m# Verify it's valid JSON and contains 'status'[0m
+2026-06-30T10:37:32.5060025Z [36;1mif echo "$HEALTH_JSON" | grep -q '"status"'; then[0m
+2026-06-30T10:37:32.5060365Z [36;1m  echo "✓ Health endpoint is working"[0m
+2026-06-30T10:37:32.5060637Z [36;1melse[0m
+2026-06-30T10:37:32.5060848Z [36;1m  echo "✗ Health endpoint failed"[0m
+2026-06-30T10:37:32.5061383Z [36;1m  echo "Expected JSON with 'status' field"[0m
+2026-06-30T10:37:32.5061738Z [36;1m  # Try to get more info[0m
+2026-06-30T10:37:32.5062024Z [36;1m  echo "=== Trying to access with curl -s ==="[0m
+2026-06-30T10:37:32.5062539Z [36;1m  curl -s http://localhost:8000/health[0m
+2026-06-30T10:37:32.5062833Z [36;1m  exit 1[0m
+2026-06-30T10:37:32.5063021Z [36;1mfi[0m
+2026-06-30T10:37:32.5093543Z shell: /usr/bin/bash -e {0}
+2026-06-30T10:37:32.5093806Z env:
+2026-06-30T10:37:32.5094018Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:32.5094281Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:32.5094519Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:32.5094751Z ##[endgroup]
+2026-06-30T10:37:32.5147005Z Testing Health Endpoint...
+2026-06-30T10:37:32.5147479Z === Running PHP processes ===
+2026-06-30T10:37:32.5260787Z root         892  0.1  0.3 295272 51932 ?        Ss   10:35   0:00 php-fpm: master process (/etc/php/8.3/fpm/php-fpm.conf)
+2026-06-30T10:37:32.5261963Z www-data    1221  0.0  0.1 295872 21384 ?        S    10:35   0:00 php-fpm: pool www
+2026-06-30T10:37:32.5262513Z www-data    1223  0.0  0.1 295872 21384 ?        S    10:35   0:00 php-fpm: pool www
+2026-06-30T10:37:32.5263121Z runner      3709  4.7  0.3 319120 60292 ?        S    10:37   0:00 php -S 127.0.0.1:8000 -t public
+2026-06-30T10:37:32.5263647Z runner      3758  0.0  0.0   7152  2176 ?        S    10:37   0:00 grep php
+2026-06-30T10:37:32.5267608Z === Checking port 8000 ===
+2026-06-30T10:37:32.6017568Z tcp        0      0 127.0.0.1:8000          0.0.0.0:*               LISTEN     
+2026-06-30T10:37:32.6141554Z ✓ API server is running
+2026-06-30T10:37:32.6141911Z === API Server Log ===
+2026-06-30T10:37:32.6152265Z [Tue Jun 30 10:37:22 2026] PHP Warning:  JIT is incompatible with third party extensions that override zend_execute_ex(). JIT disabled. in Unknown on line 0
+2026-06-30T10:37:32.6153606Z [Tue Jun 30 10:37:22 2026] PHP 8.3.31 Development Server (http://127.0.0.1:8000) started
+2026-06-30T10:37:32.6154359Z [Tue Jun 30 10:37:27 2026] 127.0.0.1:38932 Accepted
+2026-06-30T10:37:32.6154971Z [Tue Jun 30 10:37:27 2026] 127.0.0.1:38932 [200]: GET /health
+2026-06-30T10:37:32.6155355Z [Tue Jun 30 10:37:27 2026] 127.0.0.1:38932 Closing
+2026-06-30T10:37:32.6155671Z [Tue Jun 30 10:37:27 2026] 127.0.0.1:38934 Accepted
+2026-06-30T10:37:32.6155992Z [Tue Jun 30 10:37:27 2026] 127.0.0.1:38934 [401]: POST /login
+2026-06-30T10:37:32.6156332Z [Tue Jun 30 10:37:27 2026] 127.0.0.1:38934 Closing
+2026-06-30T10:37:32.6156641Z [Tue Jun 30 10:37:28 2026] 127.0.0.1:38938 Accepted
+2026-06-30T10:37:32.6156982Z [Tue Jun 30 10:37:28 2026] 127.0.0.1:38938 [201]: POST /register
+2026-06-30T10:37:32.6157327Z [Tue Jun 30 10:37:28 2026] 127.0.0.1:38938 Closing
+2026-06-30T10:37:32.6157624Z [Tue Jun 30 10:37:28 2026] 127.0.0.1:38952 Accepted
+2026-06-30T10:37:32.6158536Z [Tue Jun 30 10:37:28 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 77
+2026-06-30T10:37:32.6159471Z [Tue Jun 30 10:37:28 2026] 127.0.0.1:38952 [200]: POST /login
+2026-06-30T10:37:32.6159794Z [Tue Jun 30 10:37:28 2026] 127.0.0.1:38952 Closing
+2026-06-30T10:37:32.6160091Z [Tue Jun 30 10:37:28 2026] 127.0.0.1:38964 Accepted
+2026-06-30T10:37:32.6160430Z [Tue Jun 30 10:37:28 2026] 127.0.0.1:38964 [201]: POST /categories
+2026-06-30T10:37:32.6160758Z [Tue Jun 30 10:37:28 2026] 127.0.0.1:38964 Closing
+2026-06-30T10:37:32.6161045Z [Tue Jun 30 10:37:29 2026] 127.0.0.1:38972 Accepted
+2026-06-30T10:37:32.6161895Z [Tue Jun 30 10:37:29 2026] 127.0.0.1:38972 [200]: GET /audit_logs?table_name=categories&record_id=3&action_id=2
+2026-06-30T10:37:32.6162667Z [Tue Jun 30 10:37:29 2026] 127.0.0.1:38972 Closing
+2026-06-30T10:37:32.6162959Z [Tue Jun 30 10:37:29 2026] 127.0.0.1:38988 Accepted
+2026-06-30T10:37:32.6163294Z [Tue Jun 30 10:37:29 2026] 127.0.0.1:38988 [200]: PUT /categories/3
+2026-06-30T10:37:32.6163642Z [Tue Jun 30 10:37:29 2026] 127.0.0.1:38988 Closing
+2026-06-30T10:37:32.6163944Z [Tue Jun 30 10:37:30 2026] 127.0.0.1:39000 Accepted
+2026-06-30T10:37:32.6164412Z [Tue Jun 30 10:37:30 2026] 127.0.0.1:39000 [200]: GET /audit_logs?table_name=categories&record_id=3&action_id=3
+2026-06-30T10:37:32.6165031Z [Tue Jun 30 10:37:30 2026] 127.0.0.1:39000 Closing
+2026-06-30T10:37:32.6165335Z [Tue Jun 30 10:37:30 2026] 127.0.0.1:39010 Accepted
+2026-06-30T10:37:32.6165679Z [Tue Jun 30 10:37:30 2026] 127.0.0.1:39010 [200]: DELETE /categories/3
+2026-06-30T10:37:32.6166047Z [Tue Jun 30 10:37:30 2026] 127.0.0.1:39010 Closing
+2026-06-30T10:37:32.6166342Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39024 Accepted
+2026-06-30T10:37:32.6166815Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39024 [200]: GET /audit_logs?table_name=categories&record_id=3&action_id=4
+2026-06-30T10:37:32.6167283Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39024 Closing
+2026-06-30T10:37:32.6167571Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39030 Accepted
+2026-06-30T10:37:32.6167992Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39030 [200]: GET /audit_logs?table_name=categories&record_id=3
+2026-06-30T10:37:32.6168431Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39030 Closing
+2026-06-30T10:37:32.6168719Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39044 Accepted
+2026-06-30T10:37:32.6169050Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39044 [201]: POST /register
+2026-06-30T10:37:32.6169380Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39044 Closing
+2026-06-30T10:37:32.6169666Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39048 Accepted
+2026-06-30T10:37:32.6170556Z [Tue Jun 30 10:37:31 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 77
+2026-06-30T10:37:32.6171947Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39048 [200]: POST /login
+2026-06-30T10:37:32.6172275Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39048 Closing
+2026-06-30T10:37:32.6172565Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39058 Accepted
+2026-06-30T10:37:32.6172896Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39058 [201]: POST /categories
+2026-06-30T10:37:32.6173223Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39058 Closing
+2026-06-30T10:37:32.6173506Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39060 Accepted
+2026-06-30T10:37:32.6174384Z [Tue Jun 30 10:37:31 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 77
+2026-06-30T10:37:32.6175286Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39060 [201]: POST /items
+2026-06-30T10:37:32.6175599Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39060 Closing
+2026-06-30T10:37:32.6175894Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39064 Accepted
+2026-06-30T10:37:32.6176237Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39064 [409]: DELETE /categories/4
+2026-06-30T10:37:32.6176578Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39064 Closing
+2026-06-30T10:37:32.6176863Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39076 Accepted
+2026-06-30T10:37:32.6177183Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39076 [200]: DELETE /items/2
+2026-06-30T10:37:32.6177512Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39076 Closing
+2026-06-30T10:37:32.6177801Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39092 Accepted
+2026-06-30T10:37:32.6178139Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39092 [200]: DELETE /categories/4
+2026-06-30T10:37:32.6178477Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39092 Closing
+2026-06-30T10:37:32.6178764Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39108 Accepted
+2026-06-30T10:37:32.6179099Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39108 [404]: GET /categories/4
+2026-06-30T10:37:32.6179427Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39108 Closing
+2026-06-30T10:37:32.6179862Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39120 Accepted
+2026-06-30T10:37:32.6180180Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39120 [404]: GET /items/2
+2026-06-30T10:37:32.6180508Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39120 Closing
+2026-06-30T10:37:32.6180794Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39136 Accepted
+2026-06-30T10:37:32.6181114Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39136 [201]: POST /register
+2026-06-30T10:37:32.6181699Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39136 Closing
+2026-06-30T10:37:32.6181988Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39140 Accepted
+2026-06-30T10:37:32.6182999Z [Tue Jun 30 10:37:31 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 77
+2026-06-30T10:37:32.6183920Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39140 [200]: POST /login
+2026-06-30T10:37:32.6184249Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39140 Closing
+2026-06-30T10:37:32.6184544Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39152 Accepted
+2026-06-30T10:37:32.6185456Z [Tue Jun 30 10:37:31 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 77
+2026-06-30T10:37:32.6186374Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39152 [401]: POST /auth/refresh
+2026-06-30T10:37:32.6186712Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39152 Closing
+2026-06-30T10:37:32.6187009Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39160 Accepted
+2026-06-30T10:37:32.6187357Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39160 [400]: POST /auth/refresh
+2026-06-30T10:37:32.6187688Z [Tue Jun 30 10:37:31 2026] 127.0.0.1:39160 Closing
+2026-06-30T10:37:32.6188007Z === Testing health endpoint with verbose curl ===
+2026-06-30T10:37:32.6249323Z Curl exit code: 0
+2026-06-30T10:37:32.6249745Z Full curl output:
+2026-06-30T10:37:32.6250137Z * Host localhost:8000 was resolved.
+2026-06-30T10:37:32.6250653Z * IPv6: ::1
+2026-06-30T10:37:32.6250994Z * IPv4: 127.0.0.1
+2026-06-30T10:37:32.6251726Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+2026-06-30T10:37:32.6252207Z                                  Dload  Upload   Total   Spent    Left  Speed
+2026-06-30T10:37:32.6252449Z 
+2026-06-30T10:37:32.6252648Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying [::1]:8000...
+2026-06-30T10:37:32.6253107Z * connect to ::1 port 8000 from ::1 port 57698 failed: Connection refused
+2026-06-30T10:37:32.6253477Z *   Trying 127.0.0.1:8000...
+2026-06-30T10:37:32.6253753Z * Connected to localhost (127.0.0.1) port 8000
+2026-06-30T10:37:32.6254044Z > GET /health HTTP/1.1
+2026-06-30T10:37:32.6254267Z > Host: localhost:8000
+2026-06-30T10:37:32.6254597Z > User-Agent: curl/8.5.0
+2026-06-30T10:37:32.6254979Z > Accept: */*
+2026-06-30T10:37:32.6255291Z > 
+2026-06-30T10:37:32.6255589Z < HTTP/1.1 200 OK
+2026-06-30T10:37:32.6255934Z < Host: localhost:8000
+2026-06-30T10:37:32.6256318Z < Date: Tue, 30 Jun 2026 10:37:32 GMT
+2026-06-30T10:37:32.6256739Z < Connection: close
+2026-06-30T10:37:32.6257055Z < X-Powered-By: PHP/8.3.31
+2026-06-30T10:37:32.6257600Z < Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+2026-06-30T10:37:32.6259083Z < Access-Control-Allow-Headers: Content-Type, Authorization, X-Search-Query, X-Search-Columns, X-Sort-By, X-Sort-Direction, X-Pagination-Limit, X-Pagination-Offset, X-Request-ID
+2026-06-30T10:37:32.6260584Z < Access-Control-Allow-Credentials: true
+2026-06-30T10:37:32.6261129Z < Access-Control-Max-Age: 86400
+2026-06-30T10:37:32.6261851Z < X-RateLimit-Limit: 0
+2026-06-30T10:37:32.6262251Z < X-RateLimit-Remaining: 0
+2026-06-30T10:37:32.6262661Z < X-RateLimit-Reset: 1782815912
+2026-06-30T10:37:32.6263087Z < Content-Type: application/json
+2026-06-30T10:37:32.6263501Z < 
+2026-06-30T10:37:32.6263803Z { [109 bytes data]
+2026-06-30T10:37:32.6264020Z 
+2026-06-30T10:37:32.6264306Z 100   109    0   109    0     0  31824      0 --:--:-- --:--:-- --:--:-- 36333
+2026-06-30T10:37:32.6265141Z * Closing connection
+2026-06-30T10:37:32.6265872Z {"status":"operational","database":"OK","uptime":0,"timestamp":"2026-06-30T10:37:32+00:00","version":"1.0.0"}
+2026-06-30T10:37:32.6273851Z Health JSON response: {"status":"operational","database":"OK","uptime":0,"timestamp":"2026-06-30T10:37:32+00:00","version":"1.0.0"}
+2026-06-30T10:37:32.6288907Z ✓ Health endpoint is working
+2026-06-30T10:37:32.6375532Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-30T10:37:32.6376882Z ##[group]Run codecov/codecov-action@v3
+2026-06-30T10:37:32.6377159Z with:
+2026-06-30T10:37:32.6377352Z   files: api/coverage.xml
+2026-06-30T10:37:32.6377585Z   fail_ci_if_error: false
+2026-06-30T10:37:32.6377824Z env:
+2026-06-30T10:37:32.6378012Z   COMPOSER_PROCESS_TIMEOUT: 0
+2026-06-30T10:37:32.6378263Z   COMPOSER_NO_INTERACTION: 1
+2026-06-30T10:37:32.6378497Z   COMPOSER_NO_AUDIT: 1
+2026-06-30T10:37:32.6378708Z ##[endgroup]
+2026-06-30T10:37:32.7271725Z ==> linux OS detected
+2026-06-30T10:37:32.7369731Z (node:3771) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-06-30T10:37:32.7370755Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-06-30T10:37:33.0355437Z https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
+2026-06-30T10:37:33.0872286Z ==> SHASUM file signed by key id 806bb28aed779869
+2026-06-30T10:37:33.1640495Z ==> Uploader SHASUM verified (b37359013b48fbc3b0790d59fc474a52a260fb96e28e1b2c2ae001dc9b9cc996  codecov)
+2026-06-30T10:37:33.1641797Z ==> Running version latest
+2026-06-30T10:37:33.3059544Z ==> Running version v0.8.0
+2026-06-30T10:37:33.3078070Z [command]/home/runner/work/_actions/codecov/codecov-action/v3/dist/codecov -n  -Q github-action-3.1.6 -f api/coverage.xml
+2026-06-30T10:37:33.5226419Z [2026-06-30T10:37:33.521Z] ['info'] 
+2026-06-30T10:37:33.5226999Z      _____          _
+2026-06-30T10:37:33.5227414Z     / ____|        | |
+2026-06-30T10:37:33.5227726Z    | |     ___   __| | ___  ___ _____   __
+2026-06-30T10:37:33.5228040Z    | |    / _ \ / _` |/ _ \/ __/ _ \ \ / /
+2026-06-30T10:37:33.5228384Z    | |___| (_) | (_| |  __/ (_| (_) \ V /
+2026-06-30T10:37:33.5228674Z     \_____\___/ \__,_|\___|\___\___/ \_/
+2026-06-30T10:37:33.5228908Z 
+2026-06-30T10:37:33.5229019Z   Codecov report uploader 0.8.0
+2026-06-30T10:37:33.5282309Z [2026-06-30T10:37:33.527Z] ['info'] => Project root located at: /home/runner/work/splk2/splk2
+2026-06-30T10:37:33.5292144Z [2026-06-30T10:37:33.529Z] ['info'] -> No token specified or token is empty
+2026-06-30T10:37:33.5357919Z [2026-06-30T10:37:33.535Z] ['info'] Searching for coverage files...
+2026-06-30T10:37:33.5866149Z [2026-06-30T10:37:33.586Z] ['info'] => Found 1 possible coverage files:
+2026-06-30T10:37:33.5867104Z   api/coverage.xml
+2026-06-30T10:37:33.5867895Z [2026-06-30T10:37:33.586Z] ['info'] Processing /home/runner/work/splk2/splk2/api/coverage.xml...
+2026-06-30T10:37:33.5920097Z [2026-06-30T10:37:33.591Z] ['info'] Detected GitHub Actions as the CI provider.
+2026-06-30T10:37:33.9398659Z [2026-06-30T10:37:33.939Z] ['info'] Pinging Codecov: https://codecov.io/upload/v4?package=github-action-3.1.6-uploader-0.8.0&token=*******&branch=master&build=28438153303&build_url=https%3A%2F%2Fgithub.com%2Ffolklorista%2Fsplk2%2Factions%2Fruns%2F28438153303%2Fjob%2F84269055370&commit=e7d11497fcad27b77d02815bb4f5ff417e038ed1&job=API+Tests&pr=&service=github-actions&slug=folklorista%2Fsplk2&name=&tag=&flags=&parent=
+2026-06-30T10:37:34.2053342Z [2026-06-30T10:37:34.204Z] ['error'] There was an error running the uploader: Error uploading to https://codecov.io: Error: There was an error fetching the storage URL during POST: 429 - {"message":"Rate limit reached. Please upload with the Codecov repository upload token to resolve issue. Expected time to availability: 865s."}
+2026-06-30T10:37:34.2055901Z 
+2026-06-30T10:37:34.2056704Z [2026-06-30T10:37:34.204Z] ['info'] Codecov will exit with status code 0. If you are expecting a non-zero exit code, please pass in the `-Z` flag
+2026-06-30T10:37:34.2899862Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-30T10:37:34.2901460Z Post job cleanup.
+2026-06-30T10:37:34.3988188Z Cache hit occurred on the primary key Linux-composer-03eefbcec2961f11304712276bace39513c4c51fd94fa51115174227b7952aac, not saving cache.
+2026-06-30T10:37:34.3990248Z (node:3826) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-06-30T10:37:34.3991670Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-06-30T10:37:34.4113136Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-30T10:37:34.4114412Z Post job cleanup.
+2026-06-30T10:37:34.4997392Z [command]/usr/bin/git version
+2026-06-30T10:37:34.5066522Z git version 2.54.0
+2026-06-30T10:37:34.5109377Z Temporarily overriding HOME='/home/runner/work/_temp/44e4ccdc-4306-4467-b850-f137672481ce' before making global git config changes
+2026-06-30T10:37:34.5110426Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-30T10:37:34.5115094Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/splk2/splk2
+2026-06-30T10:37:34.5153143Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-30T10:37:34.5187800Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-30T10:37:34.5415348Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-30T10:37:34.5440429Z http.https://github.com/.extraheader
+2026-06-30T10:37:34.5451424Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-06-30T10:37:34.5482305Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-30T10:37:34.5700961Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-30T10:37:34.5731000Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-30T10:37:34.6063032Z Print service container logs: ab06d67f09a54b0987d44e9ac50cb8ba_mysql57_5d7973
+2026-06-30T10:37:34.6067534Z ##[command]/usr/bin/docker logs --details 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:37:34.6203536Z  2026-06-30T10:36:43.072080Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2026-06-30T10:37:34.6204636Z  2026-06-30T10:36:43.159820Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2026-06-30T10:37:34.6205331Z  2026-06-30T10:36:43.174936Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+2026-06-30T10:37:34.6207034Z  2026-06-30T10:36:43.177750Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: 95fd0e90-746f-11f1-8cbe-c69f5f050ac3.
+2026-06-30T10:37:34.6209178Z  2026-06-30T10:36:43.178361Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2026-06-30T10:37:34.6210447Z  2026-06-30T10:36:43.427408Z 0 [Warning] A deprecated TLS version TLSv1 is enabled. Please use TLSv1.2 or higher.
+2026-06-30T10:37:34.6217516Z  2026-06-30T10:36:43.427430Z 0 [Warning] A deprecated TLS version TLSv1.1 is enabled. Please use TLSv1.2 or higher.
+2026-06-30T10:37:34.6218987Z  2026-06-30T10:36:43.427915Z 0 [Warning] CA certificate ca.pem is self signed.
+2026-06-30T10:37:34.6220299Z  2026-06-30T10:36:43.456803Z 1 [Warning] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+2026-06-30T10:37:34.6222407Z  2026-06-30T10:36:45.258294Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2026-06-30T10:37:34.6223919Z  2026-06-30T10:36:45.259713Z 0 [Note] mysqld (mysqld 5.7.44) starting as process 125 ...
+2026-06-30T10:37:34.6224790Z  2026-06-30T10:36:45.262434Z 0 [Note] InnoDB: PUNCH HOLE support available
+2026-06-30T10:37:34.6225346Z  2026-06-30T10:36:45.262458Z 0 [Note] InnoDB: Mutexes and rw_locks use GCC atomic builtins
+2026-06-30T10:37:34.6225849Z  2026-06-30T10:36:45.262462Z 0 [Note] InnoDB: Uses event mutexes
+2026-06-30T10:37:34.6226362Z  2026-06-30T10:36:45.262467Z 0 [Note] InnoDB: GCC builtin __atomic_thread_fence() is used for memory barrier
+2026-06-30T10:37:34.6226964Z  2026-06-30T10:36:45.262471Z 0 [Note] InnoDB: Compressed tables use zlib 1.2.13
+2026-06-30T10:37:34.6227442Z  2026-06-30T10:36:45.262474Z 0 [Note] InnoDB: Using Linux native AIO
+2026-06-30T10:37:34.6227858Z  2026-06-30T10:36:45.262709Z 0 [Note] InnoDB: Number of pools: 1
+2026-06-30T10:37:34.6228278Z  2026-06-30T10:36:45.262823Z 0 [Note] InnoDB: Using CPU crc32 instructions
+2026-06-30T10:37:34.6228878Z  2026-06-30T10:36:45.264267Z 0 [Note] InnoDB: Initializing buffer pool, total size = 128M, instances = 1, chunk size = 128M
+2026-06-30T10:37:34.6229533Z  2026-06-30T10:36:45.270103Z 0 [Note] InnoDB: Completed initialization of buffer pool
+2026-06-30T10:37:34.6230660Z  2026-06-30T10:36:45.271991Z 0 [Note] InnoDB: If the mysqld execution user is authorized, page cleaner thread priority can be changed. See the man page of setpriority().
+2026-06-30T10:37:34.6232602Z  2026-06-30T10:36:45.283605Z 0 [Note] InnoDB: Highest supported file format is Barracuda.
+2026-06-30T10:37:34.6233206Z  2026-06-30T10:36:45.290157Z 0 [Note] InnoDB: Creating shared tablespace for temporary tables
+2026-06-30T10:37:34.6233928Z  2026-06-30T10:36:45.290223Z 0 [Note] InnoDB: Setting file './ibtmp1' size to 12 MB. Physically writing the file full; Please wait ...
+2026-06-30T10:37:34.6234586Z  2026-06-30T10:36:45.297245Z 0 [Note] InnoDB: File './ibtmp1' size is now 12 MB.
+2026-06-30T10:37:34.6235190Z  2026-06-30T10:36:45.297699Z 0 [Note] InnoDB: 96 redo rollback segment(s) found. 96 redo rollback segment(s) are active.
+2026-06-30T10:37:34.6236064Z  2026-06-30T10:36:45.297713Z 0 [Note] InnoDB: 32 non-redo rollback segment(s) are active.
+2026-06-30T10:37:34.6236617Z  2026-06-30T10:36:45.298171Z 0 [Note] InnoDB: 5.7.44 started; log sequence number 2768291
+2026-06-30T10:37:34.6237192Z  2026-06-30T10:36:45.298301Z 0 [Note] InnoDB: Loading buffer pool(s) from /var/lib/mysql/ib_buffer_pool
+2026-06-30T10:37:34.6237720Z  2026-06-30T10:36:45.298526Z 0 [Note] Plugin 'FEDERATED' is disabled.
+2026-06-30T10:37:34.6238201Z  2026-06-30T10:36:45.299279Z 0 [Note] InnoDB: Buffer pool(s) load completed at 260630 10:36:45
+2026-06-30T10:37:34.6238936Z  2026-06-30T10:36:45.302489Z 0 [Note] Found ca.pem, server-cert.pem and server-key.pem in data directory. Trying to enable SSL support using them.
+2026-06-30T10:37:34.6239802Z  2026-06-30T10:36:45.302500Z 0 [Note] Skipping generation of SSL certificates as certificate files are present in data directory.
+2026-06-30T10:37:34.6240580Z  2026-06-30T10:36:45.302503Z 0 [Warning] A deprecated TLS version TLSv1 is enabled. Please use TLSv1.2 or higher.
+2026-06-30T10:37:34.6242063Z  2026-06-30T10:36:45.302505Z 0 [Warning] A deprecated TLS version TLSv1.1 is enabled. Please use TLSv1.2 or higher.
+2026-06-30T10:37:34.6242823Z  2026-06-30T10:36:45.302954Z 0 [Warning] CA certificate ca.pem is self signed.
+2026-06-30T10:37:34.6243414Z  2026-06-30 10:36:42+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 5.7.44-1.el7 started.
+2026-06-30T10:37:34.6244139Z  2026-06-30T10:36:45.302990Z 0 [Note] Skipping generation of RSA key pair as key files are present in data directory.
+2026-06-30T10:37:34.6245131Z  2026-06-30T10:36:45.304463Z 0 [Warning] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+2026-06-30T10:37:34.6245949Z  2026-06-30T10:36:45.310861Z 0 [Note] Event Scheduler: Loaded 0 events
+2026-06-30T10:37:34.6246377Z  2026-06-30T10:36:45.311041Z 0 [Note] mysqld: ready for connections.
+2026-06-30T10:37:34.6246897Z  Version: '5.7.44'  socket: '/var/run/mysqld/mysqld.sock'  port: 0  MySQL Community Server (GPL)
+2026-06-30T10:37:34.6247392Z  2026-06-30T10:36:46.135093Z 3 [Note] InnoDB: Stopping purge
+2026-06-30T10:37:34.6247763Z  2026-06-30T10:36:46.136577Z 3 [Note] InnoDB: Resuming purge
+2026-06-30T10:37:34.6248116Z  2026-06-30T10:36:46.137320Z 3 [Note] InnoDB: Stopping purge
+2026-06-30T10:37:34.6248463Z  2026-06-30T10:36:46.138425Z 3 [Note] InnoDB: Resuming purge
+2026-06-30T10:37:34.6248817Z  2026-06-30T10:36:46.139191Z 3 [Note] InnoDB: Stopping purge
+2026-06-30T10:37:34.6249164Z  2026-06-30T10:36:46.140144Z 3 [Note] InnoDB: Resuming purge
+2026-06-30T10:37:34.6249508Z  2026-06-30T10:36:46.140796Z 3 [Note] InnoDB: Stopping purge
+2026-06-30T10:37:34.6249861Z  2026-06-30T10:36:46.141641Z 3 [Note] InnoDB: Resuming purge
+2026-06-30T10:37:34.6250307Z  Warning: Unable to load '/usr/share/zoneinfo/iso3166.tab' as time zone. Skipping it.
+2026-06-30T10:37:34.6250842Z  Warning: Unable to load '/usr/share/zoneinfo/leapseconds' as time zone. Skipping it.
+2026-06-30T10:37:34.6251781Z  Warning: Unable to load '/usr/share/zoneinfo/tzdata.zi' as time zone. Skipping it.
+2026-06-30T10:37:34.6252331Z  Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
+2026-06-30T10:37:34.6252852Z  Warning: Unable to load '/usr/share/zoneinfo/zone1970.tab' as time zone. Skipping it.
+2026-06-30T10:37:34.6253390Z  2026-06-30T10:36:47.250678Z 0 [Note] Giving 0 client threads a chance to die gracefully
+2026-06-30T10:37:34.6253876Z  2026-06-30T10:36:47.250698Z 0 [Note] Shutting down slave threads
+2026-06-30T10:37:34.6254335Z  2026-06-30T10:36:47.250701Z 0 [Note] Forcefully disconnecting 0 remaining clients
+2026-06-30T10:37:34.6254827Z  2026-06-30T10:36:47.250705Z 0 [Note] Event Scheduler: Purging the queue. 0 events
+2026-06-30T10:37:34.6255239Z  2026-06-30T10:36:47.250745Z 0 [Note] Binlog end
+2026-06-30T10:37:34.6255603Z  2026-06-30T10:36:47.251217Z 0 [Note] Shutting down plugin 'ngram'
+2026-06-30T10:37:34.6256037Z  2026-06-30T10:36:47.251230Z 0 [Note] Shutting down plugin 'partition'
+2026-06-30T10:37:34.6256628Z  2026-06-30T10:36:47.251234Z 0 [Note] Shutting down plugin 'BLACKHOLE'
+2026-06-30T10:37:34.6257056Z  2026-06-30T10:36:47.251237Z 0 [Note] Shutting down plugin 'ARCHIVE'
+2026-06-30T10:37:34.6257512Z  2026-06-30T10:36:47.251238Z 0 [Note] Shutting down plugin 'PERFORMANCE_SCHEMA'
+2026-06-30T10:37:34.6257973Z  2026-06-30T10:36:47.251275Z 0 [Note] Shutting down plugin 'MRG_MYISAM'
+2026-06-30T10:37:34.6258394Z  2026-06-30T10:36:47.251284Z 0 [Note] Shutting down plugin 'MyISAM'
+2026-06-30T10:37:34.6258832Z  2026-06-30T10:36:47.251290Z 0 [Note] Shutting down plugin 'INNODB_SYS_VIRTUAL'
+2026-06-30T10:37:34.6259311Z  2026-06-30T10:36:47.251294Z 0 [Note] Shutting down plugin 'INNODB_SYS_DATAFILES'
+2026-06-30T10:37:34.6259802Z  2026-06-30T10:36:47.251296Z 0 [Note] Shutting down plugin 'INNODB_SYS_TABLESPACES'
+2026-06-30T10:37:34.6260302Z  2026-06-30T10:36:47.251299Z 0 [Note] Shutting down plugin 'INNODB_SYS_FOREIGN_COLS'
+2026-06-30T10:37:34.6260903Z  2026-06-30T10:36:47.251302Z 0 [Note] Shutting down plugin 'INNODB_SYS_FOREIGN'
+2026-06-30T10:37:34.6261720Z  2026-06-30T10:36:47.251305Z 0 [Note] Shutting down plugin 'INNODB_SYS_FIELDS'
+2026-06-30T10:37:34.6262203Z  2026-06-30T10:36:47.251308Z 0 [Note] Shutting down plugin 'INNODB_SYS_COLUMNS'
+2026-06-30T10:37:34.6262668Z  2026-06-30T10:36:47.251310Z 0 [Note] Shutting down plugin 'INNODB_SYS_INDEXES'
+2026-06-30T10:37:34.6263150Z  2026-06-30T10:36:47.251313Z 0 [Note] Shutting down plugin 'INNODB_SYS_TABLESTATS'
+2026-06-30T10:37:34.6263624Z  2026-06-30T10:36:47.251316Z 0 [Note] Shutting down plugin 'INNODB_SYS_TABLES'
+2026-06-30T10:37:34.6264096Z  2026-06-30T10:36:47.251318Z 0 [Note] Shutting down plugin 'INNODB_FT_INDEX_TABLE'
+2026-06-30T10:37:34.6264572Z  2026-06-30T10:36:47.251321Z 0 [Note] Shutting down plugin 'INNODB_FT_INDEX_CACHE'
+2026-06-30T10:37:34.6265037Z  2026-06-30T10:36:47.251324Z 0 [Note] Shutting down plugin 'INNODB_FT_CONFIG'
+2026-06-30T10:37:34.6265512Z  2026-06-30T10:36:47.251327Z 0 [Note] Shutting down plugin 'INNODB_FT_BEING_DELETED'
+2026-06-30T10:37:34.6265998Z  2026-06-30T10:36:47.251330Z 0 [Note] Shutting down plugin 'INNODB_FT_DELETED'
+2026-06-30T10:37:34.6266483Z  2026-06-30T10:36:47.251333Z 0 [Note] Shutting down plugin 'INNODB_FT_DEFAULT_STOPWORD'
+2026-06-30T10:37:34.6266972Z  2026-06-30T10:36:47.251335Z 0 [Note] Shutting down plugin 'INNODB_METRICS'
+2026-06-30T10:37:34.6267442Z  2026-06-30T10:36:47.251338Z 0 [Note] Shutting down plugin 'INNODB_TEMP_TABLE_INFO'
+2026-06-30T10:37:34.6267936Z  2026-06-30T10:36:47.251341Z 0 [Note] Shutting down plugin 'INNODB_BUFFER_POOL_STATS'
+2026-06-30T10:37:34.6268435Z  2026-06-30T10:36:47.251343Z 0 [Note] Shutting down plugin 'INNODB_BUFFER_PAGE_LRU'
+2026-06-30T10:37:34.6268916Z  2026-06-30T10:36:47.251346Z 0 [Note] Shutting down plugin 'INNODB_BUFFER_PAGE'
+2026-06-30T10:37:34.6269404Z  2026-06-30T10:36:47.251349Z 0 [Note] Shutting down plugin 'INNODB_CMP_PER_INDEX_RESET'
+2026-06-30T10:37:34.6269919Z  2026-06-30T10:36:47.251351Z 0 [Note] Shutting down plugin 'INNODB_CMP_PER_INDEX'
+2026-06-30T10:37:34.6270418Z  2026-06-30T10:36:47.251354Z 0 [Note] Shutting down plugin 'INNODB_CMPMEM_RESET'
+2026-06-30T10:37:34.6270873Z  2026-06-30T10:36:47.251356Z 0 [Note] Shutting down plugin 'INNODB_CMPMEM'
+2026-06-30T10:37:34.6271602Z  2026-06-30T10:36:47.251359Z 0 [Note] Shutting down plugin 'INNODB_CMP_RESET'
+2026-06-30T10:37:34.6272054Z  2026-06-30T10:36:47.251362Z 0 [Note] Shutting down plugin 'INNODB_CMP'
+2026-06-30T10:37:34.6272498Z  2026-06-30T10:36:47.251364Z 0 [Note] Shutting down plugin 'INNODB_LOCK_WAITS'
+2026-06-30T10:37:34.6272946Z  2026-06-30T10:36:47.251367Z 0 [Note] Shutting down plugin 'INNODB_LOCKS'
+2026-06-30T10:37:34.6273372Z  2026-06-30T10:36:47.251370Z 0 [Note] Shutting down plugin 'INNODB_TRX'
+2026-06-30T10:37:34.6273792Z  2026-06-30T10:36:47.251372Z 0 [Note] Shutting down plugin 'InnoDB'
+2026-06-30T10:37:34.6274212Z  2026-06-30T10:36:47.251428Z 0 [Note] InnoDB: FTS optimize thread exiting.
+2026-06-30T10:37:34.6274643Z  2026-06-30T10:36:47.251514Z 0 [Note] InnoDB: Starting shutdown...
+2026-06-30T10:37:34.6275291Z  2026-06-30T10:36:47.351693Z 0 [Note] InnoDB: Dumping buffer pool(s) to /var/lib/mysql/ib_buffer_pool
+2026-06-30T10:37:34.6275891Z  2026-06-30T10:36:47.352033Z 0 [Note] InnoDB: Buffer pool(s) dump completed at 260630 10:36:47
+2026-06-30T10:37:34.6276445Z  2026-06-30T10:36:48.256558Z 0 [Note] InnoDB: Shutdown completed; log sequence number 12219253
+2026-06-30T10:37:34.6276997Z  2026-06-30T10:36:48.257268Z 0 [Note] InnoDB: Removed temporary tablespace data file: "ibtmp1"
+2026-06-30T10:37:34.6277486Z  2026-06-30T10:36:48.257284Z 0 [Note] Shutting down plugin 'MEMORY'
+2026-06-30T10:37:34.6277888Z  2026-06-30T10:36:48.257289Z 0 [Note] Shutting down plugin 'CSV'
+2026-06-30T10:37:34.6278315Z  2026-06-30T10:36:48.257292Z 0 [Note] Shutting down plugin 'sha256_password'
+2026-06-30T10:37:34.6278792Z  2026-06-30T10:36:48.257294Z 0 [Note] Shutting down plugin 'mysql_native_password'
+2026-06-30T10:37:34.6279241Z  2026-06-30T10:36:48.257430Z 0 [Note] Shutting down plugin 'binlog'
+2026-06-30T10:37:34.6279755Z  2026-06-30T10:36:48.257973Z 0 [Note] mysqld: Shutdown complete
+2026-06-30T10:37:34.6280070Z  
+2026-06-30T10:37:34.6280743Z  2026-06-30T10:36:49.410475Z 0 [Warning] TIMESTAMP with implicit DEFAULT value is deprecated. Please use --explicit_defaults_for_timestamp server option (see documentation for more details).
+2026-06-30T10:37:34.6281846Z  2026-06-30T10:36:49.411931Z 0 [Note] mysqld (mysqld 5.7.44) starting as process 1 ...
+2026-06-30T10:37:34.6282332Z  2026-06-30T10:36:49.414708Z 0 [Note] InnoDB: PUNCH HOLE support available
+2026-06-30T10:37:34.6282835Z  2026-06-30T10:36:49.414731Z 0 [Note] InnoDB: Mutexes and rw_locks use GCC atomic builtins
+2026-06-30T10:37:34.6283302Z  2026-06-30T10:36:49.414736Z 0 [Note] InnoDB: Uses event mutexes
+2026-06-30T10:37:34.6283813Z  2026-06-30T10:36:49.414740Z 0 [Note] InnoDB: GCC builtin __atomic_thread_fence() is used for memory barrier
+2026-06-30T10:37:34.6284382Z  2026-06-30T10:36:49.414744Z 0 [Note] InnoDB: Compressed tables use zlib 1.2.13
+2026-06-30T10:37:34.6284834Z  2026-06-30T10:36:49.414747Z 0 [Note] InnoDB: Using Linux native AIO
+2026-06-30T10:37:34.6285235Z  2026-06-30T10:36:49.415002Z 0 [Note] InnoDB: Number of pools: 1
+2026-06-30T10:37:34.6285652Z  2026-06-30T10:36:49.415137Z 0 [Note] InnoDB: Using CPU crc32 instructions
+2026-06-30T10:37:34.6286249Z  2026-06-30T10:36:49.416574Z 0 [Note] InnoDB: Initializing buffer pool, total size = 128M, instances = 1, chunk size = 128M
+2026-06-30T10:37:34.6286884Z  2026-06-30T10:36:49.422294Z 0 [Note] InnoDB: Completed initialization of buffer pool
+2026-06-30T10:37:34.6287678Z  2026-06-30T10:36:49.424264Z 0 [Note] InnoDB: If the mysqld execution user is authorized, page cleaner thread priority can be changed. See the man page of setpriority().
+2026-06-30T10:37:34.6288474Z  2026-06-30T10:36:49.435756Z 0 [Note] InnoDB: Highest supported file format is Barracuda.
+2026-06-30T10:37:34.6289019Z  2026-06-30T10:36:49.439735Z 0 [Note] InnoDB: Creating shared tablespace for temporary tables
+2026-06-30T10:37:34.6289746Z  2026-06-30T10:36:49.439788Z 0 [Note] InnoDB: Setting file './ibtmp1' size to 12 MB. Physically writing the file full; Please wait ...
+2026-06-30T10:37:34.6290390Z  2026-06-30T10:36:49.446905Z 0 [Note] InnoDB: File './ibtmp1' size is now 12 MB.
+2026-06-30T10:37:34.6290985Z  2026-06-30T10:36:49.447377Z 0 [Note] InnoDB: 96 redo rollback segment(s) found. 96 redo rollback segment(s) are active.
+2026-06-30T10:37:34.6291835Z  2026-06-30T10:36:49.447388Z 0 [Note] InnoDB: 32 non-redo rollback segment(s) are active.
+2026-06-30T10:37:34.6292364Z  2026-06-30T10:36:49.447790Z 0 [Note] InnoDB: 5.7.44 started; log sequence number 12219253
+2026-06-30T10:37:34.6292942Z  2026-06-30T10:36:49.447983Z 0 [Note] InnoDB: Loading buffer pool(s) from /var/lib/mysql/ib_buffer_pool
+2026-06-30T10:37:34.6293465Z  2026-06-30T10:36:49.448234Z 0 [Note] Plugin 'FEDERATED' is disabled.
+2026-06-30T10:37:34.6293959Z  2026-06-30T10:36:49.449528Z 0 [Note] InnoDB: Buffer pool(s) load completed at 260630 10:36:49
+2026-06-30T10:37:34.6294833Z  2026-06-30T10:36:49.452321Z 0 [Note] Found ca.pem, server-cert.pem and server-key.pem in data directory. Trying to enable SSL support using them.
+2026-06-30T10:37:34.6295722Z  2026-06-30T10:36:49.452334Z 0 [Note] Skipping generation of SSL certificates as certificate files are present in data directory.
+2026-06-30T10:37:34.6296479Z  2026-06-30T10:36:49.452339Z 0 [Warning] A deprecated TLS version TLSv1 is enabled. Please use TLSv1.2 or higher.
+2026-06-30T10:37:34.6297172Z  2026-06-30T10:36:49.452342Z 0 [Warning] A deprecated TLS version TLSv1.1 is enabled. Please use TLSv1.2 or higher.
+2026-06-30T10:37:34.6297761Z  2026-06-30T10:36:49.452840Z 0 [Warning] CA certificate ca.pem is self signed.
+2026-06-30T10:37:34.6298362Z  2026-06-30T10:36:49.452899Z 0 [Note] Skipping generation of RSA key pair as key files are present in data directory.
+2026-06-30T10:37:34.6298977Z  2026-06-30T10:36:49.453242Z 0 [Note] Server hostname (bind-address): '*'; port: 3306
+2026-06-30T10:37:34.6299517Z  2026-06-30T10:36:49.453290Z 0 [Note] IPv6 is available.
+2026-06-30T10:37:34.6299910Z  2026-06-30T10:36:49.453307Z 0 [Note]   - '::' resolves to '::';
+2026-06-30T10:37:34.6300346Z  2026-06-30T10:36:49.453322Z 0 [Note] Server socket created on IP: '::'.
+2026-06-30T10:37:34.6301398Z  2026-06-30T10:36:49.454010Z 0 [Warning] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+2026-06-30T10:37:34.6302268Z  2026-06-30T10:36:49.460152Z 0 [Note] Event Scheduler: Loaded 0 events
+2026-06-30T10:37:34.6302699Z  2026-06-30T10:36:49.460355Z 0 [Note] mysqld: ready for connections.
+2026-06-30T10:37:34.6303221Z  Version: '5.7.44'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)
+2026-06-30T10:37:34.6303775Z  2026-06-30 10:36:42+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+2026-06-30T10:37:34.6304317Z  2026-06-30 10:36:42+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 5.7.44-1.el7 started.
+2026-06-30T10:37:34.6304850Z  2026-06-30 10:36:43+00:00 [Note] [Entrypoint]: Initializing database files
+2026-06-30T10:37:34.6305282Z  2026-06-30 10:36:45+00:00 [Note] [Entrypoint]: Database files initialized
+2026-06-30T10:37:34.6305703Z  2026-06-30 10:36:45+00:00 [Note] [Entrypoint]: Starting temporary server
+2026-06-30T10:37:34.6306118Z  2026-06-30 10:36:45+00:00 [Note] [Entrypoint]: Waiting for server startup
+2026-06-30T10:37:34.6306531Z  2026-06-30 10:36:46+00:00 [Note] [Entrypoint]: Temporary server started.
+2026-06-30T10:37:34.6306939Z  '/var/lib/mysql/mysql.sock' -> '/var/run/mysqld/mysqld.sock'
+2026-06-30T10:37:34.6307336Z  2026-06-30 10:36:47+00:00 [Note] [Entrypoint]: Creating database splk
+2026-06-30T10:37:34.6307657Z  
+2026-06-30T10:37:34.6307909Z  2026-06-30 10:36:47+00:00 [Note] [Entrypoint]: Stopping temporary server
+2026-06-30T10:37:34.6308332Z  2026-06-30 10:36:49+00:00 [Note] [Entrypoint]: Temporary server stopped
+2026-06-30T10:37:34.6308663Z  
+2026-06-30T10:37:34.6308973Z  2026-06-30 10:36:49+00:00 [Note] [Entrypoint]: MySQL init process done. Ready for start up.
+2026-06-30T10:37:34.6309370Z  
+2026-06-30T10:37:34.6315289Z Stop and remove container: ab06d67f09a54b0987d44e9ac50cb8ba_mysql57_5d7973
+2026-06-30T10:37:34.6320319Z ##[command]/usr/bin/docker rm --force 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:37:34.8047427Z 43970bdc20d13242f22b5d349bb8874ba1e9abf1a48de057f777eb67a6c4abcf
+2026-06-30T10:37:34.8073967Z Remove container network: github_network_30895d0457694581bfc80c89fece9de4
+2026-06-30T10:37:34.8078216Z ##[command]/usr/bin/docker network rm github_network_30895d0457694581bfc80c89fece9de4
+2026-06-30T10:37:34.9135208Z github_network_30895d0457694581bfc80c89fece9de4
+2026-06-30T10:37:34.9205337Z Cleaning up orphan processes
+2026-06-30T10:37:34.9523579Z Terminate orphan process: pid (3709) (php)
+2026-06-30T10:37:34.9551129Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v3, actions/checkout@v4, codecov/codecov-action@v3. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

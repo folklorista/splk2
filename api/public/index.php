@@ -36,10 +36,12 @@ $db        = new Database(config: $config['database'], logger: $logger);
 $auth      = new Auth(config: $config['auth'], db: $db, logger: $logger);
 $passwordReset = new PasswordReset(db: $db, logger: $logger, auth: $auth);
 
-// Load table rules
+// Load table rules and permissions
 $tableRules = require __DIR__ . '/../config/table-rules.php';
+$permissions = require __DIR__ . '/../config/permissions.php';
 $validator  = new RuleValidator(rules: $tableRules, db: $db, logger: $logger);
 $rbac       = new RoleBasedAccessControl(db: $db, logger: $logger);
+$permissionChecker = new PermissionChecker(permissions: $permissions, rbac: $rbac, logger: $logger);
 
 $endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger, validator: $validator);
 
@@ -486,38 +488,90 @@ switch ($method) {
                 Response::send(404, "No options found for referenced table");
             }
         } elseif ($id) {
-            Response::sendPrepared($endpoints->getRecordByIdEndpoint($tableName, $id));
+            // Check read permission for single record
+            $permCheck = $permissionChecker->canAccess($tableName, 'read', $user['user'], (int)$id);
+            if (!$permCheck['allowed']) {
+                Response::send(403, "Forbidden", null, $permCheck['reason']);
+            } else {
+                // Need to check if user owns the record if read_own_only
+                $record = $db->get($tableName, $id);
+                if ($record && $record['status'] === 200) {
+                    $ownerField = $permissionChecker->getOwnerField($tableName);
+                    $recordOwnerId = $record['data'][$ownerField] ?? null;
+                    $ownerCheck = $permissionChecker->canAccess($tableName, 'read', $user['user'], $recordOwnerId);
+                    if (!$ownerCheck['allowed']) {
+                        Response::send(403, "Forbidden", null, $ownerCheck['reason']);
+                    } else {
+                        Response::sendPrepared($endpoints->getRecordByIdEndpoint($tableName, $id));
+                    }
+                } else {
+                    Response::send(404, "Record not found");
+                }
+            }
         } else {
-            Response::sendPrepared(
-                $endpoints->getAllRecords($tableName, "", $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns)
-            );
+            // Check read permission for list
+            $permCheck = $permissionChecker->canAccess($tableName, 'read', $user['user']);
+            if (!$permCheck['allowed']) {
+                Response::send(403, "Forbidden", null, $permCheck['reason']);
+            } else {
+                // Apply ownership filter if needed
+                $ownerFilter = $permissionChecker->getFilterForReadAccess($tableName, $user['user']);
+                $whereClause = $ownerFilter ? ($whereClause ? "$whereClause AND $ownerFilter" : $ownerFilter) : $whereClause;
+                Response::sendPrepared(
+                    $endpoints->getAllRecords($tableName, $whereClause, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns)
+                );
+            }
         }
         break;
 
     case 'POST':
-        $data = json_decode(file_get_contents('php://input'), true);
-        if ($data) {
-            Response::sendPrepared($endpoints->createRecordEndpoint($tableName, $data, $user['user']));
+        // Check create permission
+        $permCheck = $permissionChecker->canAccess($tableName, 'create', $user['user']);
+        if (!$permCheck['allowed']) {
+            Response::send(403, "Forbidden", null, $permCheck['reason']);
         } else {
-            Response::send(400, "Empty input");
+            $data = json_decode(file_get_contents('php://input'), true);
+            if ($data) {
+                Response::sendPrepared($endpoints->createRecordEndpoint($tableName, $data, $user['user']));
+            } else {
+                Response::send(400, "Empty input");
+            }
         }
         break;
 
     case 'PUT':
         if ($id) {
-            $data = json_decode(file_get_contents('php://input'), true);
-            if ($data) {
-                Response::sendPrepared($endpoints->updateRecordEndpoint($tableName, $id, $data, $user['user']));
+            // Check update permission
+            $record = $db->get($tableName, $id);
+            if (!$record || $record['status'] !== 200) {
+                Response::send(404, "Record not found");
             } else {
-                Response::send(400, "Empty input");
+                $ownerField = $permissionChecker->getOwnerField($tableName);
+                $recordOwnerId = $record['data'][$ownerField] ?? null;
+                $permCheck = $permissionChecker->canAccess($tableName, 'update', $user['user'], $recordOwnerId);
+                if (!$permCheck['allowed']) {
+                    Response::send(403, "Forbidden", null, $permCheck['reason']);
+                } else {
+                    $data = json_decode(file_get_contents('php://input'), true);
+                    if ($data) {
+                        Response::sendPrepared($endpoints->updateRecordEndpoint($tableName, $id, $data, $user['user']));
+                    } else {
+                        Response::send(400, "Empty input");
+                    }
+                }
             }
         } else {
             if (in_array($tableName, ['categories', 'groups'])) {
-                $data = json_decode(file_get_contents('php://input'), true);
-                if ($data) {
-                    Response::sendPrepared($endpoints->treeSaveOrUpdateEndpoint($tableName, $data, $user['user']));
+                $permCheck = $permissionChecker->canAccess($tableName, 'update', $user['user']);
+                if (!$permCheck['allowed']) {
+                    Response::send(403, "Forbidden", null, $permCheck['reason']);
                 } else {
-                    Response::send(400, "Empty input");
+                    $data = json_decode(file_get_contents('php://input'), true);
+                    if ($data) {
+                        Response::sendPrepared($endpoints->treeSaveOrUpdateEndpoint($tableName, $data, $user['user']));
+                    } else {
+                        Response::send(400, "Empty input");
+                    }
                 }
             } else {
                 Response::send(400, "ID is required");
@@ -527,7 +581,20 @@ switch ($method) {
 
     case 'DELETE':
         if ($id) {
-            Response::sendPrepared($endpoints->deleteRecordEndpoint($tableName, $id, $user['user']));
+            // Check delete permission
+            $record = $db->get($tableName, $id);
+            if (!$record || $record['status'] !== 200) {
+                Response::send(404, "Record not found");
+            } else {
+                $ownerField = $permissionChecker->getOwnerField($tableName);
+                $recordOwnerId = $record['data'][$ownerField] ?? null;
+                $permCheck = $permissionChecker->canAccess($tableName, 'delete', $user['user'], $recordOwnerId);
+                if (!$permCheck['allowed']) {
+                    Response::send(403, "Forbidden", null, $permCheck['reason']);
+                } else {
+                    Response::sendPrepared($endpoints->deleteRecordEndpoint($tableName, $id, $user['user']));
+                }
+            }
         } else {
             Response::send(400, "ID is required");
         }
