@@ -197,16 +197,20 @@ class Endpoints
         }
 
         // Audit log (CREATE: new_values = data)
-        $this->db->logAction(
-            AuditAction::DATA_INSERT,
-            $user->id,
-            $table,
-            $response['data']['id'],
-            $response['message'],
-            $data,
-            oldValues: null,
-            newValues: $data
-        );
+        try {
+            $this->db->logAction(
+                AuditAction::DATA_INSERT,
+                $user->id,
+                $table,
+                $response['data']['id'],
+                $response['message'],
+                $data,
+                oldValues: null,
+                newValues: $data
+            );
+        } catch (\Exception $e) {
+            $this->logger->error("Audit log failed", ['error' => $e->getMessage()]);
+        }
 
         // Trigger webhook event
         try {
@@ -279,16 +283,20 @@ class Endpoints
         }
 
         // Audit log (UPDATE: old_values + new_values)
-        $this->db->logAction(
-            AuditAction::DATA_UPDATE,
-            $user->id,
-            $table,
-            $id,
-            $response['message'],
-            $data,
-            oldValues: $oldValues,
-            newValues: array_merge($oldValues, $data)
-        );
+        try {
+            $this->db->logAction(
+                AuditAction::DATA_UPDATE,
+                $user->id,
+                $table,
+                $id,
+                $response['message'],
+                $data,
+                oldValues: $oldValues,
+                newValues: array_merge($oldValues, $data)
+            );
+        } catch (\Exception $e) {
+            $this->logger->error("Audit log failed", ['error' => $e->getMessage()]);
+        }
 
         // Trigger webhook event
         try {
@@ -348,16 +356,20 @@ class Endpoints
         }
 
         // Audit log (DELETE: old_values)
-        $this->db->logAction(
-            AuditAction::DATA_DELETE,
-            $user->id,
-            $table,
-            $id,
-            $response['message'],
-            data: null,
-            oldValues: $oldValues,
-            newValues: null
-        );
+        try {
+            $this->db->logAction(
+                AuditAction::DATA_DELETE,
+                $user->id,
+                $table,
+                $id,
+                $response['message'],
+                data: null,
+                oldValues: $oldValues,
+                newValues: null
+            );
+        } catch (\Exception $e) {
+            $this->logger->error("Audit log failed", ['error' => $e->getMessage()]);
+        }
 
         // Trigger webhook event
         try {
