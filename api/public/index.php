@@ -28,7 +28,7 @@ try {
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
-header(header: 'Content-Type: application/json');
+header('Content-Type: application/json');
 
 // Inicializace
 $logger    = new Logger($config['log']);
