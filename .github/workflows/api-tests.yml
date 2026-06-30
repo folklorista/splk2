@@ -160,9 +160,9 @@ jobs:
 
       - name: Restart API Server for full test run
         run: |
-          # Clear rate limit cache before starting server
-          rm -rf api/log/rate_limit 2>/dev/null || true
           cd api
+          # Clear rate limit cache before starting server
+          rm -rf ../log/rate_limit 2>/dev/null || true
           php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
           sleep 3
           if curl -s http://127.0.0.1:8000/health > /dev/null; then
