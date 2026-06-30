@@ -14,24 +14,44 @@ class RBACTest extends TestCase {
     protected function setUp(): void {
         // Register test users with different roles
         // Admin user
-        $adminResponse = $this->post('/register', [
-            'email' => 'admin' . time() . '@test.com',
-            'password' => 'Password123!',
+        $adminEmail = 'admin' . time() . '@test.com';
+        $adminPassword = 'Password123!';
+        $adminRegResponse = $this->post('/register', [
+            'email' => $adminEmail,
+            'password' => $adminPassword,
             'first_name' => 'Admin',
             'last_name' => 'User',
         ]);
-        $this->adminToken = $adminResponse['data']['token'] ?? null;
-        $this->adminUserId = $adminResponse['data']['user_id'] ?? null;
+        $this->adminUserId = $adminRegResponse['data']['id'] ?? null;
+
+        // Login as admin to get token
+        if ($this->adminUserId) {
+            $adminLoginResponse = $this->post('/login', [
+                'email' => $adminEmail,
+                'password' => $adminPassword,
+            ]);
+            $this->adminToken = $adminLoginResponse['data']['accessToken'] ?? null;
+        }
 
         // Regular user
-        $userResponse = $this->post('/register', [
-            'email' => 'user' . time() . '@test.com',
-            'password' => 'Password123!',
+        $userEmail = 'user' . time() . '@test.com';
+        $userPassword = 'Password123!';
+        $userRegResponse = $this->post('/register', [
+            'email' => $userEmail,
+            'password' => $userPassword,
             'first_name' => 'Regular',
             'last_name' => 'User',
         ]);
-        $this->userToken = $userResponse['data']['token'] ?? null;
-        $this->regularUserId = $userResponse['data']['user_id'] ?? null;
+        $this->regularUserId = $userRegResponse['data']['id'] ?? null;
+
+        // Login as regular user to get token
+        if ($this->regularUserId) {
+            $userLoginResponse = $this->post('/login', [
+                'email' => $userEmail,
+                'password' => $userPassword,
+            ]);
+            $this->userToken = $userLoginResponse['data']['accessToken'] ?? null;
+        }
 
         // Assign admin role to first user
         if ($this->adminUserId && $this->adminToken) {
