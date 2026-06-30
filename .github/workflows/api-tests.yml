@@ -181,23 +181,45 @@ jobs:
           cd api
 
           # Kill any remaining PHP processes
+          echo "=== Killing all PHP servers ==="
           pkill -f "php -S" || true
           sleep 2
 
           # Clear rate limit cache before starting server
+          echo "=== Clearing cache ==="
           rm -rf ../log/rate_limit 2>/dev/null || true
 
           # Start server
+          echo "=== Starting API server ==="
+          echo "Checking .env file..."
+          cat .env | head -10
+          echo "Checking index.php syntax..."
+          php -l public/index.php
+
           php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
+          PHP_PID=$!
+          echo "Started PHP with PID: $PHP_PID"
+
+          echo "Waiting for server to start..."
           sleep 3
 
           # Verify server started
-          if ! curl -s http://127.0.0.1:8000/health | grep -q '"status"'; then
+          echo "=== Testing health endpoint ==="
+          HEALTH=$(curl -s --max-time 5 http://127.0.0.1:8000/health)
+          CURL_EXIT=$?
+          echo "Curl exit code: $CURL_EXIT"
+          echo "Response: $HEALTH"
+
+          if [ $CURL_EXIT -eq 0 ] && echo "$HEALTH" | grep -q '"status"'; then
+            echo "✓ API server started successfully"
+          else
             echo "✗ API server failed to start"
-            cat /tmp/api.log
+            echo "=== PHP Log ==="
+            tail -50 /tmp/api.log
+            echo "=== Running PHP processes ==="
+            ps aux | grep php | grep -v grep || echo "No PHP processes found"
             exit 1
           fi
-          echo "✓ API server started successfully"
 
       - name: Run All Tests with Coverage
         run: |
@@ -219,22 +241,52 @@ jobs:
       - name: Check Health Endpoint
         run: |
           cd api
-          echo "Testing Health Endpoint..."
+          echo "=== Testing Health Endpoint ==="
+
+          # Debug: Show running PHP processes
+          echo "=== Running PHP processes ==="
+          ps aux | grep php || echo "No PHP processes found"
 
           # Verify API server is still running
           if ! pgrep -f "php -S 127.0.0.1:8000" > /dev/null; then
-            echo "Starting API server..."
+            echo "⚠ API server is not running, starting it..."
+            echo "Current directory: $(pwd)"
+            echo "Files in public/: $(ls public/ | head -10)"
+
             php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
+            PHP_PID=$!
+            echo "Started PHP server with PID: $PHP_PID"
             sleep 3
+
+            # Check if server is actually running
+            if ! kill -0 $PHP_PID 2>/dev/null; then
+              echo "✗ PHP process died immediately"
+              cat /tmp/api.log
+              exit 1
+            fi
+          else
+            echo "✓ API server is running"
           fi
 
-          # Test health endpoint
-          HEALTH=$(curl -s http://localhost:8000/health)
-          if echo "$HEALTH" | grep -q '"status"'; then
+          # Show server log before testing
+          echo "=== API Server Log ==="
+          cat /tmp/api.log 2>/dev/null || echo "No log file"
+
+          # Test with verbose curl
+          echo "=== Testing health endpoint with curl ==="
+          HEALTH=$(curl -v --max-time 5 http://127.0.0.1:8000/health 2>&1)
+          CURL_EXIT=$?
+          echo "Curl exit code: $CURL_EXIT"
+          echo "Response:"
+          echo "$HEALTH"
+
+          # Verify it's valid JSON and contains 'status'
+          HEALTH_JSON=$(echo "$HEALTH" | grep -E '^\{' | tail -1)
+          if echo "$HEALTH_JSON" | grep -q '"status"'; then
             echo "✓ Health endpoint is working"
           else
             echo "✗ Health endpoint failed"
-            echo "Response: $HEALTH"
+            echo "Expected JSON with 'status' field"
             exit 1
           fi
 

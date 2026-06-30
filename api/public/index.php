@@ -46,10 +46,12 @@ $permissionChecker = new PermissionChecker(permissions: $permissions, rbac: $rba
 $endpoints = new Endpoints(db: $db, auth: $auth, logger: $logger, validator: $validator, rbac: $rbac);
 
 // Initialize rate limiter
+// Default guest limit is 10 requests per minute, can be overridden by env variable
+$guestLimit = (int)($_ENV['RATE_LIMIT_GUEST'] ?? 10);
 $rateLimiter = new RateLimiter(
     logger: $logger,
     storePath: __DIR__ . '/../../log/rate_limit',
-    maxRequests: 100,
+    maxRequests: $guestLimit,
     windowSeconds: 60
 );
 
@@ -139,7 +141,7 @@ if (!in_array($tableName, $rateLimitExempt)) {
             'status' => 429,
             'message' => 'Too Many Requests',
             'data' => null,
-            'error' => 'Rate limit exceeded. Max ' . $limitCheck['limit'] . ' requests per ' . $this->windowSeconds . ' seconds.',
+            'error' => 'Rate limit exceeded. Max ' . $limitCheck['limit'] . ' requests per minute.',
             'meta' => [
                 'limit' => $limitCheck['limit'],
                 'remaining' => 0,

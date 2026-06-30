@@ -4,12 +4,25 @@
          bootstrap="tests/bootstrap.php"
          colors="true"
          testdox="true">
+    <php>
+        <env name="RATE_LIMIT_GUEST" value="10000"/>
+        <env name="RATE_LIMIT_USER" value="10000"/>
+        <env name="RATE_LIMIT_ADMIN" value="10000"/>
+        <env name="DB_HOST" value="127.0.0.1:8997"/>
+        <env name="DB_USERNAME" value="splk"/>
+        <env name="DB_PASSWORD" value="splk"/>
+        <env name="DB_NAME" value="splk"/>
+        <env name="APP_ENV" value="test"/>
+    </php>
     <testsuites>
         <testsuite name="Integration Tests">
             <directory>tests/Integration</directory>
         </testsuite>
         <testsuite name="Unit Tests">
             <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="E2E Tests">
+            <directory>tests/E2E</directory>
         </testsuite>
     </testsuites>
 
