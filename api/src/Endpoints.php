@@ -214,7 +214,8 @@ class Endpoints
             }
         }
 
-            // Trigger webhook event
+        // Trigger webhook event
+        if (is_array($response['data'] ?? null) && isset($response['data']['id'])) {
             try {
                 $this->webhookManager->triggerEvent(
                     "{$table}.created",
