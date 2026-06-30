@@ -161,8 +161,31 @@ jobs:
       - name: Restart API Server for full test run
         run: |
           cd api
+          # Debug: Show cache state before cleanup
+          echo "=== Cache state BEFORE cleanup ==="
+          if [ -d ../log/rate_limit ]; then
+            echo "Cache directory exists: ../log/rate_limit"
+            ls -la ../log/rate_limit 2>/dev/null | head -20
+            echo "Total files: $(find ../log/rate_limit -type f 2>/dev/null | wc -l)"
+          else
+            echo "Cache directory does NOT exist: ../log/rate_limit"
+          fi
+
           # Clear rate limit cache before starting server
+          echo "=== Clearing cache ==="
           rm -rf ../log/rate_limit 2>/dev/null || true
+
+          # Debug: Verify cleanup
+          echo "=== Cache state AFTER cleanup ==="
+          if [ -d ../log/rate_limit ]; then
+            echo "ERROR: Cache directory STILL EXISTS after cleanup!"
+            ls -la ../log/rate_limit 2>/dev/null | head -20
+          else
+            echo "✓ Cache directory successfully removed"
+          fi
+
+          # Start server
+          echo "=== Starting API server ==="
           php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
           sleep 3
           if curl -s http://127.0.0.1:8000/health > /dev/null; then
