@@ -204,13 +204,37 @@ jobs:
 
           # Start server
           echo "=== Starting API server ==="
+          echo "Current directory: $(pwd)"
+          echo "Files in public/: $(ls public/)"
+          echo "Checking index.php syntax..."
+          php -l public/index.php
+
           php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
+          PHP_PID=$!
+          echo "Started with PID: $PHP_PID"
           sleep 3
-          if curl -s http://127.0.0.1:8000/health > /dev/null; then
+
+          # Check if process is still alive
+          if ! kill -0 $PHP_PID 2>/dev/null; then
+            echo "✗ PHP process died"
+            echo "=== PHP Log ==="
+            cat /tmp/api.log
+            exit 1
+          fi
+
+          # Test health endpoint
+          echo "=== Testing health endpoint ==="
+          HEALTH=$(curl -s http://127.0.0.1:8000/health)
+          echo "Response: $HEALTH"
+
+          if echo "$HEALTH" | grep -q '"status"'; then
             echo "✓ API server restarted successfully"
           else
             echo "✗ API server failed to restart"
+            echo "=== PHP Log ==="
             cat /tmp/api.log
+            echo "=== PHP processes ==="
+            ps aux | grep php
             exit 1
           fi
 
@@ -236,21 +260,61 @@ jobs:
           cd api
           echo "Testing Health Endpoint..."
 
+          # Debug: Show running PHP processes
+          echo "=== Running PHP processes ==="
+          ps aux | grep php || true
+
+          # Debug: Check if port is open
+          echo "=== Checking port 8000 ==="
+          netstat -tuln | grep 8000 || echo "Port 8000 not found in netstat"
+
           # Verify API server is still running
           if ! pgrep -f "php -S 127.0.0.1:8000" > /dev/null; then
-            echo "API server is not running, starting it..."
+            echo "⚠ API server is not running, starting it..."
+            # Show current directory and environment
+            echo "Current directory: $(pwd)"
+            echo "Current user: $(whoami)"
+            echo "Files in public/: $(ls -la public/ | head -5)"
+
             php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
-            sleep 3
+            PHP_PID=$!
+            echo "Started PHP server with PID: $PHP_PID"
+            sleep 5
+
+            # Check if server is actually running
+            if ! kill -0 $PHP_PID 2>/dev/null; then
+              echo "✗ PHP process died immediately"
+              cat /tmp/api.log
+              exit 1
+            fi
+          else
+            echo "✓ API server is running"
           fi
 
-          HEALTH=$(curl -s http://localhost:8000/health)
-          echo "Health response: $HEALTH"
+          # Show server log before testing
+          echo "=== API Server Log ==="
+          cat /tmp/api.log 2>/dev/null || echo "No log file"
+
+          # Test with verbose curl
+          echo "=== Testing health endpoint with verbose curl ==="
+          HEALTH=$(curl -v http://localhost:8000/health 2>&1)
+          CURL_EXIT=$?
+          echo "Curl exit code: $CURL_EXIT"
+          echo "Curl output: $HEALTH"
+
+          # Extract just the JSON response
+          HEALTH_JSON=$(echo "$HEALTH" | tail -1)
+          echo "Health JSON response: $HEALTH_JSON"
 
           # Verify it's valid JSON and contains 'status'
-          if echo "$HEALTH" | grep -q '"status"'; then
+          if echo "$HEALTH_JSON" | grep -q '"status"'; then
             echo "✓ Health endpoint is working"
           else
             echo "✗ Health endpoint failed"
+            echo "Expected JSON with 'status' field"
+            # Try to get more info
+            echo "=== Trying to access with curl -s ==="
+            curl -s http://localhost:8000/health
             exit 1
           fi
 
