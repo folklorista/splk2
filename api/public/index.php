@@ -488,14 +488,17 @@ switch ($method) {
                 Response::send(404, "No options found for referenced table");
             }
         } elseif ($id) {
-            // Check read permission for single record
-            $permCheck = $permissionChecker->canAccess($tableName, 'read', $user['user'], (int)$id);
-            if (!$permCheck['allowed']) {
-                Response::send(403, "Forbidden", null, $permCheck['reason']);
+            // First check if record exists
+            $record = $db->get($tableName, $id);
+            if (!$record || $record['status'] !== 200) {
+                Response::send(404, "Record not found");
             } else {
-                // Need to check if user owns the record if read_own_only
-                $record = $db->get($tableName, $id);
-                if ($record && $record['status'] === 200) {
+                // Check read permission for single record
+                $permCheck = $permissionChecker->canAccess($tableName, 'read', $user['user'], (int)$id);
+                if (!$permCheck['allowed']) {
+                    Response::send(403, "Forbidden", null, $permCheck['reason']);
+                } else {
+                    // Need to check if user owns the record if read_own_only
                     $ownerField = $permissionChecker->getOwnerField($tableName);
                     $recordOwnerId = $record['data'][$ownerField] ?? null;
                     $ownerCheck = $permissionChecker->canAccess($tableName, 'read', $user['user'], $recordOwnerId);
@@ -504,8 +507,6 @@ switch ($method) {
                     } else {
                         Response::sendPrepared($endpoints->getRecordByIdEndpoint($tableName, $id));
                     }
-                } else {
-                    Response::send(404, "Record not found");
                 }
             }
         } else {
