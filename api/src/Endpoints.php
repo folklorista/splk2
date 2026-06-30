@@ -187,7 +187,7 @@ class Endpoints
         }
 
         // Hook: afterCreate
-        if ($this->validator) {
+        if ($this->validator && is_array($response['data'] ?? null) && isset($response['data']['id'])) {
             try {
                 $this->validator->executeHook($table, 'afterCreate', $response['data']['id'],
                     $user, $this->logger, $this->db);
@@ -197,37 +197,40 @@ class Endpoints
         }
 
         // Audit log (CREATE: new_values = data)
-        try {
-            $this->db->logAction(
-                AuditAction::DATA_INSERT,
-                $user->id,
-                $table,
-                $response['data']['id'],
-                $response['message'],
-                $data,
-                oldValues: null,
-                newValues: $data
-            );
-        } catch (\Exception $e) {
-            $this->logger->error("Audit log failed", ['error' => $e->getMessage()]);
+        if (is_array($response['data'] ?? null) && isset($response['data']['id'])) {
+            try {
+                $this->db->logAction(
+                    AuditAction::DATA_INSERT,
+                    $user->id,
+                    $table,
+                    $response['data']['id'],
+                    $response['message'] ?? "Record created",
+                    $data,
+                    oldValues: null,
+                    newValues: $data
+                );
+            } catch (\Exception $e) {
+                $this->logger->error("Audit log failed", ['error' => $e->getMessage()]);
+            }
         }
 
-        // Trigger webhook event
-        try {
-            $this->webhookManager->triggerEvent(
-                "{$table}.created",
-                $response['data']['id'],
-                [
+            // Trigger webhook event
+            try {
+                $this->webhookManager->triggerEvent(
+                    "{$table}.created",
+                    $response['data']['id'],
+                    [
+                        'table' => $table,
+                        'record_id' => $response['data']['id'],
+                        'data' => $data,
+                    ]
+                );
+            } catch (\Exception $e) {
+                $this->logger->error("Webhook trigger failed for create", [
                     'table' => $table,
-                    'record_id' => $response['data']['id'],
-                    'data' => $data,
-                ]
-            );
-        } catch (\Exception $e) {
-            $this->logger->error("Webhook trigger failed for create", [
-                'table' => $table,
-                'error' => $e->getMessage(),
-            ]);
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return $response;
