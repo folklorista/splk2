@@ -10,8 +10,16 @@ class RBACTest extends TestCase {
     private $guestToken;
     private $adminUserId;
     private $regularUserId;
+    private $dbHost;
+    private $dbUser;
+    private $dbPass;
+    private $dbName;
 
     protected function setUp(): void {
+        $this->dbHost = $_ENV['DB_HOST'] ?? '127.0.0.1:3306';
+        $this->dbUser = $_ENV['DB_USERNAME'] ?? 'root';
+        $this->dbPass = $_ENV['DB_PASSWORD'] ?? 'root';
+        $this->dbName = $_ENV['DB_NAME'] ?? 'splk';
         // Register test users with different roles
         // Admin user
         $adminEmail = 'admin' . time() . '@test.com';
@@ -220,10 +228,12 @@ class RBACTest extends TestCase {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/json',
-            $token ? "Authorization: Bearer {$token}" : '',
-        ]);
+
+        $headers = ['Content-Type: application/json'];
+        if ($token) {
+            $headers[] = "Authorization: Bearer {$token}";
+        }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         if (!empty($data)) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -237,7 +247,30 @@ class RBACTest extends TestCase {
     }
 
     private function assignRoleToUser($userId, $roleId) {
-        // This would typically be done via an API endpoint
-        // For now, this is a placeholder for test setup
+        try {
+            $host = explode(':', $this->dbHost)[0];
+            $port = explode(':', $this->dbHost)[1] ?? 3306;
+
+            $conn = new \mysqli($host, $this->dbUser, $this->dbPass, $this->dbName, $port);
+            if ($conn->connect_error) {
+                return ['status' => 500, 'message' => 'Database connection failed'];
+            }
+
+            $stmt = $conn->prepare("INSERT INTO users_roles (user_id, role_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE role_id = ?");
+            $stmt->bind_param("iii", $userId, $roleId, $roleId);
+
+            if ($stmt->execute()) {
+                $stmt->close();
+                $conn->close();
+                return ['status' => 200, 'message' => 'Role assigned successfully'];
+            } else {
+                $error = $stmt->error;
+                $stmt->close();
+                $conn->close();
+                return ['status' => 500, 'message' => 'Failed to assign role: ' . $error];
+            }
+        } catch (\Exception $e) {
+            return ['status' => 500, 'message' => 'Exception: ' . $e->getMessage()];
+        }
     }
 }
