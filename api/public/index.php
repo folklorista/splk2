@@ -526,6 +526,7 @@ $orderBy       = $_SERVER['HTTP_X_SORT_BY'] ?? null;
 $orderDir      = strtoupper($_SERVER['HTTP_X_SORT_DIRECTION'] ?? 'ASC');
 $searchQuery   = $_SERVER['HTTP_X_SEARCH_QUERY'] ?? null;
 $searchColumns = isset($_SERVER['HTTP_X_SEARCH_COLUMNS']) ? explode(',', $_SERVER['HTTP_X_SEARCH_COLUMNS']) : null;
+$whereClause   = '';
 
 // Ověření, zda orderDir obsahuje jen "ASC" nebo "DESC"
 $orderDir = in_array($orderDir, ['ASC', 'DESC']) ? $orderDir : 'ASC';

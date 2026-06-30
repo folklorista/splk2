@@ -94,7 +94,7 @@ class RelationshipLoader
     {
         // Try to detect relationship type based on record structure
         // Pattern 1: {relationshipName}_id → has one/many
-        // Pattern 2: table has FK to relationshipName table
+        // Pattern 2: {tableName}_{relationshipName} or {relationshipName}_{tableName} → many-to-many
 
         $fkField = $relationshipName . '_id';
 
@@ -104,10 +104,10 @@ class RelationshipLoader
             return $this->loadHasOne($relationshipName, $record[$fkField]);
         }
 
-        // Check if relationshipName is a many-to-many table
-        // (connecting two other tables)
-        if ($this->isManyToManyTable($relationshipName, $tableName)) {
-            return $this->loadManyToMany($tableName, $record['id'], $relationshipName);
+        // Try to find junction table for many-to-many
+        $junctionTable = $this->findJunctionTable($tableName, $relationshipName);
+        if ($junctionTable) {
+            return $this->loadManyToMany($tableName, $record['id'], $junctionTable);
         }
 
         // Could not detect relationship
@@ -207,24 +207,41 @@ class RelationshipLoader
     }
 
     /**
-     * Check if a table is a many-to-many junction table
+     * Find the junction table for a many-to-many relationship
+     * Tries patterns: {mainTable}_{relatedTable} and {relatedTable}_{mainTable}
      *
-     * @param string $junctionTableName The potential junction table name
      * @param string $mainTable The main table name
-     * @return bool
+     * @param string $relatedTableName The related table name or relationship name
+     * @return string|null The junction table name or null if not found
      */
-    private function isManyToManyTable(string $junctionTableName, string $mainTable): bool
+    private function findJunctionTable(string $mainTable, string $relatedTableName): ?string
     {
-        // Simple heuristic: junction tables typically contain both table names
-        // or follow pattern: singular_singular (users_groups, items_events)
+        // Try both possible orderings
+        $candidates = [
+            $mainTable . '_' . $relatedTableName,  // users_roles
+            $relatedTableName . '_' . $mainTable,  // roles_users
+        ];
 
-        // Check if main table name is in junction table name
-        if (strpos($junctionTableName, $mainTable) !== false) {
-            return true;
+        foreach ($candidates as $tableName) {
+            try {
+                // Try to check if table exists by attempting a limited query
+                $result = $this->db->getAllWhere(
+                    $tableName,
+                    "1=0",  // Empty WHERE to check existence without loading data
+                    []
+                );
+
+                // If we got a response (even empty), the table exists
+                if ($result !== null && isset($result['status'])) {
+                    return $tableName;
+                }
+            } catch (\Exception $e) {
+                // Table doesn't exist, try next candidate
+                continue;
+            }
         }
 
-        // Could expand this with more sophisticated detection if needed
-        return false;
+        return null;
     }
 
     /**
