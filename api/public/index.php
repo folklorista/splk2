@@ -58,30 +58,34 @@ $rateLimiter = new RateLimiter(
 // Endpoints exempt from rate limiting
 $rateLimitExempt = ['health', 'docs', 'openapi.yaml'];
 
-// Získání HTTP metody a endpointu
-$method = $_SERVER['REQUEST_METHOD'];
+// Parse API request with versioning support
+try {
+    $routing = ApiRouter::parseRequest($_SERVER['REQUEST_URI']);
+} catch (\Exception $e) {
+    Response::send(400, "Routing failed", null, $e->getMessage());
+}
 
-// Rozparsování URL
-$parsedUrl = parse_url($_SERVER['REQUEST_URI']);
-
-// Cesta
-$path = explode('/', trim($parsedUrl['path'], '/'));
+$version = $routing['version'];
+$method = $routing['method'];
+$tableName = $routing['resource'];
+$id = $routing['id'];
+$path = $routing['path'];
+$pathIndex = $routing['pathIndex'];
 
 // Query string (pokud existuje)
 $queryParams = [];
+$parsedUrl = parse_url($_SERVER['REQUEST_URI']);
 if (isset($parsedUrl['query'])) {
     parse_str($parsedUrl['query'], $queryParams);
 }
 
 // Validace endpointu
-$pathIndex = $config['pathIndex'];
 if (count($path) == 0 || empty($path[$pathIndex['table']])) {
     Response::send(400, "Routing failed", null, "Invalid endpoint");
 }
 
-// Rozdělení endpointu na tabulku a ID
-$tableName = $path[$pathIndex['table']];
-$id        = $path[$pathIndex['id']] ?? null;
+// Add API version info to response headers
+header("X-API-Version: $version");
 
 // Apply rate limiting to non-exempt endpoints
 $clientIp = RateLimiter::getClientIdentifier();
@@ -181,6 +185,32 @@ if ($tableName === 'health' && $method === 'GET') {
         'uptime' => $uptime,
         'timestamp' => date('c'),
         'version' => '1.0.0',
+    ]);
+    exit;
+}
+
+// API Versions endpoint (no authentication required)
+if ($tableName === 'versions' && $method === 'GET') {
+    $supportedVersions = ApiRouter::getSupportedVersions();
+    $versionsInfo = [];
+
+    foreach ($supportedVersions as $v) {
+        $deprecationInfo = ApiRouter::getDeprecationInfo($v);
+        $versionsInfo[] = [
+            'version' => $v,
+            'status' => $deprecationInfo ? 'deprecated' : 'active',
+            'deprecation' => $deprecationInfo,
+        ];
+    }
+
+    http_response_code(200);
+    echo json_encode([
+        'status' => 'success',
+        'data' => [
+            'default_version' => 'v1',
+            'supported_versions' => $versionsInfo,
+            'documentation_url' => '/docs',
+        ],
     ]);
     exit;
 }
