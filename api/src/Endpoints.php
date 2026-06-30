@@ -268,8 +268,8 @@ class Endpoints
 
         // Update
         $response = $this->db->update($table, $id, $data);
-        if ($response['status'] !== 200) {
-            return $response;
+        if (!is_array($response) || ($response['status'] ?? null) !== 200) {
+            return $response ?? Response::prepare(500, "Database update failed");
         }
 
         // Hook: afterUpdate
@@ -341,8 +341,8 @@ class Endpoints
 
         // Delete
         $response = $this->db->delete($table, $id);
-        if ($response['status'] !== 200) {
-            return $response;
+        if (!is_array($response) || ($response['status'] ?? null) !== 200) {
+            return $response ?? Response::prepare(500, "Database delete failed");
         }
 
         // Hook: afterDelete
