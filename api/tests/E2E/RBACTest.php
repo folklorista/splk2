@@ -248,15 +248,23 @@ class RBACTest extends TestCase {
 
     private function assignRoleToUser($userId, $roleId) {
         try {
-            $host = explode(':', $this->dbHost)[0];
-            $port = explode(':', $this->dbHost)[1] ?? 3306;
+            $hostParts = explode(':', $this->dbHost);
+            $host = $hostParts[0] ?? '127.0.0.1';
+            $port = isset($hostParts[1]) ? (int)$hostParts[1] : 3306;
 
             $conn = new \mysqli($host, $this->dbUser, $this->dbPass, $this->dbName, $port);
-            if ($conn->connect_error) {
+            if ($conn->connect_errno !== 0) {
+                error_log("DB Connection error: " . $conn->connect_error);
                 return ['status' => 500, 'message' => 'Database connection failed'];
             }
 
             $stmt = $conn->prepare("INSERT INTO users_roles (user_id, role_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE role_id = ?");
+            if (!$stmt) {
+                error_log("Prepare error: " . $conn->error);
+                $conn->close();
+                return ['status' => 500, 'message' => 'Database prepare failed'];
+            }
+
             $stmt->bind_param("iii", $userId, $roleId, $roleId);
 
             if ($stmt->execute()) {
@@ -267,9 +275,11 @@ class RBACTest extends TestCase {
                 $error = $stmt->error;
                 $stmt->close();
                 $conn->close();
+                error_log("Role assignment error: " . $error);
                 return ['status' => 500, 'message' => 'Failed to assign role: ' . $error];
             }
         } catch (\Exception $e) {
+            error_log("Role assignment exception: " . $e->getMessage());
             return ['status' => 500, 'message' => 'Exception: ' . $e->getMessage()];
         }
     }
