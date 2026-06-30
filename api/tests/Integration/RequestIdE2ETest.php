@@ -65,7 +65,7 @@ class RequestIdE2ETest extends TestCase
 
         $requestId = $response['headers']['x-request-id'];
         $this->assertStringStartsWith('req_', $requestId);
-        $this->assertRegExp('/^req_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i', $requestId);
+        $this->assertMatchesRegularExpression('/^req_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i', $requestId);
     }
 
     /**
@@ -159,7 +159,8 @@ class RequestIdE2ETest extends TestCase
      */
     public function testClientIdPreservedInResponse()
     {
-        $clientId = 'client-trace-123456789';
+        // Must use valid UUID format for client ID
+        $clientId = 'req_12345678-1234-5678-1234-567812345678';
 
         $response = $this->makeRequestWithHeaders('/api/v1/health', [
             'X-Request-ID' => $clientId,

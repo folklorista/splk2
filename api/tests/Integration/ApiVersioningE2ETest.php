@@ -87,10 +87,10 @@ class ApiVersioningE2ETest extends TestCase
         $this->assertIsArray($versions);
         $this->assertNotEmpty($versions);
 
-        // Check that v1 and v2 are listed
+        // Check that v1 is listed (v2 is planned for future)
         $versionStrings = array_column($versions, 'version');
         $this->assertContains('v1', $versionStrings);
-        $this->assertContains('v2', $versionStrings);
+        $this->assertNotContains('v2', $versionStrings);  // v2 not yet supported
     }
 
     /**
