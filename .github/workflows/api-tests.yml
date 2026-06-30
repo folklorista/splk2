@@ -160,6 +160,8 @@ jobs:
 
       - name: Restart API Server for full test run
         run: |
+          # Clear rate limit cache before starting server
+          rm -rf api/log/rate_limit 2>/dev/null || true
           cd api
           php -S 127.0.0.1:8000 -t public > /tmp/api.log 2>&1 &
           sleep 3
@@ -173,8 +175,6 @@ jobs:
 
       - name: Run All Tests with Coverage
         run: |
-          # Clear rate limit cache before running full test suite
-          rm -rf ../../log/rate_limit 2>/dev/null || true
           ./vendor/bin/phpunit \
             --coverage-clover coverage.xml \
             --display-deprecations \
