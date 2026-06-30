@@ -186,15 +186,30 @@ if ($tableName === 'health' && $method === 'GET') {
         isset($_SERVER['REQUEST_TIME']) ? time() - $_SERVER['REQUEST_TIME'] : 0
     );
 
-    http_response_code(200);
-    header('Content-Type: application/json');
-    echo json_encode([
+    $responseData = [
         'status' => $dbStatus === 'OK' ? 'operational' : 'degraded',
         'database' => $dbStatus,
         'uptime' => $uptime,
         'timestamp' => date('c'),
         'version' => '1.0.0',
-    ]);
+    ];
+
+    // Set cache headers for health endpoint
+    $responseJson = json_encode($responseData);
+    $eTag = CacheHeaderManager::generateETag($responseJson);
+
+    // Check for 304 Not Modified
+    if (CacheHeaderManager::isClientCacheValid($eTag)) {
+        http_response_code(304);
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        exit(0);
+    }
+
+    // Set cache headers
+    CacheHeaderManager::setCacheHeaders('health', 'GET', $eTag);
+
+    http_response_code(200);
+    echo $responseJson;
     exit;
 }
 
@@ -212,20 +227,39 @@ if ($tableName === 'versions' && $method === 'GET') {
         ];
     }
 
-    http_response_code(200);
-    echo json_encode([
+    $responseData = [
         'status' => 'success',
         'data' => [
             'default_version' => 'v1',
             'supported_versions' => $versionsInfo,
             'documentation_url' => '/docs',
         ],
-    ]);
+    ];
+
+    // Set cache headers for versions endpoint
+    $responseJson = json_encode($responseData);
+    $eTag = CacheHeaderManager::generateETag($responseJson);
+
+    // Check for 304 Not Modified
+    if (CacheHeaderManager::isClientCacheValid($eTag)) {
+        http_response_code(304);
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        exit(0);
+    }
+
+    // Set cache headers
+    CacheHeaderManager::setCacheHeaders('versions', 'GET', $eTag);
+
+    http_response_code(200);
+    echo $responseJson;
     exit;
 }
 
 // API Documentation UI (no authentication required)
 if ($tableName === 'docs' && $method === 'GET') {
+    // Set cache headers for docs endpoint
+    CacheHeaderManager::setCacheHeaders('docs', 'GET');
+
     http_response_code(200);
     header('Content-Type: text/html; charset=utf-8');
     ?>
