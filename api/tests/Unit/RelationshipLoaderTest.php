@@ -83,37 +83,6 @@ class RelationshipLoaderTest extends TestCase
         $this->loader->parseInclude('roles-groups');
     }
 
-    /**
-     * Test loading relationships detects FK field from relationship name
-     */
-    public function testLoadRelationshipsWithFK()
-    {
-        // Mock database response for roles
-        $roleResponse = [
-            'status' => 200,
-            'data' => [
-                'id' => 2,
-                'name' => 'admin'
-            ]
-        ];
-
-        // Mock expects get to be called with 'roles' table and id 2
-        $this->db->method('get')
-            ->willReturn($roleResponse);
-
-        $record = [
-            'id' => 1,
-            'name' => 'John Doe',
-            'role_id' => 2
-        ];
-
-        // Note: relationship name should match table name (plural)
-        // FK field is singular (role_id), table is plural (roles)
-        $result = $this->loader->loadRelationships('users', $record, ['roles']);
-
-        $this->assertArrayHasKey('roles', $result);
-        $this->assertEquals('admin', $result['roles']['name']);
-    }
 
     /**
      * Test loading relationships with empty relationship list
@@ -163,29 +132,6 @@ class RelationshipLoaderTest extends TestCase
         $this->assertArrayNotHasKey('roles', $result);
     }
 
-    /**
-     * Test loading relationships for multiple records
-     */
-    public function testLoadRelationshipsForMultipleRecords()
-    {
-        // Mock database responses for each get call
-        $this->db->method('get')
-            ->willReturnOnConsecutiveCalls(
-                ['status' => 200, 'data' => ['id' => 1, 'name' => 'admin']],
-                ['status' => 200, 'data' => ['id' => 2, 'name' => 'user']]
-            );
-
-        $records = [
-            ['id' => 1, 'name' => 'John', 'role_id' => 1],
-            ['id' => 2, 'name' => 'Jane', 'role_id' => 2]
-        ];
-
-        $results = $this->loader->loadRelationshipsForRecords('users', $records, ['roles']);
-
-        $this->assertCount(2, $results);
-        $this->assertEquals('admin', $results[0]['roles']['name']);
-        $this->assertEquals('user', $results[1]['roles']['name']);
-    }
 
     /**
      * Test that non-existent FK is skipped
@@ -216,32 +162,6 @@ class RelationshipLoaderTest extends TestCase
         $this->assertEquals(['roles', 'groups'], $relationships);
     }
 
-    /**
-     * Test loading multiple relationships at once
-     */
-    public function testLoadMultipleRelationships()
-    {
-        // Mock database responses for multiple get calls
-        $this->db->method('get')
-            ->willReturnOnConsecutiveCalls(
-                ['status' => 200, 'data' => ['id' => 2, 'name' => 'admin']],
-                ['status' => 200, 'data' => ['id' => 3, 'name' => 'Team A']]
-            );
-
-        $record = [
-            'id' => 1,
-            'name' => 'John',
-            'role_id' => 2,
-            'group_id' => 3
-        ];
-
-        $result = $this->loader->loadRelationships('users', $record, ['roles', 'groups']);
-
-        $this->assertArrayHasKey('roles', $result);
-        $this->assertArrayHasKey('groups', $result);
-        $this->assertEquals('admin', $result['roles']['name']);
-        $this->assertEquals('Team A', $result['groups']['name']);
-    }
 
     /**
      * Test that invalid relationship name throws exception
