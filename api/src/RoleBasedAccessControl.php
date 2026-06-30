@@ -46,14 +46,14 @@ class RoleBasedAccessControl {
                 [$userId]
             );
 
-            if ($result['status'] !== 200 || empty($result['data'])) {
+            if (!is_array($result) || ($result['status'] ?? null) !== 200 || empty($result['data'])) {
                 return [];
             }
 
             $roles = [];
             foreach ($result['data'] as $userRole) {
                 $roleResult = $this->db->get('roles', $userRole['role_id']);
-                if ($roleResult['status'] === 200) {
+                if (is_array($roleResult) && ($roleResult['status'] ?? null) === 200) {
                     $roles[] = $roleResult['data'];
                 }
             }
@@ -79,7 +79,7 @@ class RoleBasedAccessControl {
         try {
             // Verify user exists
             $userResult = $this->db->get('users', $userId);
-            if ($userResult['status'] !== 200) {
+            if (!is_array($userResult) || ($userResult['status'] ?? null) !== 200) {
                 return [
                     'status' => 404,
                     'message' => 'User not found',
@@ -89,7 +89,7 @@ class RoleBasedAccessControl {
 
             // Verify role exists
             $roleResult = $this->db->get('roles', $roleId);
-            if ($roleResult['status'] !== 200) {
+            if (!is_array($roleResult) || ($roleResult['status'] ?? null) !== 200) {
                 return [
                     'status' => 404,
                     'message' => 'Role not found',
@@ -104,7 +104,7 @@ class RoleBasedAccessControl {
                 [$userId, $roleId]
             );
 
-            if ($existingResult['status'] === 200 && !empty($existingResult['data'])) {
+            if (is_array($existingResult) && ($existingResult['status'] ?? null) === 200 && !empty($existingResult['data'])) {
                 return [
                     'status' => 400,
                     'message' => 'User already has this role',
@@ -160,7 +160,7 @@ class RoleBasedAccessControl {
                 [$userId, $roleId]
             );
 
-            if ($existingResult['status'] !== 200 || empty($existingResult['data'])) {
+            if (!is_array($existingResult) || ($existingResult['status'] ?? null) !== 200 || empty($existingResult['data'])) {
                 return [
                     'status' => 404,
                     'message' => 'User does not have this role',
@@ -215,7 +215,7 @@ class RoleBasedAccessControl {
                 [$roleName]
             );
 
-            if ($roleResult['status'] !== 200 || empty($roleResult['data'])) {
+            if (!is_array($roleResult) || ($roleResult['status'] ?? null) !== 200 || empty($roleResult['data'])) {
                 return [
                     'status' => 404,
                     'message' => 'Role not found',
