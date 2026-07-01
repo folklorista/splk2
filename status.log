@@ -1,0 +1,1492 @@
+timestamp: 2026-07-01T13:07:00Z
+branch: develop
+commit: 97cba171e4c9913dc2275c4c6efdad09e63f868a
+run: 28519670911 (attempt 1)
+status: success
+
+--- Unit Tests log ---
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.31 with Xdebug 3.5.3
+Configuration: /home/runner/work/splk2/splk2/api/phpunit.xml
+
+...............................................................  63 / 274 ( 22%)
+............................................................... 126 / 274 ( 45%)
+..............................................................D 189 / 274 ( 68%)
+D.............................................................. 252 / 274 ( 91%)
+......................                                          274 / 274 (100%)
+
+Time: 00:01.163, Memory: 26.00 MB
+
+Api Versioning (App\Tests\ApiVersioning)
+ ✔ Parse v 1 versioned url
+ ✔ Parse v 2 versioned url not supported
+ ✔ Parse legacy format
+ ✔ Parse with trailing slash
+ ✔ Parse endpoint without id
+ ✔ Parse with query params
+ ✔ Unsupported version throws exception
+ ✔ Version string validation
+ ✔ Get supported versions
+ ✔ Path index structure
+ ✔ Path array structure
+ ✔ Health endpoint parsing
+ ✔ Docs endpoint parsing
+ ✔ Versions endpoint parsing
+
+Authorization (Tests\Unit\Authorization)
+ ✔ Permission checker exists
+ ✔ Permissions config exists
+ ✔ Permission matrix defined
+ ✔ Roles have crud permissions
+ ✔ Ownership restrictions exist
+ ✔ Admin has full access
+ ✔ Guest has limited access
+ ✔ User has ownership restrictions
+ ✔ Authorization checks in index
+ ✔ Read access filtering implemented
+ ✔ Owner fields defined
+ ✔ Proper http status
+ ✔ Authorization logging
+
+Cache Header Manager (App\Tests\CacheHeaderManager)
+ ✔ Generate e tag from string
+ ✔ Generate e tag from array
+ ✔ E tag consistency
+ ✔ E tag uniqueness
+ ✔ Get cache strategy for health
+ ✔ Get cache strategy for versions
+ ✔ Get cache strategy for docs
+ ✔ Get default cache strategy
+ ✔ Post requests not cached
+ ✔ Put requests not cached
+ ✔ Delete requests not cached
+ ✔ Should cache for g e t
+ ✔ Should cache for h e a d
+ ✔ Should not cache for p o s t
+ ✔ Should not cache error responses
+ ✔ Should not cache nocach endpoints
+ ✔ Should cache not modified response
+ ✔ Is client cache valid with matching e tag
+ ✔ Is client cache valid with quoted e tag
+ ✔ Is client cache invalid with mismatched e tag
+ ✔ Is client cache valid with if modified since
+ ✔ Is client cache invalid without headers
+ ✔ Get all strategies
+ ✔ Cache strategy structure
+ ✔ Cache max age values
+ ✔ Public private classification
+
+Cors (Tests\Unit\Cors)
+ ✔ Missing configuration throws exception
+ ✔ Allowed origin receives cors headers
+ ✔ Disallowed origin no allow origin header
+ ✔ Subdomain wildcard pattern
+ ✔ Options preflight
+ ✔ Exact origin matching
+ ✔ Whitespace handling in origin list
+ ✔ Wildcard origin not allowed
+ ✔ Multiple origin configuration
+ ✔ Missing origin header
+ ✔ Cors headers structure
+ ✔ Origin with port number
+ ✔ Similar origin rejected
+
+File Upload Manager (App\Tests\Unit\FileUploadManager)
+ ✔ Get file successfully
+ ✔ Get file fails when not found
+ ✔ Get user files successfully
+ ✔ Get allowed extensions
+ ✔ Get max file size
+ ✔ Handle upload fails with invalid array
+ ✔ Handle upload fails with oversized file
+ ✔ Handle upload fails with invalid extension
+ ✔ Delete file fails when not found
+ ✔ Delete file fails when not owner
+
+File Upload Security (Tests\Unit\FileUploadSecurity)
+ ✔ Env example includes file upload config
+ ✔ Uploads directory is outside webroot
+ ✔ Blocked mime types configured
+ ✔ Mime type validation
+ ✔ File content validation
+ ✔ Filenames are randomized
+ ✔ File permissions are secure
+ ✔ Validation failures are logged
+ ✔ Max file size from env
+ ✔ Allowed extensions from env
+
+Filter Parser (Tests\Unit\FilterParser)
+ ✔ Parse empty returns empty array
+ ✔ Parse shorthand equality filter
+ ✔ Parse operator filter
+ ✔ Parse multiple operators on same column
+ ✔ Parse in filter splits comma separated values
+ ✔ Parse like filter wraps value in wildcards
+ ✔ Parse rejects unknown column
+ ✔ Parse rejects unknown operator
+ ✔ Apply builds where clause with bound params
+
+Jwt Expiration (Tests\Unit\JwtExpiration)
+ ✔ Jwt expiration env variable
+ ✔ Default jwt expiration is 15 minutes
+ ✔ Env example includes jwt expiration
+ ✔ Jwt expiration is not too long
+
+Jwt Secret Config (Tests\Unit\JwtSecretConfig)
+ ✔ Missing jwt secret throws exception
+ ✔ Empty jwt secret throws exception
+ ✔ Valid jwt secret loads
+ ✔ Jwt secret not hardcoded
+ ✔ Error message is helpful
+ ✔ Env example no hardcoded secret
+
+Pagination Manager (App\Tests\PaginationManager)
+ ✔ Default pagination
+ ✔ Parse with limit and offset
+ ✔ Limit enforcement too high
+ ✔ Limit enforcement too low
+ ✔ Negative limit defaults to default
+ ✔ Negative offset defaults to zero
+ ✔ Maximum offset enforcement
+ ✔ Build metadata standard
+ ✔ Build metadata last page
+ ✔ Build metadata partial last page
+ ✔ Build metadata total less than limit
+ ✔ Build metadata zero total
+ ✔ Get limit clause
+ ✔ Pagination is needed
+ ✔ Get previous offset
+ ✔ Get next offset
+ ✔ Build links
+ ✔ Build links first page
+ ✔ Build links last page
+ ✔ Build links format
+ ✔ Empty result pagination
+ ✔ Large offset small total
+ ✔ Page calculation accuracy
+ ✔ Limit boundary values
+ ✔ Returned records calculation
+
+Password Reset (Tests\Unit\PasswordReset)
+ ✔ Password reset class exists
+ ✔ Password reset docs exist
+ ✔ Token expiry is one hour
+ ✔ Rate limit three per hour
+ ✔ Token can only be used once
+ ✔ Passwords are hashed
+ ✔ Token hash used
+ ✔ Reset endpoints exist
+ ✔ Email validation
+ ✔ Other tokens revoked on reset
+ ✔ Password minimum length enforced
+ ✔ Audit logging performed
+ ✔ Email sending is stubbed
+ ✔ Migration exists
+
+Rate Limiting Security (Tests\Unit\RateLimitingSecurity)
+ ✔ Skip rate limit bypass removed
+ ✔ Login endpoint rate limited
+ ✔ Register endpoint rate limited
+ ✔ Role based rate limiting
+ ✔ Authenticated requests use user id
+ ✔ Rate limit headers set
+ ✔ Env variables for rate limits
+ ✔ Proper http status on rate limit
+ ✔ Retry after header
+ ✔ Only health and docs exempt
+
+Relationship Loader (Tests\Unit\RelationshipLoader)
+ ✔ Parse include valid
+ ✔ Parse include with whitespace
+ ✔ Parse include single
+ ✔ Parse include empty
+ ✔ Parse include invalid
+ ✔ Parse include with numbers
+ ✔ Parse include invalid chars
+ ✔ Load relationships empty
+ ✔ Load relationships empty record
+ ✔ Load relationships handles errors
+ ✔ Load relationships skips non existent f k
+ ✔ Parse include trailing commas
+ ✔ Parse include start with number
+
+Request Id Manager (App\Tests\RequestIdManager)
+ ✔ Generate new request id
+ ✔ Detect client provided id
+ ✔ Detect from correlation id header
+ ✔ Detect from trace id header
+ ✔ Ignore invalid client id
+ ✔ Ignore too long client id
+ ✔ Header precedence
+ ✔ Uuid v 4 format validation
+ ✔ Invalid uuid format rejection
+ ✔ Log format
+ ✔ Context array
+ ✔ Context array client provided
+ ✔ Set response header
+ ✔ Generated id uniqueness
+ ✔ Trim whitespace from headers
+ ✔ Empty header ignored
+ ✔ Whitespace only header ignored
+
+Role Based Access Control (App\Tests\Unit\RoleBasedAccessControl)
+ ✔ Has role returns true when user has role
+ ✔ Has role returns false when user doesnt have role
+ ✔ Has role with multiple roles
+ ✔ Has role returns false when user is null
+ ⚠ Assign role successfully
+ ⚠ Assign role fails when role already assigned
+ ✔ Assign role fails when user not found
+ ✔ Remove role successfully
+ ✔ Remove role fails when role not assigned
+ ✔ Is owner returns true when user is owner
+ ✔ Is owner returns false when user is not owner
+ ✔ Is owner returns false for non users table
+
+Rule Validator (SPLK2\Tests\Unit\RuleValidator)
+ ✔ Required field valid
+ ✔ Required field missing
+ ✔ Required field empty string
+ ✔ Required field null
+ ✔ Email type valid
+ ✔ Email type invalid
+ ✔ Integer type valid
+ ✔ Integer type string integer
+ ✔ Integer type float invalid
+ ✔ Float type valid
+ ✔ Boolean type valid
+ ✔ String type valid
+ ✔ MinLength valid
+ ✔ MinLength too short
+ ✔ MaxLength valid
+ ✔ MaxLength too long
+ ✔ Enum valid
+ ✔ Enum invalid
+ ✔ Min value valid
+ ✔ Min value too low
+ ✔ Max value valid
+ ✔ Max value too high
+ ✔ Min float valid
+ ✔ Min float too low
+ ✔ Unique exists
+ ✔ Unique not exists
+ ✔ Unique database 404
+ ✔ Update partial data
+ ✔ Update validates provided
+ ✔ Hook beforeCreate executed
+ ✔ Hook beforeDelete executed
+ ✔ Hook no matching table
+ ✔ Hook no matching hook
+ ✔ Get table rules
+ ✔ GetTableRules nonexistent
+ ✔ HasRules true
+ ✔ HasRules false
+ ✔ Multiple errors
+ ✔ Required stops other validations
+ ✔ No rules for table
+
+SQLInjection (Tests\Unit\SQLInjection)
+ ✔ Equality condition with malicious input
+ ✔ In condition with malicious input
+ ✔ Like condition with malicious input
+ ✔ Fulltext with malicious input
+ ✔ Multiple conditions with malicious input
+ ✔ Null value handling
+ ✔ Column name quoting
+ ✔ Correct query structure
+ ✔ Special characters in values
+
+Search Parser (Tests\Unit\SearchParser)
+ ✔ Parse empty or null
+ ✔ Parse single short term stays exact
+ ✔ Parse plain terms get auto wildcard
+ ✔ Parse and operator requires both terms
+ ✔ Parse or operator is no op
+ ✔ Parse not keyword excludes term
+ ✔ Parse leading minus excludes term
+ ✔ Parse quoted phrase keeps exact match
+ ✔ Parse explicit wildcard is preserved
+ ✔ Parse strips unsafe characters
+ ✔ Parse duplicate terms are deduplicated
+
+Sort Parser (Tests\Unit\SortParser)
+ ✔ Parse single column ascending
+ ✔ Parse single column descending
+ ✔ Parse explicit ascending
+ ✔ Parse multiple columns
+ ✔ Parse with whitespace
+ ✔ Parse empty or null
+ ✔ Parse invalid column name
+ ✔ Parse invalid column starting with digit
+
+Webhook Manager (App\Tests\Unit\WebhookManager)
+ ✔ Create webhook fails with invalid url
+ ✔ Create webhook fails with empty events
+ ✔ Create webhook fails with invalid event
+ ✔ Update webhook successfully
+ ✔ Update webhook fails when not found
+ ✔ Delete webhook successfully
+ ✔ Get webhook successfully
+ ✔ Get user webhooks successfully
+ ✔ Test webhook fails when not found
+ ✔ Trigger event with no webhooks
+
+OK, but there were issues!
+Tests: 274, Assertions: 728, PHPUnit Deprecations: 2.
+
+Generating code coverage report in Cobertura XML format ... done [00:00.252]
+
+--- Integration Tests (E2E) log ---
+✓ API is running at http://localhost:8000
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.31 with Xdebug 3.5.3
+Configuration: /home/runner/work/splk2/splk2/api/phpunit.xml
+
+...............................
+=== STEP 1: Register User for Change Tracking ===
+Email: change-tracking-1782911169-716867@example.com
+Response Status: 201
+✓ User registered
+.
+=== STEP 2: Login User ===
+Response Status: 200
+✓ Login successful
+.
+=== STEP 3: Create Category (Check new_values) ===
+Request: POST /categories
+Data: {"name":"Change Tracking Test Category"}
+Response Status: 201
+✓ Category created (ID: 10)
+
+Audit Log Response:
+{
+    "status": 200,
+    "data": [
+        {
+            "id": 36,
+            "user_id": 12,
+            "action_id": 2,
+            "table_name": "categories",
+            "record_id": 10,
+            "details": "Record created",
+            "data": "{\"name\": \"Change Tracking Test Category\"}",
+            "old_values": null,
+            "new_values": "{\"name\": \"Change Tracking Test Category\"}",
+            "ip_address": "127.0.0.1",
+            "user_agent": null,
+            "created_at": "2026-07-01 13:06:11"
+        }
+    ],
+    "message": "Records found",
+    "error": null
+}
+✓ Audit log verified:
+  - new_values: {"name": "Change Tracking Test Category"}
+  - old_values: NULL
+.
+=== STEP 4: Update Category (Check old_values + new_values) ===
+Request: PUT /categories/10
+Data: {"name":"Updated Change Tracking Category"}
+Response Status: 200
+✓ Category updated
+
+Audit Log Response:
+{
+    "status": 200,
+    "data": [
+        {
+            "id": 37,
+            "user_id": 12,
+            "action_id": 3,
+            "table_name": "categories",
+            "record_id": 10,
+            "details": "Record updated",
+            "data": "{\"name\": \"Updated Change Tracking Category\"}",
+            "old_values": "{\"id\": 10, \"name\": \"Change Tracking Test Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-07-01 13:06:11\", \"is_deleted\": 0, \"updated_at\": \"2026-07-01 13:06:11\"}",
+            "new_values": "{\"id\": 10, \"name\": \"Updated Change Tracking Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-07-01 13:06:11\", \"is_deleted\": 0, \"updated_at\": \"2026-07-01 13:06:11\"}",
+            "ip_address": "127.0.0.1",
+            "user_agent": null,
+            "created_at": "2026-07-01 13:06:12"
+        }
+    ],
+    "message": "Records found",
+    "error": null
+}
+✓ Audit log verified:
+  - old_values: {"id": 10, "name": "Change Tracking Test Category", "position": 0, "parent_id": null, "created_at": "2026-07-01 13:06:11", "is_deleted": 0, "updated_at": "2026-07-01 13:06:11"}
+  - new_values: {"id": 10, "name": "Updated Change Tracking Category", "position": 0, "parent_id": null, "created_at": "2026-07-01 13:06:11", "is_deleted": 0, "updated_at": "2026-07-01 13:06:11"}
+.
+=== STEP 5: Delete Category (Check old_values) ===
+Request: DELETE /categories/10
+Response Status: 200
+✓ Category deleted
+
+Audit Log Response:
+{
+    "status": 200,
+    "data": [
+        {
+            "id": 38,
+            "user_id": 12,
+            "action_id": 4,
+            "table_name": "categories",
+            "record_id": 10,
+            "details": "Record deleted",
+            "data": null,
+            "old_values": "{\"id\": 10, \"name\": \"Updated Change Tracking Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-07-01 13:06:11\", \"is_deleted\": 0, \"updated_at\": \"2026-07-01 13:06:12\"}",
+            "new_values": null,
+            "ip_address": "127.0.0.1",
+            "user_agent": null,
+            "created_at": "2026-07-01 13:06:13"
+        }
+    ],
+    "message": "Records found",
+    "error": null
+}
+✓ Audit log verified:
+  - old_values: {"id": 10, "name": "Updated Change Tracking Category", "position": 0, "parent_id": null, "created_at": "2026-07-01 13:06:11", "is_deleted": 0, "updated_at": "2026-07-01 13:06:12"}
+  - new_values: NULL
+.
+=== STEP 6: Verify Full Audit Trail ===
+Total audit entries: 3
+
+Audit Actions Found:
+  - Record created
+  - Record updated
+  - Record deleted
+
+✓ Full audit trail verified!
+  - CREATE with new_values ✓
+  - UPDATE with old_values + new_values ✓
+  - DELETE with old_values ✓
+.
+=== STEP 1: Register New User ===
+Request: POST /register
+Email: e2e-test-1782911169-541147@example.com
+Response Status: 201
+Response: {
+    "status": 201,
+    "message": "User registered",
+    "data": {
+        "id": "13"
+    }
+}
+✓ User registered successfully (ID: 13)
+.
+=== STEP 2: Login User ===
+Request: POST /login
+Email: e2e-test-1782911169-541147@example.com
+Response Status: 200
+✓ Login successful
+Access Token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb...
+Refresh Token: ...
+.
+=== STEP 3: Create Category ===
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz...
+Request: POST /categories
+Response Status: 201
+Response: {
+    "status": 201,
+    "message": "Record created",
+    "data": {
+        "id": "11"
+    }
+}
+✓ Category created successfully (ID: 11)
+.
+=== STEP 4: Create Item ===
+Category ID: 11
+Request: POST /items
+Response Status: 201
+Response: {
+    "status": 201,
+    "message": "Record created",
+    "data": {
+        "id": "10"
+    }
+}
+✓ Item created successfully (ID: 10)
+.
+=== STEP 5: Try Delete Category (Should Fail) ===
+Category ID: 11
+Category has 10 item(s)
+Request: DELETE /categories/11
+Response Status: 409
+Response: {
+    "status": 409,
+    "message": "Cannot delete category with items. Remove items first.",
+    "data": null,
+    "error": "Unknown error"
+}
+✓ Correctly prevented deletion (business rule enforced)
+  Error: Unknown error
+.
+=== STEP 6: Delete Item ===
+Item ID: 10
+Request: DELETE /items/10
+Response Status: 200
+Response: {
+    "status": 200,
+    "message": "Record deleted",
+    "data": null
+}
+✓ Item deleted successfully
+.
+=== STEP 7: Delete Category (Now Succeeds) ===
+Category ID: 11
+Category is now empty
+Request: DELETE /categories/11
+Response Status: 200
+Response: {
+    "status": 200,
+    "message": "Record deleted",
+    "data": null
+}
+✓ Category deleted successfully
+.
+=== STEP 8: Verify Cleanup ===
+Request: GET /categories/11
+Response Status: 404
+✓ Category properly deleted (not found)
+Request: GET /items/10
+Response Status: 404
+✓ Item properly deleted (not found)
+................
+=== Test 1: Register User ===
+Response Status: 201
+✓ User registered
+.
+=== Test 2: Login Returns Tokens ===
+Response Status: 200
+✓ Login successful, received tokens
+Access Token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb...
+Expires In: 900 seconds
+.S
+=== Test 4: Token Rotation - Old Token Cannot Be Reused ===
+Response Status: 401
+✓ Invalid refresh token properly rejected
+.
+=== Test 5: Missing Refresh Token ===
+Response Status: 400
+✓ Missing refresh token properly rejected
+. 65 / 92 ( 70%)
+...........................                                       92 / 92 (100%)
+
+Time: 00:19.065, Memory: 12.00 MB
+
+Api Versioning E2E (App\Tests\Integration\ApiVersioningE2E)
+ ✔ V 1 versioned endpoint
+ ✔ V 2 versioned endpoint not supported
+ ✔ Legacy endpoint
+ ✔ Versions endpoint
+ ✔ Response includes version header
+ ✔ Unsupported version returns error
+ ✔ Docs with versioned url
+ ✔ Docs with legacy url
+
+Bulk Operations E2E (Tests\Integration\BulkOperationsE2E)
+ ✔ Bulk create items succeeds
+ ✔ Bulk create partially invalid record returns 207
+ ✔ Bulk create requires non empty array
+ ✔ Bulk create over limit returns 400
+ ✔ Bulk update items succeeds
+ ✔ Bulk update non existent id returns error entry
+ ✔ Bulk update denies record not owned by user
+ ✔ Bulk delete items succeeds
+ ✔ Bulk delete requires ids array
+
+Cache Headers E2E (App\Tests\Integration\CacheHeadersE2E)
+ ✔ Health endpoint has cache control
+ ✔ Health endpoint has last modified
+ ✔ Health endpoint has e tag
+ ✔ Versions endpoint has longer cache
+ ✔ Docs endpoint has longest cache
+ ✔ User endpoints have no cache
+ ✔ Cachable endpoints have must revalidate
+ ✔ E tag consistency
+ ✔ If none match with matching e tag
+ ✔ If modified since header
+ ✔ H e a d requests cache headers
+ ✔ Post request has no cache
+ ✔ Cache control header format
+ ✔ E tag format
+
+Change Tracking E2E (SPLK2\Tests\Integration\ChangeTrackingE2E)
+ ✔ 01 RegisterUser
+ ✔ 02 LoginUser
+ ✔ 03 CreateCategoryWithChangeTracking
+ ✔ 04 UpdateCategoryWithChangeTracking
+ ✔ 05 DeleteCategoryWithChangeTracking
+ ✔ 06 VerifyFullAuditTrail
+
+E2EWorkflow (SPLK2\Tests\Integration\E2EWorkflow)
+ ✔ 01 RegisterNewUser
+ ✔ 02 LoginUser
+ ✔ 03 CreateCategory
+ ✔ 04 CreateItem
+ ✔ 05 TryDeleteCategoryWithItems
+ ✔ 06 DeleteItem
+ ✔ 07 DeleteCategory
+ ✔ 08 VerifyCleanup
+
+Enhanced Search E2E (Tests\Integration\EnhancedSearchE2E)
+ ✔ Filter by exact column value
+ ✔ Filter with comparison operator
+ ✔ Filter rejects unknown column
+ ✔ Boolean search and requires both terms
+ ✔ Boolean search not excludes term
+ ✔ Fuzzy search fallback matches typo
+ ✔ Faceted search returns counts
+
+Field Selection E2E (Tests\Integration\FieldSelectionE2E)
+ ✔ Get without field selection
+ ✔ Get with field selection
+ ✔ Get with single field selection
+ ✔ Get with field selection whitespace
+ ✔ Invalid field name
+ ✔ List with field selection
+ ✔ Always protected field cannot be requested
+ ✔ Case insensitive field names
+
+Refresh Token (SPLK2\Tests\Integration\RefreshToken)
+ ✔ 01 RegisterUser
+ ✔ 02 LoginReturnsTokens
+ ↩ 03 RefreshTokenReturnsNewAccessToken
+ ✔ 04 OldRefreshTokenCannotBeReused
+ ✔ 05 MissingRefreshTokenReturnsError
+
+Relationship Expansion E2E (Tests\Integration\RelationshipExpansionE2E)
+ ✔ Get without include
+ ✔ Get with invalid include
+ ✔ Get with include parameter
+ ✔ List with include parameter
+ ✔ Get with multiple includes
+ ✔ Get with include and field selection
+ ✔ Get with include whitespace
+ ✔ Get with empty include
+
+Request Id E2E (App\Tests\Integration\RequestIdE2E)
+ ✔ Api generates request id
+ ✔ Api accepts client request id
+ ✔ Api accepts correlation id header
+ ✔ Api generates new id for invalid client id
+ ✔ Request id in different endpoints
+ ✔ Each request gets unique id
+ ✔ Client id preserved in response
+ ✔ Request id with legacy url
+ ✔ Request id in error response
+ ✔ Request id with whitespace in client header
+ ✔ Invalid long client id is rejected
+
+Sorting E2E (Tests\Integration\SortingE2E)
+ ✔ Multi column sort breaks tie on second column
+ ✔ Sort direction prefix is respected
+ ✔ Invalid sort column returns 400
+ ✔ Sort meta reflects requested columns
+
+Sse Events E2E (Tests\Integration\SseEventsE2E)
+ ✔ Events requires authentication
+ ✔ Events streams change via bearer header
+ ✔ Events streams change via query token
+ ✔ Events filters records user cannot read
+
+OK, but some tests were skipped!
+Tests: 92, Assertions: 423, Skipped: 1.
+
+Generating code coverage report in Cobertura XML format ... done [00:00.808]
+
+--- Full run with Coverage log ---
+✓ API is running at http://localhost:8000
+PHPUnit 11.5.55 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.3.31 with Xdebug 3.5.3
+Configuration: /home/runner/work/splk2/splk2/api/phpunit.xml
+
+...............................
+=== STEP 1: Register User for Change Tracking ===
+Email: change-tracking-1782911196-513814@example.com
+Response Status: 201
+✓ User registered
+.
+=== STEP 2: Login User ===
+Response Status: 200
+✓ Login successful
+.
+=== STEP 3: Create Category (Check new_values) ===
+Request: POST /categories
+Data: {"name":"Change Tracking Test Category"}
+Response Status: 201
+✓ Category created (ID: 37)
+
+Audit Log Response:
+{
+    "status": 200,
+    "data": [
+        {
+            "id": 149,
+            "user_id": 59,
+            "action_id": 2,
+            "table_name": "categories",
+            "record_id": 37,
+            "details": "Record created",
+            "data": "{\"name\": \"Change Tracking Test Category\"}",
+            "old_values": null,
+            "new_values": "{\"name\": \"Change Tracking Test Category\"}",
+            "ip_address": "127.0.0.1",
+            "user_agent": null,
+            "created_at": "2026-07-01 13:06:38"
+        }
+    ],
+    "message": "Records found",
+    "error": null
+}
+✓ Audit log verified:
+  - new_values: {"name": "Change Tracking Test Category"}
+  - old_values: NULL
+.
+=== STEP 4: Update Category (Check old_values + new_values) ===
+Request: PUT /categories/37
+Data: {"name":"Updated Change Tracking Category"}
+Response Status: 200
+✓ Category updated
+
+Audit Log Response:
+{
+    "status": 200,
+    "data": [
+        {
+            "id": 150,
+            "user_id": 59,
+            "action_id": 3,
+            "table_name": "categories",
+            "record_id": 37,
+            "details": "Record updated",
+            "data": "{\"name\": \"Updated Change Tracking Category\"}",
+            "old_values": "{\"id\": 37, \"name\": \"Change Tracking Test Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-07-01 13:06:38\", \"is_deleted\": 0, \"updated_at\": \"2026-07-01 13:06:38\"}",
+            "new_values": "{\"id\": 37, \"name\": \"Updated Change Tracking Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-07-01 13:06:38\", \"is_deleted\": 0, \"updated_at\": \"2026-07-01 13:06:38\"}",
+            "ip_address": "127.0.0.1",
+            "user_agent": null,
+            "created_at": "2026-07-01 13:06:39"
+        }
+    ],
+    "message": "Records found",
+    "error": null
+}
+✓ Audit log verified:
+  - old_values: {"id": 37, "name": "Change Tracking Test Category", "position": 0, "parent_id": null, "created_at": "2026-07-01 13:06:38", "is_deleted": 0, "updated_at": "2026-07-01 13:06:38"}
+  - new_values: {"id": 37, "name": "Updated Change Tracking Category", "position": 0, "parent_id": null, "created_at": "2026-07-01 13:06:38", "is_deleted": 0, "updated_at": "2026-07-01 13:06:38"}
+.
+=== STEP 5: Delete Category (Check old_values) ===
+Request: DELETE /categories/37
+Response Status: 200
+✓ Category deleted
+
+Audit Log Response:
+{
+    "status": 200,
+    "data": [
+        {
+            "id": 151,
+            "user_id": 59,
+            "action_id": 4,
+            "table_name": "categories",
+            "record_id": 37,
+            "details": "Record deleted",
+            "data": null,
+            "old_values": "{\"id\": 37, \"name\": \"Updated Change Tracking Category\", \"position\": 0, \"parent_id\": null, \"created_at\": \"2026-07-01 13:06:38\", \"is_deleted\": 0, \"updated_at\": \"2026-07-01 13:06:39\"}",
+            "new_values": null,
+            "ip_address": "127.0.0.1",
+            "user_agent": null,
+            "created_at": "2026-07-01 13:06:40"
+        }
+    ],
+    "message": "Records found",
+    "error": null
+}
+✓ Audit log verified:
+  - old_values: {"id": 37, "name": "Updated Change Tracking Category", "position": 0, "parent_id": null, "created_at": "2026-07-01 13:06:38", "is_deleted": 0, "updated_at": "2026-07-01 13:06:39"}
+  - new_values: NULL
+.
+=== STEP 6: Verify Full Audit Trail ===
+Total audit entries: 3
+
+Audit Actions Found:
+  - Record created
+  - Record updated
+  - Record deleted
+
+✓ Full audit trail verified!
+  - CREATE with new_values ✓
+  - UPDATE with old_values + new_values ✓
+  - DELETE with old_values ✓
+.
+=== STEP 1: Register New User ===
+Request: POST /register
+Email: e2e-test-1782911196-792132@example.com
+Response Status: 201
+Response: {
+    "status": 201,
+    "message": "User registered",
+    "data": {
+        "id": "60"
+    }
+}
+✓ User registered successfully (ID: 60)
+.
+=== STEP 2: Login User ===
+Request: POST /login
+Email: e2e-test-1782911196-792132@example.com
+Response Status: 200
+✓ Login successful
+Access Token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb...
+Refresh Token: ...
+.
+=== STEP 3: Create Category ===
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUz...
+Request: POST /categories
+Response Status: 201
+Response: {
+    "status": 201,
+    "message": "Record created",
+    "data": {
+        "id": "38"
+    }
+}
+✓ Category created successfully (ID: 38)
+.
+=== STEP 4: Create Item ===
+Category ID: 38
+Request: POST /items
+Response Status: 201
+Response: {
+    "status": 201,
+    "message": "Record created",
+    "data": {
+        "id": "39"
+    }
+}
+✓ Item created successfully (ID: 39)
+.
+=== STEP 5: Try Delete Category (Should Fail) ===
+Category ID: 38
+Category has 39 item(s)
+Request: DELETE /categories/38
+Response Status: 409
+Response: {
+    "status": 409,
+    "message": "Cannot delete category with items. Remove items first.",
+    "data": null,
+    "error": "Unknown error"
+}
+✓ Correctly prevented deletion (business rule enforced)
+  Error: Unknown error
+.
+=== STEP 6: Delete Item ===
+Item ID: 39
+Request: DELETE /items/39
+Response Status: 200
+Response: {
+    "status": 200,
+    "message": "Record deleted",
+    "data": null
+}
+✓ Item deleted successfully
+.
+=== STEP 7: Delete Category (Now Succeeds) ===
+Category ID: 38
+Category is now empty
+Request: DELETE /categories/38
+Response Status: 200
+Response: {
+    "status": 200,
+    "message": "Record deleted",
+    "data": null
+}
+✓ Category deleted successfully
+.
+=== STEP 8: Verify Cleanup ===
+Request: GET /categories/38
+Response Status: 404
+✓ Category properly deleted (not found)
+Request: GET /items/39
+Response Status: 404
+✓ Item properly deleted (not found)
+................
+=== Test 1: Register User ===
+Response Status: 201
+✓ User registered
+.
+=== Test 2: Login Returns Tokens ===
+Response Status: 200
+✓ Login successful, received tokens
+Access Token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb...
+Expires In: 900 seconds
+.S  63 / 376 ( 16%)
+
+=== Test 4: Token Rotation - Old Token Cannot Be Reused ===
+Response Status: 401
+✓ Invalid refresh token properly rejected
+.
+=== Test 5: Missing Refresh Token ===
+Response Status: 400
+✓ Missing refresh token properly rejected
+.............................................................. 126 / 376 ( 33%)
+............................................................... 189 / 376 ( 50%)
+............................................................... 252 / 376 ( 67%)
+............................DD................................. 315 / 376 ( 83%)
+.............................................................   376 / 376 (100%)
+
+Time: 00:21.842, Memory: 28.00 MB
+
+Api Versioning (App\Tests\ApiVersioning)
+ ✔ Parse v 1 versioned url
+ ✔ Parse v 2 versioned url not supported
+ ✔ Parse legacy format
+ ✔ Parse with trailing slash
+ ✔ Parse endpoint without id
+ ✔ Parse with query params
+ ✔ Unsupported version throws exception
+ ✔ Version string validation
+ ✔ Get supported versions
+ ✔ Path index structure
+ ✔ Path array structure
+ ✔ Health endpoint parsing
+ ✔ Docs endpoint parsing
+ ✔ Versions endpoint parsing
+
+Api Versioning E2E (App\Tests\Integration\ApiVersioningE2E)
+ ✔ V 1 versioned endpoint
+ ✔ V 2 versioned endpoint not supported
+ ✔ Legacy endpoint
+ ✔ Versions endpoint
+ ✔ Response includes version header
+ ✔ Unsupported version returns error
+ ✔ Docs with versioned url
+ ✔ Docs with legacy url
+
+Authorization (Tests\Unit\Authorization)
+ ✔ Permission checker exists
+ ✔ Permissions config exists
+ ✔ Permission matrix defined
+ ✔ Roles have crud permissions
+ ✔ Ownership restrictions exist
+ ✔ Admin has full access
+ ✔ Guest has limited access
+ ✔ User has ownership restrictions
+ ✔ Authorization checks in index
+ ✔ Read access filtering implemented
+ ✔ Owner fields defined
+ ✔ Proper http status
+ ✔ Authorization logging
+
+Bulk Operations E2E (Tests\Integration\BulkOperationsE2E)
+ ✔ Bulk create items succeeds
+ ✔ Bulk create partially invalid record returns 207
+ ✔ Bulk create requires non empty array
+ ✔ Bulk create over limit returns 400
+ ✔ Bulk update items succeeds
+ ✔ Bulk update non existent id returns error entry
+ ✔ Bulk update denies record not owned by user
+ ✔ Bulk delete items succeeds
+ ✔ Bulk delete requires ids array
+
+Cache Header Manager (App\Tests\CacheHeaderManager)
+ ✔ Generate e tag from string
+ ✔ Generate e tag from array
+ ✔ E tag consistency
+ ✔ E tag uniqueness
+ ✔ Get cache strategy for health
+ ✔ Get cache strategy for versions
+ ✔ Get cache strategy for docs
+ ✔ Get default cache strategy
+ ✔ Post requests not cached
+ ✔ Put requests not cached
+ ✔ Delete requests not cached
+ ✔ Should cache for g e t
+ ✔ Should cache for h e a d
+ ✔ Should not cache for p o s t
+ ✔ Should not cache error responses
+ ✔ Should not cache nocach endpoints
+ ✔ Should cache not modified response
+ ✔ Is client cache valid with matching e tag
+ ✔ Is client cache valid with quoted e tag
+ ✔ Is client cache invalid with mismatched e tag
+ ✔ Is client cache valid with if modified since
+ ✔ Is client cache invalid without headers
+ ✔ Get all strategies
+ ✔ Cache strategy structure
+ ✔ Cache max age values
+ ✔ Public private classification
+
+Cache Headers E2E (App\Tests\Integration\CacheHeadersE2E)
+ ✔ Health endpoint has cache control
+ ✔ Health endpoint has last modified
+ ✔ Health endpoint has e tag
+ ✔ Versions endpoint has longer cache
+ ✔ Docs endpoint has longest cache
+ ✔ User endpoints have no cache
+ ✔ Cachable endpoints have must revalidate
+ ✔ E tag consistency
+ ✔ If none match with matching e tag
+ ✔ If modified since header
+ ✔ H e a d requests cache headers
+ ✔ Post request has no cache
+ ✔ Cache control header format
+ ✔ E tag format
+
+Change Tracking E2E (SPLK2\Tests\Integration\ChangeTrackingE2E)
+ ✔ 01 RegisterUser
+ ✔ 02 LoginUser
+ ✔ 03 CreateCategoryWithChangeTracking
+ ✔ 04 UpdateCategoryWithChangeTracking
+ ✔ 05 DeleteCategoryWithChangeTracking
+ ✔ 06 VerifyFullAuditTrail
+
+Cors (Tests\Unit\Cors)
+ ✔ Missing configuration throws exception
+ ✔ Allowed origin receives cors headers
+ ✔ Disallowed origin no allow origin header
+ ✔ Subdomain wildcard pattern
+ ✔ Options preflight
+ ✔ Exact origin matching
+ ✔ Whitespace handling in origin list
+ ✔ Wildcard origin not allowed
+ ✔ Multiple origin configuration
+ ✔ Missing origin header
+ ✔ Cors headers structure
+ ✔ Origin with port number
+ ✔ Similar origin rejected
+
+E2EWorkflow (SPLK2\Tests\Integration\E2EWorkflow)
+ ✔ 01 RegisterNewUser
+ ✔ 02 LoginUser
+ ✔ 03 CreateCategory
+ ✔ 04 CreateItem
+ ✔ 05 TryDeleteCategoryWithItems
+ ✔ 06 DeleteItem
+ ✔ 07 DeleteCategory
+ ✔ 08 VerifyCleanup
+
+Enhanced Search E2E (Tests\Integration\EnhancedSearchE2E)
+ ✔ Filter by exact column value
+ ✔ Filter with comparison operator
+ ✔ Filter rejects unknown column
+ ✔ Boolean search and requires both terms
+ ✔ Boolean search not excludes term
+ ✔ Fuzzy search fallback matches typo
+ ✔ Faceted search returns counts
+
+Field Selection E2E (Tests\Integration\FieldSelectionE2E)
+ ✔ Get without field selection
+ ✔ Get with field selection
+ ✔ Get with single field selection
+ ✔ Get with field selection whitespace
+ ✔ Invalid field name
+ ✔ List with field selection
+ ✔ Always protected field cannot be requested
+ ✔ Case insensitive field names
+
+File Upload Manager (App\Tests\Unit\FileUploadManager)
+ ✔ Get file successfully
+ ✔ Get file fails when not found
+ ✔ Get user files successfully
+ ✔ Get allowed extensions
+ ✔ Get max file size
+ ✔ Handle upload fails with invalid array
+ ✔ Handle upload fails with oversized file
+ ✔ Handle upload fails with invalid extension
+ ✔ Delete file fails when not found
+ ✔ Delete file fails when not owner
+
+File Upload Security (Tests\Unit\FileUploadSecurity)
+ ✔ Env example includes file upload config
+ ✔ Uploads directory is outside webroot
+ ✔ Blocked mime types configured
+ ✔ Mime type validation
+ ✔ File content validation
+ ✔ Filenames are randomized
+ ✔ File permissions are secure
+ ✔ Validation failures are logged
+ ✔ Max file size from env
+ ✔ Allowed extensions from env
+
+Filter Parser (Tests\Unit\FilterParser)
+ ✔ Parse empty returns empty array
+ ✔ Parse shorthand equality filter
+ ✔ Parse operator filter
+ ✔ Parse multiple operators on same column
+ ✔ Parse in filter splits comma separated values
+ ✔ Parse like filter wraps value in wildcards
+ ✔ Parse rejects unknown column
+ ✔ Parse rejects unknown operator
+ ✔ Apply builds where clause with bound params
+
+Jwt Expiration (Tests\Unit\JwtExpiration)
+ ✔ Jwt expiration env variable
+ ✔ Default jwt expiration is 15 minutes
+ ✔ Env example includes jwt expiration
+ ✔ Jwt expiration is not too long
+
+Jwt Secret Config (Tests\Unit\JwtSecretConfig)
+ ✔ Missing jwt secret throws exception
+ ✔ Empty jwt secret throws exception
+ ✔ Valid jwt secret loads
+ ✔ Jwt secret not hardcoded
+ ✔ Error message is helpful
+ ✔ Env example no hardcoded secret
+
+Pagination Manager (App\Tests\PaginationManager)
+ ✔ Default pagination
+ ✔ Parse with limit and offset
+ ✔ Limit enforcement too high
+ ✔ Limit enforcement too low
+ ✔ Negative limit defaults to default
+ ✔ Negative offset defaults to zero
+ ✔ Maximum offset enforcement
+ ✔ Build metadata standard
+ ✔ Build metadata last page
+ ✔ Build metadata partial last page
+ ✔ Build metadata total less than limit
+ ✔ Build metadata zero total
+ ✔ Get limit clause
+ ✔ Pagination is needed
+ ✔ Get previous offset
+ ✔ Get next offset
+ ✔ Build links
+ ✔ Build links first page
+ ✔ Build links last page
+ ✔ Build links format
+ ✔ Empty result pagination
+ ✔ Large offset small total
+ ✔ Page calculation accuracy
+ ✔ Limit boundary values
+ ✔ Returned records calculation
+
+Password Reset (Tests\Unit\PasswordReset)
+ ✔ Password reset class exists
+ ✔ Password reset docs exist
+ ✔ Token expiry is one hour
+ ✔ Rate limit three per hour
+ ✔ Token can only be used once
+ ✔ Passwords are hashed
+ ✔ Token hash used
+ ✔ Reset endpoints exist
+ ✔ Email validation
+ ✔ Other tokens revoked on reset
+ ✔ Password minimum length enforced
+ ✔ Audit logging performed
+ ✔ Email sending is stubbed
+ ✔ Migration exists
+
+RBAC (App\Tests\E2E\RBAC)
+ ✔ Admin can create users
+ ✔ Regular user cannot create users
+ ✔ Admin can delete users
+ ✔ Regular user cannot delete users
+ ✔ User can update own profile
+ ✔ User cannot update other users
+ ✔ Admin cannot delete own account
+ ✔ Admin can create roles
+ ✔ Regular user cannot create roles
+ ✔ Admin cannot delete built in roles
+
+Rate Limiting Security (Tests\Unit\RateLimitingSecurity)
+ ✔ Skip rate limit bypass removed
+ ✔ Login endpoint rate limited
+ ✔ Register endpoint rate limited
+ ✔ Role based rate limiting
+ ✔ Authenticated requests use user id
+ ✔ Rate limit headers set
+ ✔ Env variables for rate limits
+ ✔ Proper http status on rate limit
+ ✔ Retry after header
+ ✔ Only health and docs exempt
+
+Refresh Token (SPLK2\Tests\Integration\RefreshToken)
+ ✔ 01 RegisterUser
+ ✔ 02 LoginReturnsTokens
+ ↩ 03 RefreshTokenReturnsNewAccessToken
+ ✔ 04 OldRefreshTokenCannotBeReused
+ ✔ 05 MissingRefreshTokenReturnsError
+
+Relationship Expansion E2E (Tests\Integration\RelationshipExpansionE2E)
+ ✔ Get without include
+ ✔ Get with invalid include
+ ✔ Get with include parameter
+ ✔ List with include parameter
+ ✔ Get with multiple includes
+ ✔ Get with include and field selection
+ ✔ Get with include whitespace
+ ✔ Get with empty include
+
+Relationship Loader (Tests\Unit\RelationshipLoader)
+ ✔ Parse include valid
+ ✔ Parse include with whitespace
+ ✔ Parse include single
+ ✔ Parse include empty
+ ✔ Parse include invalid
+ ✔ Parse include with numbers
+ ✔ Parse include invalid chars
+ ✔ Load relationships empty
+ ✔ Load relationships empty record
+ ✔ Load relationships handles errors
+ ✔ Load relationships skips non existent f k
+ ✔ Parse include trailing commas
+ ✔ Parse include start with number
+
+Request Id E2E (App\Tests\Integration\RequestIdE2E)
+ ✔ Api generates request id
+ ✔ Api accepts client request id
+ ✔ Api accepts correlation id header
+ ✔ Api generates new id for invalid client id
+ ✔ Request id in different endpoints
+ ✔ Each request gets unique id
+ ✔ Client id preserved in response
+ ✔ Request id with legacy url
+ ✔ Request id in error response
+ ✔ Request id with whitespace in client header
+ ✔ Invalid long client id is rejected
+
+Request Id Manager (App\Tests\RequestIdManager)
+ ✔ Generate new request id
+ ✔ Detect client provided id
+ ✔ Detect from correlation id header
+ ✔ Detect from trace id header
+ ✔ Ignore invalid client id
+ ✔ Ignore too long client id
+ ✔ Header precedence
+ ✔ Uuid v 4 format validation
+ ✔ Invalid uuid format rejection
+ ✔ Log format
+ ✔ Context array
+ ✔ Context array client provided
+ ✔ Set response header
+ ✔ Generated id uniqueness
+ ✔ Trim whitespace from headers
+ ✔ Empty header ignored
+ ✔ Whitespace only header ignored
+
+Role Based Access Control (App\Tests\Unit\RoleBasedAccessControl)
+ ✔ Has role returns true when user has role
+ ✔ Has role returns false when user doesnt have role
+ ✔ Has role with multiple roles
+ ✔ Has role returns false when user is null
+ ⚠ Assign role successfully
+ ⚠ Assign role fails when role already assigned
+ ✔ Assign role fails when user not found
+ ✔ Remove role successfully
+ ✔ Remove role fails when role not assigned
+ ✔ Is owner returns true when user is owner
+ ✔ Is owner returns false when user is not owner
+ ✔ Is owner returns false for non users table
+
+Rule Validator (SPLK2\Tests\Unit\RuleValidator)
+ ✔ Required field valid
+ ✔ Required field missing
+ ✔ Required field empty string
+ ✔ Required field null
+ ✔ Email type valid
+ ✔ Email type invalid
+ ✔ Integer type valid
+ ✔ Integer type string integer
+ ✔ Integer type float invalid
+ ✔ Float type valid
+ ✔ Boolean type valid
+ ✔ String type valid
+ ✔ MinLength valid
+ ✔ MinLength too short
+ ✔ MaxLength valid
+ ✔ MaxLength too long
+ ✔ Enum valid
+ ✔ Enum invalid
+ ✔ Min value valid
+ ✔ Min value too low
+ ✔ Max value valid
+ ✔ Max value too high
+ ✔ Min float valid
+ ✔ Min float too low
+ ✔ Unique exists
+ ✔ Unique not exists
+ ✔ Unique database 404
+ ✔ Update partial data
+ ✔ Update validates provided
+ ✔ Hook beforeCreate executed
+ ✔ Hook beforeDelete executed
+ ✔ Hook no matching table
+ ✔ Hook no matching hook
+ ✔ Get table rules
+ ✔ GetTableRules nonexistent
+ ✔ HasRules true
+ ✔ HasRules false
+ ✔ Multiple errors
+ ✔ Required stops other validations
+ ✔ No rules for table
+
+SQLInjection (Tests\Unit\SQLInjection)
+ ✔ Equality condition with malicious input
+ ✔ In condition with malicious input
+ ✔ Like condition with malicious input
+ ✔ Fulltext with malicious input
+ ✔ Multiple conditions with malicious input
+ ✔ Null value handling
+ ✔ Column name quoting
+ ✔ Correct query structure
+ ✔ Special characters in values
+
+Search Parser (Tests\Unit\SearchParser)
+ ✔ Parse empty or null
+ ✔ Parse single short term stays exact
+ ✔ Parse plain terms get auto wildcard
+ ✔ Parse and operator requires both terms
+ ✔ Parse or operator is no op
+ ✔ Parse not keyword excludes term
+ ✔ Parse leading minus excludes term
+ ✔ Parse quoted phrase keeps exact match
+ ✔ Parse explicit wildcard is preserved
+ ✔ Parse strips unsafe characters
+ ✔ Parse duplicate terms are deduplicated
+
+Sort Parser (Tests\Unit\SortParser)
+ ✔ Parse single column ascending
+ ✔ Parse single column descending
+ ✔ Parse explicit ascending
+ ✔ Parse multiple columns
+ ✔ Parse with whitespace
+ ✔ Parse empty or null
+ ✔ Parse invalid column name
+ ✔ Parse invalid column starting with digit
+
+Sorting E2E (Tests\Integration\SortingE2E)
+ ✔ Multi column sort breaks tie on second column
+ ✔ Sort direction prefix is respected
+ ✔ Invalid sort column returns 400
+ ✔ Sort meta reflects requested columns
+
+Sse Events E2E (Tests\Integration\SseEventsE2E)
+ ✔ Events requires authentication
+ ✔ Events streams change via bearer header
+ ✔ Events streams change via query token
+ ✔ Events filters records user cannot read
+
+Webhook Manager (App\Tests\Unit\WebhookManager)
+ ✔ Create webhook fails with invalid url
+ ✔ Create webhook fails with empty events
+ ✔ Create webhook fails with invalid event
+ ✔ Update webhook successfully
+ ✔ Update webhook fails when not found
+ ✔ Delete webhook successfully
+ ✔ Get webhook successfully
+ ✔ Get user webhooks successfully
+ ✔ Test webhook fails when not found
+ ✔ Trigger event with no webhooks
+
+OK, but there were issues!
+Tests: 376, Assertions: 1168, PHPUnit Deprecations: 2, Skipped: 1.
+
+Generating code coverage report in Clover XML format ... done [00:00.242]
+
+Generating code coverage report in Cobertura XML format ... done [00:00.015]
+
+--- API server log (tail) ---
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34870 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34878 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34878 [200]: POST /login
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34878 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34892 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34892 [403]: PUT /users/108
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34892 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34898 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34898 [201]: POST /register
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34898 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34912 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34912 [200]: POST /login
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34912 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34916 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34916 [201]: POST /register
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34916 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34924 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34924 [200]: POST /login
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34924 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34938 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34938 [403]: DELETE /users/110
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34938 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34942 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34942 [201]: POST /register
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34942 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34946 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34946 [200]: POST /login
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34946 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34962 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34962 [201]: POST /register
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34962 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34978 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34978 [200]: POST /login
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34978 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34982 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34982 [201]: POST /roles
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34982 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34984 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34984 [201]: POST /register
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34984 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34998 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34998 [200]: POST /login
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:34998 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:35004 Accepted
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:35004 [201]: POST /register
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:35004 Closing
+[Wed Jul  1 13:06:57 2026] 127.0.0.1:35014 Accepted
+[Wed Jul  1 13:06:58 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35014 [200]: POST /login
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35014 Closing
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35022 Accepted
+[Wed Jul  1 13:06:58 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35022 [403]: POST /roles
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35022 Closing
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35036 Accepted
+[Wed Jul  1 13:06:58 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:58 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35036 [201]: POST /register
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35036 Closing
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35040 Accepted
+[Wed Jul  1 13:06:58 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35040 [200]: POST /login
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35040 Closing
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35042 Accepted
+[Wed Jul  1 13:06:58 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:58 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35042 [201]: POST /register
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35042 Closing
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35058 Accepted
+[Wed Jul  1 13:06:58 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35058 [200]: POST /login
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35058 Closing
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35062 Accepted
+[Wed Jul  1 13:06:58 2026] PHP Warning:  file_put_contents(/home/runner/work/splk2/splk2/api/config/../../log/api/app.log): Failed to open stream: No such file or directory in /home/runner/work/splk2/splk2/api/src/Logger.php on line 104
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35062 [403]: DELETE /roles/1
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35062 Closing
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35076 Accepted
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35076 [200]: GET /health
+[Wed Jul  1 13:06:58 2026] 127.0.0.1:35076 Closing
