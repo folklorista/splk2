@@ -434,7 +434,7 @@ As you complete each task, mark it here:
 
 ### Phase 3: Enhancements (As needed)
 - [ ] 3.1 Real-Time Support
-- [ ] 3.2 Bulk Operations
+- [x] 3.2 Bulk Operations ✅ COMPLETE
 - [x] 3.3 Multiple Column Sorting ✅ COMPLETE
 - [ ] 3.4 Enhanced Search
 - [ ] 3.5 API Keys
@@ -470,5 +470,5 @@ Features that are worth doing eventually but don't block the current roadmap. Pu
 
 For detailed implementation guidance on any task, check the corresponding section above or ask during implementation sessions.
 
-**Status:** Phase 1 & 2 complete (2.6 deferred to wishlist). Phase 3 in progress — 3.3 done, CI green.
-**Next Task:** Pick from Phase 3 (3.1 Real-Time/SSE, 3.2 Bulk Operations, 3.4 Enhanced Search, 3.5 API Keys, 3.6 Refresh Tokens, 3.7 Auto-Generate OpenAPI, or 3.8 Export/Batch Download).
+**Status:** Phase 1 & 2 complete (2.6 deferred to wishlist). Phase 3 in progress — 3.2 and 3.3 done, CI green.
+**Next Task:** Pick from Phase 3 (3.1 Real-Time/SSE, 3.4 Enhanced Search, 3.5 API Keys, 3.6 Refresh Tokens, 3.7 Auto-Generate OpenAPI, or 3.8 Export/Batch Download).
