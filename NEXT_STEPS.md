@@ -313,6 +313,17 @@ These improve API usability, maintainability, and performance.
 
 ---
 
+## 🐛 Known Issues
+
+### RBAC test failures when full suite runs together
+- **Discovered:** 2026-07-01, while fixing CI logging on `develop` (`.github/workflows/api-tests.yml`)
+- **Symptom:** 10 tests fail (`Admin can create users`, `Regular user cannot create users`, `Admin can delete users`, `Regular user cannot delete users`, `User can update own profile`, `User cannot update other users`, `Admin cannot delete own account`, `Admin can create roles`, `Regular user cannot create roles`, `Admin cannot delete built-in roles`) — but only in the "Run All Tests with Coverage" step, which runs the whole suite together. The same tests pass when Unit and Integration suites run separately.
+- **Likely cause:** test isolation issue when everything runs back-to-back in one process (e.g. rate limiter state, shared user/role fixtures, or ordering dependency) — not yet confirmed.
+- **Why it went unnoticed:** the coverage step has `continue-on-error: true`, and a separate bug (invalid `--verbose` PHPUnit 11 flag) meant this step's output wasn't even being captured — the job reported `status: success` regardless.
+- **Next step:** investigate test isolation/fixtures in the affected RBAC tests; consider removing `continue-on-error` once fixed so real failures block CI.
+
+---
+
 ## 📈 Summary & Effort Breakdown
 
 | Phase | Category | Tasks | Estimated Hours | Critical |
