@@ -85,7 +85,6 @@ class Response
 
         // Set cache headers if endpoint and method are set
         if (self::$endpoint && self::$method) {
-            // Check if client has valid cached version
             if ($statusCode === 200) {
                 $eTag = CacheHeaderManager::generateETag($responseJson);
 
@@ -101,6 +100,9 @@ class Response
                     // No-cache for private/user-specific data
                     CacheHeaderManager::setCacheHeaders(self::$endpoint, self::$method);
                 }
+            } else {
+                // Error responses must never be cached, but still need the header
+                CacheHeaderManager::setCacheHeaders(self::$endpoint, self::$method);
             }
         }
 

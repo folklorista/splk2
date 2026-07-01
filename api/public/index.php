@@ -197,7 +197,7 @@ header('X-RateLimit-Remaining: ' . max(0, $limitCheck['remaining'] ?? 0));
 header('X-RateLimit-Reset: ' . ($limitCheck['reset_at'] ?? (time() + 60)));
 
 // Health check endpoint (no authentication required)
-if ($tableName === 'health' && $method === 'GET') {
+if ($tableName === 'health' && ($method === 'GET' || $method === 'HEAD')) {
     $dbStatus = 'OK';
     try {
         $db->execute('SELECT 1');
@@ -232,12 +232,14 @@ if ($tableName === 'health' && $method === 'GET') {
     CacheHeaderManager::setCacheHeaders('health', 'GET', $eTag);
 
     http_response_code(200);
-    echo $responseJson;
+    if ($method !== 'HEAD') {
+        echo $responseJson;
+    }
     exit;
 }
 
 // API Versions endpoint (no authentication required)
-if ($tableName === 'versions' && $method === 'GET') {
+if ($tableName === 'versions' && ($method === 'GET' || $method === 'HEAD')) {
     $supportedVersions = ApiRouter::getSupportedVersions();
     $versionsInfo = [];
 
@@ -274,17 +276,22 @@ if ($tableName === 'versions' && $method === 'GET') {
     CacheHeaderManager::setCacheHeaders('versions', 'GET', $eTag);
 
     http_response_code(200);
-    echo $responseJson;
+    if ($method !== 'HEAD') {
+        echo $responseJson;
+    }
     exit;
 }
 
 // API Documentation UI (no authentication required)
-if ($tableName === 'docs' && $method === 'GET') {
+if ($tableName === 'docs' && ($method === 'GET' || $method === 'HEAD')) {
     // Set cache headers for docs endpoint
     CacheHeaderManager::setCacheHeaders('docs', 'GET');
 
     http_response_code(200);
     header('Content-Type: text/html; charset=utf-8');
+    if ($method === 'HEAD') {
+        exit;
+    }
     ?>
     <!DOCTYPE html>
     <html>
@@ -311,12 +318,14 @@ if ($tableName === 'docs' && $method === 'GET') {
 }
 
 // OpenAPI schema endpoint (no authentication required)
-if ($tableName === 'openapi.yaml' && $method === 'GET') {
+if ($tableName === 'openapi.yaml' && ($method === 'GET' || $method === 'HEAD')) {
     $openapiPath = __DIR__ . '/openapi.yaml';
     if (file_exists($openapiPath)) {
         http_response_code(200);
         header('Content-Type: application/x-yaml; charset=utf-8');
-        echo file_get_contents($openapiPath);
+        if ($method !== 'HEAD') {
+            echo file_get_contents($openapiPath);
+        }
         exit;
     }
 }
