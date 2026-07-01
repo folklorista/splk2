@@ -62,7 +62,9 @@ $rateLimiter = new RateLimiter(
 );
 
 // Endpoints exempt from rate limiting
-$rateLimitExempt = ['health', 'docs', 'openapi.yaml'];
+// 'events' is a long-lived SSE stream - it holds a single connection instead of firing
+// repeated requests, so counting it against the per-minute quota doesn't make sense.
+$rateLimitExempt = ['health', 'docs', 'openapi.yaml', 'events'];
 
 // Parse API request with versioning support
 try {
@@ -382,6 +384,136 @@ if ($tableName == 'login' && $method == 'POST') {
 
     $result = $passwordReset->completeReset($token, $newPassword);
     Response::sendPrepared(Response::prepare($result['status'], $result['message'], $result['data']));
+    exit;
+}
+
+// Real-time change stream: GET /events (Server-Sent Events)
+// Uses its own auth check (not $auth->authenticate()) because the browser's native
+// EventSource API cannot set an Authorization header - it must be able to authenticate
+// via a `?token=` query parameter as well as the standard Bearer header.
+if ($tableName === 'events' && $method === 'GET') {
+    $sseToken = null;
+    if ($authHeader && strpos($authHeader, 'Bearer ') === 0) {
+        $sseToken = substr($authHeader, 7);
+    } elseif (!empty($queryParams['token'])) {
+        $sseToken = $queryParams['token'];
+    }
+
+    $decoded = $sseToken ? $auth->verifyToken($sseToken) : false;
+    if (!$decoded || !isset($decoded['user'])) {
+        Response::send(401, "Unauthorized access", null, "Valid token required via Authorization header or ?token= query parameter");
+        exit;
+    }
+    $sseUser = $decoded['user'];
+
+    // Resume position: browsers send Last-Event-ID automatically on reconnect;
+    // ?lastEventId= is the manual/testing equivalent.
+    $lastEventIdHeader = null;
+    if (function_exists('apache_request_headers')) {
+        foreach (apache_request_headers() as $key => $value) {
+            if (strtolower($key) === 'last-event-id') {
+                $lastEventIdHeader = $value;
+                break;
+            }
+        }
+    }
+    if ($lastEventIdHeader === null && !empty($_SERVER['HTTP_LAST_EVENT_ID'])) {
+        $lastEventIdHeader = $_SERVER['HTTP_LAST_EVENT_ID'];
+    }
+    if ($lastEventIdHeader !== null && is_numeric($lastEventIdHeader)) {
+        $lastId = (int)$lastEventIdHeader;
+    } elseif (isset($queryParams['lastEventId']) && is_numeric($queryParams['lastEventId'])) {
+        $lastId = (int)$queryParams['lastEventId'];
+    } else {
+        $latest = $db->fetchOne("SELECT MAX(id) AS maxId FROM audit_logs");
+        $lastId = (int)($latest['maxId'] ?? 0);
+    }
+
+    $pollIntervalUs = (int)($_ENV['SSE_POLL_INTERVAL_MS'] ?? 1000) * 1000;
+    $heartbeatIntervalSec = (int)($_ENV['SSE_HEARTBEAT_INTERVAL_SEC'] ?? 30);
+    $maxDurationSec = (int)($_ENV['SSE_MAX_STREAM_DURATION_SEC'] ?? 300);
+
+    // Client can only shorten its own session, never lengthen it past the server-configured
+    // cap. This lets a client end the connection cleanly on a known schedule instead of
+    // relying on connection_aborted(), which the PHP built-in dev server doesn't detect
+    // reliably - a client-abandoned connection can otherwise run the full $maxDurationSec
+    // before the (single-threaded) dev server notices and frees up to serve other requests.
+    if (isset($queryParams['maxDurationSec']) && is_numeric($queryParams['maxDurationSec'])) {
+        $requestedDuration = (int)$queryParams['maxDurationSec'];
+        if ($requestedDuration > 0 && $requestedDuration < $maxDurationSec) {
+            $maxDurationSec = $requestedDuration;
+        }
+    }
+
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    set_time_limit($maxDurationSec + 30);
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('Connection: keep-alive');
+    header('X-Accel-Buffering: no'); // disable nginx response buffering for this stream
+
+    echo ": connected\n\n";
+    flush();
+
+    $startTime = time();
+    $lastHeartbeat = time();
+
+    while (!connection_aborted()) {
+        if (time() - $startTime >= $maxDurationSec) {
+            echo "event: timeout\ndata: {\"message\":\"Max stream duration reached, reconnect\"}\n\n";
+            flush();
+            break;
+        }
+
+        $rows = $db->getAllWhere(
+            'audit_logs',
+            'id > :lastId AND table_name IS NOT NULL AND record_id IS NOT NULL',
+            ['lastId' => $lastId]
+        );
+        $entries = $rows['data'] ?? [];
+
+        if (!empty($entries)) {
+            usort($entries, fn($a, $b) => $a['id'] <=> $b['id']);
+
+            foreach ($entries as $entry) {
+                $lastId = max($lastId, (int)$entry['id']);
+                $entryTable = $entry['table_name'];
+
+                $ownerField = $permissionChecker->getOwnerField($entryTable);
+                $values = json_decode($entry['new_values'] ?? $entry['old_values'] ?? '{}', true) ?? [];
+                $ownerId = isset($values[$ownerField]) ? (int)$values[$ownerField] : null;
+
+                $permCheck = $permissionChecker->canAccess($entryTable, 'read', $sseUser, $ownerId);
+                if (!$permCheck['allowed']) {
+                    continue;
+                }
+
+                $action = AuditAction::tryFrom((int)$entry['action_id'])?->name ?? 'UNKNOWN';
+                $payload = json_encode([
+                    'table' => $entryTable,
+                    'recordId' => (int)$entry['record_id'],
+                    'action' => $action,
+                    'userId' => $entry['user_id'] !== null ? (int)$entry['user_id'] : null,
+                    'createdAt' => $entry['created_at'],
+                ]);
+
+                echo "id: {$entry['id']}\n";
+                echo "event: change\n";
+                echo "data: {$payload}\n\n";
+            }
+            flush();
+            $lastHeartbeat = time();
+        } elseif (time() - $lastHeartbeat >= $heartbeatIntervalSec) {
+            echo ": heartbeat\n\n";
+            flush();
+            $lastHeartbeat = time();
+        }
+
+        usleep($pollIntervalUs);
+    }
+
     exit;
 }
 
