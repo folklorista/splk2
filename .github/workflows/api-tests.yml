@@ -98,7 +98,7 @@ jobs:
           (5, 'TREE_UPDATE', 'Aktualizace stromové struktury');"
 
       - name: Run Unit Tests
-        run: ./vendor/bin/phpunit tests/Unit/
+        run: ./vendor/bin/phpunit tests/Unit/ 2>&1 | tee /tmp/phpunit-unit.log
         working-directory: api
         env:
           DB_HOST: 127.0.0.1:3306
@@ -145,7 +145,7 @@ jobs:
           fi
 
       - name: Run Integration Tests (E2E)
-        run: ./vendor/bin/phpunit tests/Integration/
+        run: ./vendor/bin/phpunit tests/Integration/ 2>&1 | tee /tmp/phpunit-integration.log
         working-directory: api
         env:
           DB_HOST: 127.0.0.1:3306
@@ -238,8 +238,7 @@ jobs:
           ./vendor/bin/phpunit \
             --coverage-clover coverage.xml \
             --display-deprecations \
-            --display-warnings \
-            --verbose 2>&1 | tee /tmp/phpunit.log
+            --display-warnings 2>&1 | tee /tmp/phpunit.log
         working-directory: api
         env:
           DB_HOST: 127.0.0.1:3306
@@ -335,8 +334,14 @@ jobs:
             echo "run: ${{ github.run_id }} (attempt ${{ github.run_attempt }})"
             echo "status: ${{ job.status }}"
             echo ""
-            echo "--- Full PHPUnit log ---"
-            cat /tmp/phpunit.log 2>/dev/null || echo "no phpunit log captured"
+            echo "--- Unit Tests log ---"
+            cat /tmp/phpunit-unit.log 2>/dev/null || echo "no unit test log captured"
+            echo ""
+            echo "--- Integration Tests (E2E) log ---"
+            cat /tmp/phpunit-integration.log 2>/dev/null || echo "no integration test log captured"
+            echo ""
+            echo "--- Full run with Coverage log ---"
+            cat /tmp/phpunit.log 2>/dev/null || echo "no coverage run log captured"
             echo ""
             echo "--- API server log (tail) ---"
             tail -n 100 /tmp/api.log 2>/dev/null || echo "no api server log captured"
