@@ -272,7 +272,7 @@ class Endpoints
         // Hook: beforeCreate
         if ($this->validator) {
             try {
-                $this->validator->executeHook($table, 'beforeCreate', $data, $user, $this->logger);
+                $this->validator->executeHook($table, 'beforeCreate', $data, $user, $this->logger, $this->db);
             } catch (RuleException $e) {
                 return Response::prepare($e->getCode(), $e->getMessage());
             } catch (\Exception $e) {
