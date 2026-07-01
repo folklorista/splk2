@@ -13,6 +13,9 @@ on:
       - 'api/**'
       - 'dev/db.sql'
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -321,3 +324,33 @@ jobs:
         with:
           files: api/coverage.xml
           fail_ci_if_error: false
+
+      - name: Publish CI summary for develop
+        if: always() && github.ref == 'refs/heads/develop'
+        run: |
+          {
+            echo "timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "branch: develop"
+            echo "commit: ${{ github.sha }}"
+            echo "run: ${{ github.run_id }} (attempt ${{ github.run_attempt }})"
+            echo "status: ${{ job.status }}"
+            echo ""
+            echo "--- PHPUnit summary ---"
+            grep -E "OK \(|FAILURES!|Tests: |Errors: |Failures: " /tmp/phpunit.log 2>/dev/null | tail -10 || echo "no phpunit summary captured"
+          } > /tmp/ci-summary.log
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin ci-results/develop 2>/dev/null || true
+          if git show-ref --verify --quiet refs/remotes/origin/ci-results/develop; then
+            git checkout -B ci-results/develop origin/ci-results/develop
+          else
+            git checkout --orphan ci-results/develop
+          fi
+          git rm -rf --ignore-unmatch . > /dev/null 2>&1 || true
+
+          cp /tmp/ci-summary.log status.log
+          git add status.log
+          git commit -m "ci: update develop test summary [skip ci]"
+          git push --force origin ci-results/develop
