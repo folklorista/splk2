@@ -423,19 +423,19 @@ As you complete each task, mark it here:
 **🎉 PHASE 1 COMPLETE: 8/8 tasks (100%)**
 **API is now production-ready from security perspective!**
 
-### Phase 2: High Priority Design (In Progress - 4/7)
+### Phase 2: High Priority Design (6/7 — 2.6 moved to wishlist)
 - [x] 2.1 API Versioning ✅ COMPLETE
 - [x] 2.2 Response Caching & ETag ✅ COMPLETE
 - [x] 2.3 Enforce Pagination ✅ COMPLETE
-- [ ] 2.4 Field Selection
+- [x] 2.4 Field Selection ✅ COMPLETE
 - [x] 2.5 Request Correlation IDs ✅ COMPLETE
-- [ ] 2.6 Webhook Signing
-- [ ] 2.7 Relationship Expansion
+- [ ] 2.6 Webhook Signing — deferred, see [Wishlist](#-wishlist--deferred-ideas)
+- [x] 2.7 Relationship Expansion ✅ COMPLETE
 
 ### Phase 3: Enhancements (As needed)
 - [ ] 3.1 Real-Time Support
 - [ ] 3.2 Bulk Operations
-- [ ] 3.3 Multiple Column Sorting
+- [x] 3.3 Multiple Column Sorting ✅ COMPLETE
 - [ ] 3.4 Enhanced Search
 - [ ] 3.5 API Keys
 - [ ] 3.6 Refresh Token Management
@@ -447,6 +447,22 @@ As you complete each task, mark it here:
 - [ ] 4.2 Security Tests
 - [ ] 4.3 API Documentation
 - [ ] 4.4 Deployment Guide
+
+---
+
+## 💭 Wishlist / Deferred Ideas
+
+Features that are worth doing eventually but don't block the current roadmap. Pull from here when Phase 3 is done or when a specific need arises.
+
+### Webhook Payload Signing with HMAC (was 2.6)
+- **Estimated Time:** 2-3 hours
+- **Description:** Sign webhooks with `X-Webhook-Signature` header so consumers can verify payload authenticity/integrity.
+- **Why deferred:** No active webhook consumer needs verified signatures yet; revisit once a real external subscriber exists.
+
+### GraphQL Layer over the REST API
+- **Estimated Time:** TBD (needs its own spike/estimate)
+- **Description:** Add a GraphQL endpoint on top of the existing REST API, primarily to solve chained/nested relationship queries (e.g. `A -> B -> C`) in a single request — something `?include=` only handles one hop at a time.
+- **Why deferred:** Bigger architectural decision (schema design, resolver strategy, N+1 handling) than a normal roadmap task; needs dedicated design time before estimating.
 
 ---
 
