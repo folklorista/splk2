@@ -406,6 +406,144 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['foreignKeys'])) {
     return;
 }
 
+// Bulk operations routes ({table}/bulk) - POST create many, PUT update many, DELETE many
+// Excluded for 'webhooks'/'files' which have their own dedicated routing below
+if ($id === 'bulk' && !in_array($tableName, ['webhooks', 'files'])) {
+    $maxBulkRecords = (int)($_ENV['BULK_MAX_RECORDS'] ?? 100);
+
+    switch ($method) {
+        case 'POST':
+            $permCheck = $permissionChecker->canAccess($tableName, 'create', $user['user']);
+            if (!$permCheck['allowed']) {
+                Response::send(403, "Forbidden", null, $permCheck['reason']);
+            }
+
+            $items = json_decode(file_get_contents('php://input'), true);
+            if (!is_array($items) || empty($items)) {
+                Response::send(400, "Request body must be a non-empty array of records");
+            }
+            if (count($items) > $maxBulkRecords) {
+                Response::send(400, "Too many records", null, "Maximum {$maxBulkRecords} records per bulk request");
+            }
+
+            $created = [];
+            $errors = [];
+            foreach ($items as $index => $data) {
+                if (!is_array($data)) {
+                    $errors[] = ['index' => $index, 'error' => 'Record must be an object'];
+                    continue;
+                }
+                $result = $endpoints->createRecordEndpoint($tableName, $data, $user['user']);
+                if (($result['status'] ?? null) === 201) {
+                    $created[] = $result['data']['id'];
+                } else {
+                    $errors[] = ['index' => $index, 'error' => $result['error'] ?? $result['message'] ?? 'Unknown error'];
+                }
+            }
+
+            $status = empty($errors) ? 201 : (empty($created) ? 400 : 207);
+            $message = empty($errors) ? "All records created" : (empty($created) ? "Bulk create failed" : "Bulk create partially succeeded");
+            Response::send($status, $message, ['created' => $created, 'errors' => $errors]);
+            exit;
+
+        case 'PUT':
+            $items = json_decode(file_get_contents('php://input'), true);
+            if (!is_array($items) || empty($items)) {
+                Response::send(400, "Request body must be a non-empty array of records");
+            }
+            if (count($items) > $maxBulkRecords) {
+                Response::send(400, "Too many records", null, "Maximum {$maxBulkRecords} records per bulk request");
+            }
+
+            $updated = [];
+            $errors = [];
+            foreach ($items as $index => $data) {
+                if (!is_array($data) || !isset($data['id']) || !is_numeric($data['id'])) {
+                    $errors[] = ['index' => $index, 'error' => 'Record must include a numeric id'];
+                    continue;
+                }
+                $itemId = (int)$data['id'];
+                unset($data['id']);
+
+                $record = $db->get($tableName, $itemId);
+                if (!$record || $record['status'] !== 200) {
+                    $errors[] = ['index' => $index, 'id' => $itemId, 'error' => 'Record not found'];
+                    continue;
+                }
+
+                $ownerField = $permissionChecker->getOwnerField($tableName);
+                $recordOwnerId = $record['data'][$ownerField] ?? null;
+                $permCheck = $permissionChecker->canAccess($tableName, 'update', $user['user'], $recordOwnerId);
+                if (!$permCheck['allowed']) {
+                    $errors[] = ['index' => $index, 'id' => $itemId, 'error' => $permCheck['reason']];
+                    continue;
+                }
+
+                $result = $endpoints->updateRecordEndpoint($tableName, $itemId, $data, $user['user']);
+                if (($result['status'] ?? null) === 200) {
+                    $updated[] = $itemId;
+                } else {
+                    $errors[] = ['index' => $index, 'id' => $itemId, 'error' => $result['error'] ?? $result['message'] ?? 'Unknown error'];
+                }
+            }
+
+            $status = empty($errors) ? 200 : (empty($updated) ? 400 : 207);
+            $message = empty($errors) ? "All records updated" : (empty($updated) ? "Bulk update failed" : "Bulk update partially succeeded");
+            Response::send($status, $message, ['updated' => $updated, 'errors' => $errors]);
+            exit;
+
+        case 'DELETE':
+            $body = json_decode(file_get_contents('php://input'), true);
+            $ids = $body['ids'] ?? null;
+            if (!is_array($ids) || empty($ids)) {
+                Response::send(400, "Request body must include a non-empty 'ids' array");
+            }
+            if (count($ids) > $maxBulkRecords) {
+                Response::send(400, "Too many records", null, "Maximum {$maxBulkRecords} records per bulk request");
+            }
+
+            $deleted = [];
+            $errors = [];
+            foreach ($ids as $index => $itemId) {
+                if (!is_numeric($itemId)) {
+                    $errors[] = ['index' => $index, 'error' => 'Invalid id'];
+                    continue;
+                }
+                $itemId = (int)$itemId;
+
+                $record = $db->get($tableName, $itemId);
+                if (!$record || $record['status'] !== 200) {
+                    $errors[] = ['index' => $index, 'id' => $itemId, 'error' => 'Record not found'];
+                    continue;
+                }
+
+                $ownerField = $permissionChecker->getOwnerField($tableName);
+                $recordOwnerId = $record['data'][$ownerField] ?? null;
+                $permCheck = $permissionChecker->canAccess($tableName, 'delete', $user['user'], $recordOwnerId);
+                if (!$permCheck['allowed']) {
+                    $errors[] = ['index' => $index, 'id' => $itemId, 'error' => $permCheck['reason']];
+                    continue;
+                }
+
+                $result = $endpoints->deleteRecordEndpoint($tableName, $itemId, $user['user']);
+                if (($result['status'] ?? null) === 200) {
+                    $deleted[] = $itemId;
+                } else {
+                    $errors[] = ['index' => $index, 'id' => $itemId, 'error' => $result['error'] ?? $result['message'] ?? 'Unknown error'];
+                }
+            }
+
+            $status = empty($errors) ? 200 : (empty($deleted) ? 400 : 207);
+            $message = empty($errors) ? "All records deleted" : (empty($deleted) ? "Bulk delete failed" : "Bulk delete partially succeeded");
+            Response::send($status, $message, ['deleted' => $deleted, 'errors' => $errors]);
+            exit;
+
+        default:
+            Response::send(405, "Method not allowed");
+            exit;
+    }
+}
+
 // Role management routes (users/{id}/roles/{roleId})
 if ($tableName === 'users' && $id && isset($path[$pathIndex['id'] + 1]) && $path[$pathIndex['id'] + 1] === 'roles') {
     $roleId = $path[$pathIndex['id'] + 2] ?? null;

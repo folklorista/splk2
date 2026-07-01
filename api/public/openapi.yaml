@@ -542,6 +542,162 @@ paths:
                 data: null
                 error: "Cannot delete the last admin"
 
+  /{tableName}/bulk:
+    post:
+      summary: Bulk create records
+      description: |
+        Create multiple records in a single request. Each item goes through the
+        same validation, hooks, audit logging, and webhook events as a single
+        POST /{tableName}. Processing continues past per-item failures - the
+        response reports which records succeeded and which failed (partial
+        success returns 207).
+
+        Maximum records per request is capped by BULK_MAX_RECORDS (default 100).
+      tags: [CRUD]
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                additionalProperties: true
+            example:
+              - category_id: 1
+                inventory_number: "INV-001"
+              - category_id: 1
+                inventory_number: "INV-002"
+      responses:
+        201:
+          description: All records created
+        207:
+          description: Partial success - some records created, some failed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          created:
+                            type: array
+                            items:
+                              type: integer
+                          errors:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                index:
+                                  type: integer
+                                error:
+                                  type: string
+              example:
+                status: 207
+                message: "Bulk create partially succeeded"
+                data:
+                  created: [42]
+                  errors:
+                    - index: 1
+                      error: "Validation failed: category_id is required"
+        400:
+          description: Empty/invalid body, too many records, or all records failed
+        401:
+          description: Unauthorized
+        403:
+          description: No create permission on table
+
+    put:
+      summary: Bulk update records
+      description: |
+        Update multiple records in a single request. Each item must include an
+        `id`; the rest of the fields are applied like a single PUT /{tableName}/{id},
+        including per-record ownership checks (update_own_only). Processing
+        continues past per-item failures - see /{tableName}/bulk POST for the
+        response shape (created replaced with `updated`).
+      tags: [CRUD]
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required: [id]
+                additionalProperties: true
+            example:
+              - id: 1
+                status: "repair"
+              - id: 2
+                status: "retired"
+      responses:
+        200:
+          description: All records updated
+        207:
+          description: Partial success - some records updated, some failed
+        400:
+          description: Empty/invalid body, too many records, or all records failed
+        401:
+          description: Unauthorized
+
+    delete:
+      summary: Bulk delete records
+      description: |
+        Delete multiple records in a single request. Body must be
+        `{"ids": [1, 2, 3]}`. Each id goes through the same per-record
+        ownership check and hooks as a single DELETE /{tableName}/{id}.
+        Processing continues past per-item failures.
+      tags: [CRUD]
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+            example: items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+            example:
+              ids: [1, 2, 3]
+      responses:
+        200:
+          description: All records deleted
+        207:
+          description: Partial success - some records deleted, some failed
+        400:
+          description: Empty/invalid body, too many records, or all records failed
+        401:
+          description: Unauthorized
+
   /{tableName}/{id}:
     get:
       summary: Get single record by ID
