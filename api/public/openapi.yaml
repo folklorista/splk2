@@ -365,6 +365,76 @@ paths:
               schema:
                 $ref: '#/components/schemas/ValidationError'
 
+  /events:
+    get:
+      summary: Real-time change stream (Server-Sent Events)
+      description: |
+        Streams create/update/delete notifications as they happen, using the
+        `text/event-stream` format (Server-Sent Events). Each event only includes
+        table/record/action metadata, filtered per-user via the same permission
+        rules as normal CRUD reads - it never includes the changed field values.
+
+        **Authentication:** accepts a normal `Authorization: Bearer <token>` header,
+        or a `?token=<token>` query parameter. The query parameter exists because the
+        browser's native `EventSource` API cannot set custom headers.
+
+        **Resuming after a disconnect:** the browser automatically sends a
+        `Last-Event-ID` header on reconnect, and the stream resumes from that event
+        id. For manual testing, pass `?lastEventId=<id>` instead.
+
+        **Stream lifetime:** the server closes the connection after
+        `SSE_MAX_STREAM_DURATION_SEC` (default 300s) and sends a `timeout` event;
+        `EventSource` reconnects automatically and picks up from `Last-Event-ID`.
+        While idle, a `: heartbeat` comment is sent every `SSE_HEARTBEAT_INTERVAL_SEC`
+        (default 30s) to keep the connection alive through proxies.
+
+        **Operational note:** this holds one open connection per client for the
+        duration of the stream. Under the PHP built-in dev server (`php -S`, single
+        threaded) an open stream blocks all other requests until it closes - fine in
+        production behind php-fpm/Apache (one worker per connection), but avoid
+        leaving a browser tab with an open stream while doing local dev against
+        `php -S`.
+      tags: [Real-Time]
+      parameters:
+        - name: token
+          in: query
+          required: false
+          schema:
+            type: string
+          description: JWT access token, used instead of the Authorization header when the client can't set custom headers (e.g. EventSource).
+        - name: lastEventId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Resume the stream after this audit_logs id. Normally set automatically by the browser via the Last-Event-ID header instead.
+        - name: maxDurationSec
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Ends the stream after this many seconds instead of the server-configured default. Only shortens the session - a value at or above the configured `SSE_MAX_STREAM_DURATION_SEC` is ignored.
+      responses:
+        200:
+          description: |
+            An open `text/event-stream` connection. Example event:
+            ```
+            id: 4821
+            event: change
+            data: {"table":"items","recordId":42,"action":"DATA_UPDATE","userId":7,"createdAt":"2026-07-01 10:15:00"}
+
+            ```
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        401:
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
   # Dynamic CRUD Endpoints
   /{tableName}:
     get:
