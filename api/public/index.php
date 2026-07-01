@@ -906,8 +906,33 @@ switch ($method) {
                 // Apply ownership filter if needed
                 $ownerFilter = $permissionChecker->getFilterForReadAccess($tableName, $user['user']);
                 $whereClause = $ownerFilter ? ($whereClause ? "$whereClause AND $ownerFilter" : $ownerFilter) : $whereClause;
+
+                $whereParams = [];
+                $facetColumns = null;
+                try {
+                    $columnNames = $db->getColumnNames($tableName);
+
+                    // Generic column filters: ?filter[column]=value or ?filter[column][op]=value
+                    $filterConditions = FilterParser::parse($queryParams['filter'] ?? null, $columnNames);
+                    if (!empty($filterConditions)) {
+                        $builder = new WhereClauseBuilder();
+                        FilterParser::apply($builder, $filterConditions);
+                        $filterClause = $builder->build();
+                        $whereParams = $builder->getParams();
+                        $whereClause = $whereClause ? "($whereClause) AND ($filterClause)" : $filterClause;
+                    }
+
+                    // Faceted search: ?facets=col1,col2 - silently drop unknown columns
+                    if (!empty($queryParams['facets'])) {
+                        $requestedFacets = array_map('trim', explode(',', $queryParams['facets']));
+                        $facetColumns = array_values(array_intersect($requestedFacets, $columnNames));
+                    }
+                } catch (\InvalidArgumentException $e) {
+                    Response::send(400, "Invalid filter parameter", null, $e->getMessage());
+                }
+
                 Response::sendPrepared(
-                    $endpoints->getAllRecords($tableName, $whereClause, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns)
+                    $endpoints->getAllRecordsWithParams($tableName, $whereClause, $whereParams, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns, $facetColumns)
                 );
             }
         }

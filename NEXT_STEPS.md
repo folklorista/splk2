@@ -315,7 +315,11 @@ These improve API usability, maintainability, and performance.
 
 ## 🐛 Known Issues
 
-_(none currently — see Resolved Issues below)_
+### Default multi-column `?search=` can hit a MySQL FULLTEXT error
+- **Discovered:** 2026-07-01, while implementing 3.4 Enhanced Search.
+- **Symptom:** When a search request doesn't specify `X-Search-Columns`, the API defaults to searching every "searchable" column on the table (`Database::getSearchableColumns()`), then runs a single `MATCH(col1, col2, ...) AGAINST (...)`. MySQL requires one FULLTEXT index covering exactly that column set — none of the current schemas have one for the full default set (e.g. `items` has FULLTEXT only on `inventory_number`, not `status`; `users` has two separate single-column FULLTEXT indexes, not one composite). The query fails with error 1191.
+- **Why it wasn't caught before:** no test exercised default (column-less) search until 3.4; the new `EnhancedSearchE2ETest` works around it by always passing `X-Search-Columns` explicitly.
+- **Fix idea for later:** either restrict the default search-column set to columns actually covered by a single FULLTEXT index, or issue one `MATCH()` per FULLTEXT index and OR the results together.
 
 ---
 
@@ -456,7 +460,7 @@ As you complete each task, mark it here:
 - [x] 3.1 Real-Time Support ✅ COMPLETE
 - [x] 3.2 Bulk Operations ✅ COMPLETE
 - [x] 3.3 Multiple Column Sorting ✅ COMPLETE
-- [ ] 3.4 Enhanced Search
+- [x] 3.4 Enhanced Search ✅ COMPLETE
 - [ ] 3.5 API Keys
 - [ ] 3.6 Refresh Token Management
 - [ ] 3.7 Auto-Generate OpenAPI
@@ -490,5 +494,5 @@ Features that are worth doing eventually but don't block the current roadmap. Pu
 
 For detailed implementation guidance on any task, check the corresponding section above or ask during implementation sessions.
 
-**Status:** Phase 1 & 2 complete (2.6 deferred to wishlist). Phase 3 in progress — 3.2 and 3.3 done, CI green.
-**Next Task:** Pick from Phase 3 (3.1 Real-Time/SSE, 3.4 Enhanced Search, 3.5 API Keys, 3.6 Refresh Tokens, 3.7 Auto-Generate OpenAPI, or 3.8 Export/Batch Download).
+**Status:** Phase 1 & 2 complete (2.6 deferred to wishlist). Phase 3 in progress — 3.1, 3.2, 3.3 and 3.4 done, CI green.
+**Next Task:** Pick from Phase 3 (3.5 API Keys, 3.6 Refresh Tokens, 3.7 Auto-Generate OpenAPI, or 3.8 Export/Batch Download).

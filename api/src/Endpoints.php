@@ -237,6 +237,7 @@ class Endpoints
      * @param string $orderDir
      * @param string|null $searchQuery
      * @param array|null $searchColumns
+     * @param array|null $facetColumns Columns to compute per-value counts for (already validated by the caller)
      * @return array
      */
     public function getAllRecordsWithParams(
@@ -248,11 +249,19 @@ class Endpoints
         string|array $orderBy = null,
         string $orderDir = 'ASC',
         string $searchQuery = null,
-        array $searchColumns = null
+        array $searchColumns = null,
+        array $facetColumns = null
     ) {
         $response = $this->db->getAllWithParams($table, $whereClause, $whereParams, $limit, $offset, $orderBy, $orderDir, $searchQuery, $searchColumns);
         if ($response && $response['status'] === 200 && isset($response['data'])) {
             $response['data'] = $this->applyFieldSelection($response['data'], $table);
+        }
+        if (!empty($facetColumns) && $response && in_array($response['status'], [200, 204], true)) {
+            $facets = $this->db->getFacets($table, $whereClause, $whereParams, $facetColumns);
+            if (!empty($facets)) {
+                $response['meta'] = $response['meta'] ?? [];
+                $response['meta']['facets'] = $facets;
+            }
         }
         return $response;
     }

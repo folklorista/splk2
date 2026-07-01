@@ -271,6 +271,10 @@ class Database
                     $searchQuery = urldecode($searchQuery);
                 }
 
+                // Boolean operators (AND/OR/NOT), quoted phrases and prefix wildcards
+                // only make sense in BOOLEAN MODE, which requires a FULLTEXT index.
+                $parsedSearch = $fulltextAvailable ? SearchParser::parse($searchQuery) : null;
+
                 // Build search clause
                 if ($fulltextAvailable) {
                     $searchClause = "MATCH(" . implode(',', $searchColumns) . ") AGAINST (:searchQuery IN BOOLEAN MODE)";
@@ -278,6 +282,7 @@ class Database
                     $searchParts  = array_map(fn($col) => "`$col` LIKE :searchQuery", $searchColumns);
                     $searchClause = implode(' OR ', $searchParts);
                 }
+                $preSearchWhereClause = $whereClause;
                 $whereClause = ! empty($whereClause) ? "({$whereClause}) AND ({$searchClause})" : $searchClause;
             }
 
@@ -307,7 +312,7 @@ class Database
 
             // Bind search parameter if needed
             if ($searchQuery !== null) {
-                $searchParam = $fulltextAvailable ? $searchQuery : "%$searchQuery%";
+                $searchParam = $fulltextAvailable ? ($parsedSearch['boolean_query'] ?? $searchQuery) : "%$searchQuery%";
                 $stmt->bindValue(':searchQuery', $searchParam, PDO::PARAM_STR);
             }
 
@@ -332,6 +337,28 @@ class Database
 
             $countStmt->execute();
             $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+            // Typo-tolerant fallback: BOOLEAN MODE's own wildcard already covers
+            // prefix typos, but transposed/substituted letters still find nothing.
+            // Retry those against a bounded candidate set using edit distance.
+            $fuzzyFallbackUsed = false;
+            if ($searchQuery !== null && $fulltextAvailable && (int)$totalRecords === 0 && !empty($parsedSearch['terms'] ?? [])) {
+                $fuzzy = $this->fuzzySearchFallback(
+                    $table,
+                    $columnsList,
+                    $preSearchWhereClause,
+                    $params,
+                    $searchColumns,
+                    $parsedSearch['terms'],
+                    $limit,
+                    $offset
+                );
+                if (!empty($fuzzy['rows'])) {
+                    $result = $fuzzy['rows'];
+                    $totalRecords = $fuzzy['total'];
+                    $fuzzyFallbackUsed = true;
+                }
+            }
 
             // Convert tinyint(1) to boolean
             if ($result) {
@@ -364,9 +391,10 @@ class Database
             }
             if ($searchQuery !== null) {
                 $meta['search'] = [
-                    'query'    => $searchQuery,
-                    'columns'  => $searchColumns,
-                    'fulltext' => $fulltextAvailable,
+                    'query'          => $searchQuery,
+                    'columns'        => $searchColumns,
+                    'fulltext'       => $fulltextAvailable,
+                    'fuzzy_fallback' => $fuzzyFallbackUsed,
                 ];
             }
 
@@ -381,6 +409,133 @@ class Database
         } catch (PDOException $e) {
             return Response::prepare(500, "Database error", null, $e->getMessage());
         }
+    }
+
+    /**
+     * Retry a fulltext search with edit-distance matching when BOOLEAN MODE
+     * finds nothing (e.g. a misspelled word). Pulls a bounded candidate set
+     * with the non-search WHERE conditions applied, then ranks it in PHP.
+     *
+     * @param string $table
+     * @param string $columnsList Comma-separated column list (already excludes password)
+     * @param string $baseWhereClause WHERE clause without the search condition
+     * @param array $baseParams Parameters for $baseWhereClause
+     * @param array $searchColumns Columns to compare against
+     * @param array $terms Plain search terms (no operators/wildcards)
+     * @param int|null $limit
+     * @param int|null $offset
+     * @return array{rows: array, total: int}
+     */
+    private function fuzzySearchFallback(
+        string $table,
+        string $columnsList,
+        string $baseWhereClause,
+        array $baseParams,
+        array $searchColumns,
+        array $terms,
+        ?int $limit,
+        ?int $offset
+    ): array {
+        $maxDistance = 2;
+        $candidateCap = 300;
+
+        $query = "SELECT {$columnsList} FROM `{$table}`";
+        if (!empty($baseWhereClause)) {
+            $query .= " WHERE {$baseWhereClause}";
+        }
+        $query .= " LIMIT {$candidateCap}";
+
+        $stmt = $this->pdo->prepare($query);
+        foreach ($baseParams as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $matches = [];
+        foreach ($candidates as $row) {
+            $bestDistance = null;
+            foreach ($searchColumns as $col) {
+                $cellValue = (string)($row[$col] ?? '');
+                if ($cellValue === '') {
+                    continue;
+                }
+                foreach (preg_split('/\s+/u', $cellValue) as $word) {
+                    if ($word === '') {
+                        continue;
+                    }
+                    foreach ($terms as $term) {
+                        $distance = levenshtein(mb_strtolower($word), mb_strtolower($term));
+                        if ($bestDistance === null || $distance < $bestDistance) {
+                            $bestDistance = $distance;
+                        }
+                    }
+                }
+            }
+            if ($bestDistance !== null && $bestDistance <= $maxDistance) {
+                $matches[] = ['row' => $row, 'distance' => $bestDistance];
+            }
+        }
+
+        usort($matches, fn($a, $b) => $a['distance'] <=> $b['distance']);
+        $rows = array_map(fn($m) => $m['row'], $matches);
+        $total = count($rows);
+
+        if ($limit !== null) {
+            $rows = array_slice($rows, $offset ?? 0, $limit);
+        }
+
+        return ['rows' => $rows, 'total' => $total];
+    }
+
+    /**
+     * Compute per-value counts for the given columns, respecting the same
+     * WHERE conditions as the main list query so facets reflect currently
+     * active filters and permission restrictions.
+     *
+     * @param string $table
+     * @param string $whereClause WHERE clause without the WHERE keyword (parameterized)
+     * @param array $params Parameters to bind
+     * @param array $facetColumns Columns to compute facet counts for (must already be validated by the caller)
+     * @param int $maxValuesPerFacet Cap on distinct values returned per facet column
+     * @return array<string, array<string, int>> Column name => [value => count]
+     */
+    public function getFacets(string $table, string $whereClause, array $params, array $facetColumns, int $maxValuesPerFacet = 50): array
+    {
+        $facets = [];
+
+        foreach ($facetColumns as $column) {
+            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $column)) {
+                continue;
+            }
+
+            $query = "SELECT `{$column}` AS facet_value, COUNT(*) AS facet_count FROM `{$table}`";
+            if (!empty($whereClause)) {
+                $query .= " WHERE {$whereClause}";
+            }
+            $query .= " GROUP BY `{$column}` ORDER BY facet_count DESC LIMIT {$maxValuesPerFacet}";
+
+            try {
+                $stmt = $this->pdo->prepare($query);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue($key, $value);
+                }
+                $stmt->execute();
+                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                $counts = [];
+                foreach ($rows as $row) {
+                    $value = $row['facet_value'];
+                    $counts[$value === null ? '(null)' : (string)$value] = (int)$row['facet_count'];
+                }
+                $facets[$column] = $counts;
+            } catch (PDOException $e) {
+                // Skip a facet that fails to group (e.g. incompatible type) rather than failing the whole request
+                continue;
+            }
+        }
+
+        return $facets;
     }
 
     /**
@@ -427,6 +582,23 @@ class Database
         return implode(', ', array_map(
             fn($spec) => "`{$spec['column']}` {$spec['direction']}",
             $sortSpecs
+        ));
+    }
+
+    /**
+     * Get the column names for a table (excluding 'password'), for validating
+     * user-supplied column names such as ?filter[column] or ?facets=column.
+     *
+     * @param string $table
+     * @return array<string>
+     */
+    public function getColumnNames(string $table): array
+    {
+        $stmt = $this->pdo->query("DESCRIBE `{$table}`");
+        $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_values(array_filter(
+            array_map(fn($column) => $column['Field'], $columns),
+            fn($field) => $field !== 'password'
         ));
     }
 
