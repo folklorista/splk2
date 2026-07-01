@@ -1,7 +1,7 @@
 # SPLK2 API - Security & Enhancement Roadmap
 
 **Status**: Based on comprehensive security audit
-**Last Updated**: 2026-06-29
+**Last Updated**: 2026-07-01
 **Total Tasks**: 27 tasks across 4 phases
 **Estimated Effort**: 95-125 hours
 **Audit Report**: Available in audit visualization
@@ -470,5 +470,5 @@ Features that are worth doing eventually but don't block the current roadmap. Pu
 
 For detailed implementation guidance on any task, check the corresponding section above or ask during implementation sessions.
 
-**Status:** Ready to begin Phase 1 - Security Critical
-**Starting Task:** 1.4 - Fix SQL Injection (or 1.1 if you prefer quick wins first)
+**Status:** Phase 1 & 2 complete (2.6 deferred to wishlist). Phase 3 in progress — 3.3 done, CI green.
+**Next Task:** Pick from Phase 3 (3.1 Real-Time/SSE, 3.2 Bulk Operations, 3.4 Enhanced Search, 3.5 API Keys, 3.6 Refresh Tokens, 3.7 Auto-Generate OpenAPI, or 3.8 Export/Batch Download).
