@@ -540,6 +540,16 @@ $whereClause   = '';
 // Ověření, zda orderDir obsahuje jen "ASC" nebo "DESC"
 $orderDir = in_array($orderDir, ['ASC', 'DESC']) ? $orderDir : 'ASC';
 
+// ?sort=last_name,-first_name (multi-column) má přednost před X-Sort-By hlavičkou (single column)
+$sortParam = $queryParams['sort'] ?? null;
+if ($sortParam) {
+    try {
+        $orderBy = SortParser::parse($sortParam);
+    } catch (\InvalidArgumentException $e) {
+        Response::send(400, "Invalid sort parameter", null, $e->getMessage());
+    }
+}
+
 // CRUD operace (jen pro přihlášené uživatele)
 switch ($method) {
     case 'GET':

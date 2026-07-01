@@ -374,8 +374,13 @@ paths:
 
         Query parameters are passed via HTTP headers for complex queries:
         - Pagination: X-Pagination-Limit, X-Pagination-Offset
-        - Sorting: X-Sort-By, X-Sort-Direction
+        - Sorting: X-Sort-By, X-Sort-Direction (single column, or use ?sort= below for multiple)
         - Search: X-Search-Query, X-Search-Columns
+
+        Multi-column sorting is also available via the `sort` query parameter
+        (JSON:API style), e.g. `?sort=last_name,-first_name` sorts by last_name
+        ascending, then first_name descending. When present, it takes precedence
+        over X-Sort-By/X-Sort-Direction.
 
         Response includes pagination metadata if limit is specified.
       tags: [CRUD]
@@ -412,6 +417,12 @@ paths:
             enum: [ASC, DESC]
             example: DESC
           description: Sort direction
+        - name: sort
+          in: query
+          schema:
+            type: string
+            example: "last_name,-first_name"
+          description: Multi-column sort, comma-separated column names, prefix with "-" for DESC. Takes precedence over X-Sort-By/X-Sort-Direction.
         - name: X-Search-Query
           in: header
           schema:

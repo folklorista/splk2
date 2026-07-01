@@ -39,8 +39,8 @@ class Database
      * @param string $whereClause WHERE condition as raw SQL (not user input!)
      * @param int|null $limit
      * @param int|null $offset
-     * @param string|null $orderBy
-     * @param string $orderDir
+     * @param string|array|null $orderBy Single column name, or array of ['column' => string, 'direction' => 'ASC'|'DESC'] for multi-column sorting
+     * @param string $orderDir Only used when $orderBy is a single column name
      * @param string|null $searchQuery
      * @param array|null $searchColumns
      * @return array
@@ -50,7 +50,7 @@ class Database
         string $whereClause = "",
         int $limit = null,
         int $offset = null,
-        string $orderBy = null,
+        string|array $orderBy = null,
         string $orderDir = 'ASC',
         string $searchQuery = null,
         array $searchColumns = null
@@ -116,9 +116,10 @@ class Database
                 $query .= " WHERE {$whereClause}";
             }
 
-            // Přidání řazení
-            if ($orderBy !== null && in_array($orderBy, $columnNames)) {
-                $query .= " ORDER BY `{$orderBy}` " . ($orderDir === 'DESC' ? 'DESC' : 'ASC');
+            // Přidání řazení (single column nebo vícenásobné řazení)
+            $sortSpecs = self::normalizeSortSpecs($orderBy, $orderDir, $columnNames);
+            if (!empty($sortSpecs)) {
+                $query .= " ORDER BY " . self::buildOrderByClause($sortSpecs);
             }
 
             // Přidání stránkování
@@ -177,11 +178,8 @@ class Database
                     'total_pages'   => ceil($totalRecords / $limit),
                 ];
             }
-            if ($orderBy !== null) {
-                $meta['sorting'] = [
-                    'order_by'  => $orderBy,
-                    'direction' => $orderDir,
-                ];
+            if (!empty($sortSpecs)) {
+                $meta['sorting'] = $sortSpecs;
             }
             if ($searchQuery !== null) {
                 $meta['search'] = [
@@ -212,8 +210,8 @@ class Database
      * @param array $params Parameters to bind (e.g., [':id' => 1, ':name' => '%test%'])
      * @param int|null $limit
      * @param int|null $offset
-     * @param string|null $orderBy
-     * @param string $orderDir
+     * @param string|array|null $orderBy Single column name, or array of ['column' => string, 'direction' => 'ASC'|'DESC'] for multi-column sorting
+     * @param string $orderDir Only used when $orderBy is a single column name
      * @param string|null $searchQuery
      * @param array|null $searchColumns
      * @return array
@@ -224,7 +222,7 @@ class Database
         array $params = [],
         int $limit = null,
         int $offset = null,
-        string $orderBy = null,
+        string|array $orderBy = null,
         string $orderDir = 'ASC',
         string $searchQuery = null,
         array $searchColumns = null
@@ -289,9 +287,10 @@ class Database
                 $query .= " WHERE {$whereClause}";
             }
 
-            // Add sorting
-            if ($orderBy !== null && in_array($orderBy, $columnNames)) {
-                $query .= " ORDER BY `{$orderBy}` " . ($orderDir === 'DESC' ? 'DESC' : 'ASC');
+            // Add sorting (single column or multi-column)
+            $sortSpecs = self::normalizeSortSpecs($orderBy, $orderDir, $columnNames);
+            if (!empty($sortSpecs)) {
+                $query .= " ORDER BY " . self::buildOrderByClause($sortSpecs);
             }
 
             // Add pagination
@@ -360,11 +359,8 @@ class Database
                     'total_pages'   => ceil($totalRecords / $limit),
                 ];
             }
-            if ($orderBy !== null) {
-                $meta['sorting'] = [
-                    'order_by'  => $orderBy,
-                    'direction' => $orderDir,
-                ];
+            if (!empty($sortSpecs)) {
+                $meta['sorting'] = $sortSpecs;
             }
             if ($searchQuery !== null) {
                 $meta['search'] = [
@@ -385,6 +381,53 @@ class Database
         } catch (PDOException $e) {
             return Response::prepare(500, "Database error", null, $e->getMessage());
         }
+    }
+
+    /**
+     * Normalize $orderBy (single column string, or array of sort specs) into a
+     * validated list of ['column' => string, 'direction' => 'ASC'|'DESC'],
+     * dropping any column not present in $columnNames.
+     *
+     * @param string|array|null $orderBy
+     * @param string $orderDir
+     * @param array $columnNames
+     * @return array
+     */
+    private static function normalizeSortSpecs(string|array|null $orderBy, string $orderDir, array $columnNames): array
+    {
+        if (is_array($orderBy)) {
+            $specs = $orderBy;
+        } elseif ($orderBy !== null) {
+            $specs = [['column' => $orderBy, 'direction' => $orderDir]];
+        } else {
+            return [];
+        }
+
+        $sortSpecs = [];
+        foreach ($specs as $spec) {
+            if (in_array($spec['column'], $columnNames)) {
+                $sortSpecs[] = [
+                    'column' => $spec['column'],
+                    'direction' => ($spec['direction'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC',
+                ];
+            }
+        }
+
+        return $sortSpecs;
+    }
+
+    /**
+     * Build a SQL ORDER BY clause (without the ORDER BY keyword) from validated sort specs.
+     *
+     * @param array $sortSpecs
+     * @return string
+     */
+    private static function buildOrderByClause(array $sortSpecs): string
+    {
+        return implode(', ', array_map(
+            fn($spec) => "`{$spec['column']}` {$spec['direction']}",
+            $sortSpecs
+        ));
     }
 
     // Získání jednoho záznamu podle ID

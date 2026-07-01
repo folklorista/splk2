@@ -212,7 +212,7 @@ class Endpoints
         string $whereClause = "",
         int $limit = null,
         int $offset = null,
-        string $orderBy = null,
+        string|array $orderBy = null,
         string $orderDir = 'ASC',
         string $searchQuery = null,
         array $searchColumns = null
@@ -233,7 +233,7 @@ class Endpoints
      * @param array $whereParams Parameters to bind (keys match clause placeholders)
      * @param int|null $limit
      * @param int|null $offset
-     * @param string|null $orderBy
+     * @param string|array|null $orderBy
      * @param string $orderDir
      * @param string|null $searchQuery
      * @param array|null $searchColumns
@@ -245,7 +245,7 @@ class Endpoints
         array $whereParams = [],
         int $limit = null,
         int $offset = null,
-        string $orderBy = null,
+        string|array $orderBy = null,
         string $orderDir = 'ASC',
         string $searchQuery = null,
         array $searchColumns = null
