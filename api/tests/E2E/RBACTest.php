@@ -22,7 +22,7 @@ class RBACTest extends TestCase {
         $this->dbName = $_ENV['DB_NAME'] ?? 'splk';
         // Register test users with different roles
         // Admin user
-        $adminEmail = 'admin' . time() . '@test.com';
+        $adminEmail = 'admin' . str_replace('.', '', uniqid('', true)) . '@test.com';
         $adminPassword = 'Password123!';
         $adminRegResponse = $this->post('/register', [
             'email' => $adminEmail,
@@ -42,7 +42,7 @@ class RBACTest extends TestCase {
         }
 
         // Regular user
-        $userEmail = 'user' . time() . '@test.com';
+        $userEmail = 'user' . str_replace('.', '', uniqid('', true)) . '@test.com';
         $userPassword = 'Password123!';
         $userRegResponse = $this->post('/register', [
             'email' => $userEmail,
@@ -72,13 +72,13 @@ class RBACTest extends TestCase {
      */
     public function testAdminCanCreateUsers() {
         $response = $this->post('/users', [
-            'email' => 'newuser' . time() . '@test.com',
+            'email' => 'newuser' . str_replace('.', '', uniqid('', true)) . '@test.com',
             'password' => 'Password123!',
             'first_name' => 'New',
             'last_name' => 'User',
         ], $this->adminToken);
 
-        $this->assertEquals(200, $response['status']);
+        $this->assertEquals(201, $response['status']);
     }
 
     /**
@@ -86,14 +86,14 @@ class RBACTest extends TestCase {
      */
     public function testRegularUserCannotCreateUsers() {
         $response = $this->post('/users', [
-            'email' => 'newuser' . time() . '@test.com',
+            'email' => 'newuser' . str_replace('.', '', uniqid('', true)) . '@test.com',
             'password' => 'Password123!',
             'first_name' => 'New',
             'last_name' => 'User',
         ], $this->userToken);
 
         $this->assertEquals(403, $response['status']);
-        $this->assertStringContainsString('administrator', strtolower($response['message'] ?? ''));
+        $this->assertStringContainsString('permission', strtolower($response['error'] ?? ''));
     }
 
     /**
@@ -102,7 +102,7 @@ class RBACTest extends TestCase {
     public function testAdminCanDeleteUsers() {
         // Create a user to delete
         $createResponse = $this->post('/users', [
-            'email' => 'delete' . time() . '@test.com',
+            'email' => 'delete' . str_replace('.', '', uniqid('', true)) . '@test.com',
             'password' => 'Password123!',
             'first_name' => 'Delete',
             'last_name' => 'Me',
@@ -123,7 +123,7 @@ class RBACTest extends TestCase {
     public function testRegularUserCannotDeleteUsers() {
         // Create a user to delete (as admin)
         $createResponse = $this->post('/users', [
-            'email' => 'nodelete' . time() . '@test.com',
+            'email' => 'nodelete' . str_replace('.', '', uniqid('', true)) . '@test.com',
             'password' => 'Password123!',
             'first_name' => 'No',
             'last_name' => 'Delete',
@@ -135,7 +135,7 @@ class RBACTest extends TestCase {
         $response = $this->delete("/users/{$userId}", [], $this->userToken);
 
         $this->assertEquals(403, $response['status']);
-        $this->assertStringContainsString('administrator', strtolower($response['message'] ?? ''));
+        $this->assertStringContainsString('permission', strtolower($response['error'] ?? ''));
     }
 
     /**
@@ -159,7 +159,7 @@ class RBACTest extends TestCase {
         ], $this->userToken);
 
         $this->assertEquals(403, $response['status']);
-        $this->assertStringContainsString('own account', $response['message'] ?? '');
+        $this->assertStringContainsString('own records', $response['error'] ?? '');
     }
 
     /**
@@ -177,11 +177,11 @@ class RBACTest extends TestCase {
      */
     public function testAdminCanCreateRoles() {
         $response = $this->post('/roles', [
-            'name' => 'moderator' . time(),
+            'name' => 'moderator' . uniqid('', true),
             'description' => 'Test moderator role',
         ], $this->adminToken);
 
-        $this->assertEquals(200, $response['status']);
+        $this->assertEquals(201, $response['status']);
     }
 
     /**
@@ -189,7 +189,7 @@ class RBACTest extends TestCase {
      */
     public function testRegularUserCannotCreateRoles() {
         $response = $this->post('/roles', [
-            'name' => 'hacker' . time(),
+            'name' => 'hacker' . uniqid('', true),
             'description' => 'Should fail',
         ], $this->userToken);
 

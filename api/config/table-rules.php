@@ -20,7 +20,7 @@
  *         ]
  *     ],
  *     'hooks' => [
- *         'beforeCreate' => function($data, $user, $logger) { },
+ *         'beforeCreate' => function($data, $user, $logger, $db) { },
  *         'afterCreate' => function($id, $user, $logger, $db) { },
  *         'beforeUpdate' => function($id, $data, $user, $logger, $db) { },
  *         'afterUpdate' => function($id, $user, $logger, $db) { },
@@ -98,7 +98,7 @@ return [
                 }
 
                 // Admin cannot delete themselves
-                if ($user->id === $id) {
+                if ($user->id === (int)$id) {
                     throw new \App\RuleException(
                         'You cannot delete your own account',
                         403,
